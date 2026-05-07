@@ -65,10 +65,12 @@ voor decoratieve ambiguïteit.
     - Schilder: neutraal palet (wit, lichtgrijs, één krachtige accentkleur
       die de vakman zelf kiest — zijn verfpalet is zijn visitekaartje).
     - HVAC: koelblauw (#0A6EBD) of industrieel groen (#2D6A4F).
-  - Implementeer via `--color-brand-primary` en
-    `--color-brand-secondary` in de site-specifieke `global.css`, na de
-    import van `tokens.css` (zie SYSTEM.md §9 Brand-Token Override
-    System).
+  - Implementeer via `--brand-primary` (achtergrond / hoofdkleur) en
+    `--brand-accent` (CTA / signaalkleur) in de site-specifieke
+    `global.css`, na de import van `tokens.css` (zie SYSTEM.md §9
+    Brand-Token Override System). De canonieke vier merk-tokens zijn
+    `--brand-primary`, `--brand-accent`, `--brand-bg`, `--brand-fg` —
+    geen `--color-*` of `--brand-secondary` toevoegen.
 - **Layout: kort, direct, geen scrollen vereist voor de kernboodschap.**
   - Telefoonnummer zichtbaar zonder scrollen op elke schermgrootte.
   - Korte alinea's: max. 3 zinnen. Bullet lists voor diensten.
