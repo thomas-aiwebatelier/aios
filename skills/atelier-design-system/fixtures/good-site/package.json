@@ -1,0 +1,12 @@
+{
+  "name": "fixture-good-site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  }
+}

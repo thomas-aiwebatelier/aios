@@ -1,0 +1,138 @@
+/**
+ * Atelier Design System — tokens.css
+ * Runtime contract. Every generated client site imports this file.
+ *
+ * RULES:
+ * - Do NOT modify values here without updating SYSTEM.md (they are a contract pair).
+ * - Do NOT add per-site colors here. Use the brand token override block in the
+ *   site's global.css AFTER this import.
+ * - Token naming convention for spacing: named by Tailwind-equivalent multiplier
+ *   (--space-N where N × 4px = the actual pixel value). e.g. --space-6 = 24px.
+ */
+
+:root {
+
+  /* =========================================================================
+   * SPACING SCALE
+   * Base: 4px. 11 stops covering 4/8/12/16/24/32/48/64/96/128/192px.
+   * No spacing value outside this scale is valid in generated sites.
+   * ========================================================================= */
+
+  --space-1:  0.25rem;   /*   4px */
+  --space-2:  0.5rem;    /*   8px */
+  --space-3:  0.75rem;   /*  12px */
+  --space-4:  1rem;      /*  16px */
+  --space-6:  1.5rem;    /*  24px */
+  --space-8:  2rem;      /*  32px */
+  --space-12: 3rem;      /*  48px */
+  --space-16: 4rem;      /*  64px */
+  --space-24: 6rem;      /*  96px */
+  --space-32: 8rem;      /* 128px */
+  --space-48: 12rem;     /* 192px */
+
+
+  /* =========================================================================
+   * TYPE SCALE
+   * Ratio: 1.250 (Major Third). Base = 1rem (assumes 16px browser default).
+   * Values rounded to 3 decimal places. All font-size declarations must
+   * reference these tokens — hardcoded px/rem font sizes are a violation.
+   * ========================================================================= */
+
+  --text-xs:   0.64rem;   /* ~10.2px  — captions, legal fine print   */
+  --text-sm:   0.8rem;    /* ~12.8px  — secondary labels, meta text  */
+  --text-base: 1rem;      /*  16px    — body copy baseline            */
+  --text-lg:   1.25rem;   /*  20px    — lead text, large body         */
+  --text-xl:   1.563rem;  /* ~25px    — subheadings, card titles      */
+  --text-2xl:  1.953rem;  /* ~31.2px  — section headings (h3/h2)      */
+  --text-3xl:  2.441rem;  /* ~39px    — page headings (h2/h1)         */
+  --text-4xl:  3.052rem;  /* ~48.8px  — display headings              */
+  --text-5xl:  3.815rem;  /* ~61px    — hero / splash display text    */
+
+
+  /* =========================================================================
+   * MOTION
+   * One easing curve for all transitions + 3 duration stops.
+   * Arbitrary durations (e.g. 250ms, 400ms) are a violation.
+   * All animations must respect prefers-reduced-motion (see SYSTEM.md §4).
+   * ========================================================================= */
+
+  --ease:         cubic-bezier(0.4, 0, 0.2, 1);  /* Material standard ease  */
+  --dur-micro:    150ms;   /* Hover states, focus rings, toggles              */
+  --dur-standard: 300ms;   /* Panel opens, dropdowns, reveals                 */
+  --dur-hero:     600ms;   /* Page-entry animations, hero sequences            */
+
+
+  /* =========================================================================
+   * LAYOUT
+   * Max content width + gutter. Breakpoints are listed as tokens for JS
+   * consumption only — use pixel values directly in @media queries.
+   * ========================================================================= */
+
+  --max-w:  1280px;   /* Maximum content container width                      */
+  --gutter: 1.5rem;   /* 24px = --space-6; used as grid gap                   */
+
+  /* Breakpoints — JS-readable only. Do NOT use var(--bp-*) in @media rules.
+   * In CSS, write: @media (min-width: 640px) { ... } etc.                    */
+  --bp-sm: 640px;    /* @media (min-width: 640px)  — small devices+           */
+  --bp-md: 768px;    /* @media (min-width: 768px)  — tablets+                 */
+  --bp-lg: 1024px;   /* @media (min-width: 1024px) — laptops+                 */
+  --bp-xl: 1280px;   /* @media (min-width: 1280px) — desktops+                */
+
+
+  /* =========================================================================
+   * BRAND TOKENS
+   * Placeholder defaults. MUST be overridden per-site in global.css AFTER
+   * this file is imported. See SYSTEM.md §9 for the override protocol.
+   *
+   * Override pattern in site's src/styles/global.css:
+   *
+   *   @import url('/styles/tokens.css');
+   *
+   *   :root {
+   *     --brand-primary: #2c5f2e;
+   *     --brand-accent:  #97bc62;
+   *     --brand-bg:      #f9f9f6;
+   *     --brand-fg:      #1a1a1a;
+   *   }
+   *
+   * Contrast requirements (validated by quality-checks.ts):
+   *   --brand-fg on --brand-bg  ≥ 4.5:1
+   *   --brand-accent on --brand-bg  ≥ 3:1
+   *
+   * Derivative colors: use color-mix() at the usage site, NOT new tokens.
+   *   Soft bg:    color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg))
+   *   Hover dark: color-mix(in srgb, var(--brand-primary) 80%, black)
+   *   90% alpha:  color-mix(in srgb, var(--brand-primary) 90%, transparent)
+   * ========================================================================= */
+
+  --brand-primary: #1a1a1a;   /* Placeholder: deep ink. Override per-site.    */
+  --brand-accent:  #c9a96e;   /* Placeholder: warm gold. Override per-site.   */
+  --brand-bg:      #fbfbf8;   /* Placeholder: off-white. Override per-site.   */
+  --brand-fg:      #1a1a1a;   /* Placeholder: deep ink. Override per-site.    */
+
+}
+
+
+/* =============================================================================
+ * REDUCED MOTION
+ * Collapse all durations to near-zero when the user has requested reduced
+ * motion. This rule applies globally — no animation or transition in generated
+ * sites may override it.
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro:    1ms;
+    --dur-standard: 1ms;
+    --dur-hero:     1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration:   1ms  !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:  1ms  !important;
+    scroll-behavior:      auto !important;
+  }
+}

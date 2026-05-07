@@ -1,0 +1,43 @@
+---
+// Missing-alt fixture site - fails alt-text quality check
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Missing Alt Site Fixture</title>
+    <link rel="stylesheet" href="/styles/tokens.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: var(--space-4);
+        font-size: var(--text-base);
+        background-color: var(--brand-bg);
+        color: var(--brand-fg);
+        font-family: sans-serif;
+      }
+      .container {
+        max-width: var(--max-w);
+        margin: 0 auto;
+        padding: var(--space-6);
+      }
+      h1 {
+        font-size: var(--text-3xl);
+        margin-bottom: var(--space-4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Missing Alt Site Fixture</h1>
+      <p>This site intentionally fails the alt-text check.</p>
+      <!-- Intentionally missing alt text to trigger quality-check failure -->
+      <img src="/placeholder.svg" alt="" width="200" height="100" />
+      <nav>
+        <a href="/about">About page</a>
+      </nav>
+    </div>
+  </body>
+</html>
