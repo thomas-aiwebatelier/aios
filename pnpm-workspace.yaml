@@ -1,0 +1,4 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  # generated-sites/* are intentionally NOT workspace members — see spec §5

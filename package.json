@@ -1,0 +1,12 @@
+{
+  "name": "aiwebatelier",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "admin:dev": "pnpm --filter admin dev",
+    "agency:dev": "pnpm --filter agency-site dev",
+    "db:generate": "pnpm --filter @atelier/db generate",
+    "db:migrate": "pnpm --filter @atelier/db migrate",
+    "smoke": "pnpm tsx scripts/smoke-test.ts"
+  }
+}

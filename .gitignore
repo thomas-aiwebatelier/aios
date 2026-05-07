@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+.astro
+.env
+.env.local
+.env.*.local
+data/
+generated-sites/
+logs/
+*.log
+.DS_Store
