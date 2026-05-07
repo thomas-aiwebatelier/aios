@@ -1,0 +1,154 @@
+---
+---
+
+<section class="location-block" id="locatie">
+  <div class="container location-inner">
+    <div class="location-info">
+      <h2>U vindt ons in Antwerpen</h2>
+      <address>
+        <p class="location-address">
+          Lange Kievitstraat 48<br />
+          2018 Antwerpen
+        </p>
+        <p><a href="tel:+3232328754">03 232 87 54</a></p>
+        <p><a href="mailto:info@desemhoek.be">info@desemhoek.be</a></p>
+      </address>
+
+      <div class="location-hours">
+        <h3>Openingsuren</h3>
+        <table aria-label="Openingsuren">
+          <tbody>
+            <tr>
+              <td>Di – Za</td>
+              <td><strong>06:30 – 18:00</strong></td>
+            </tr>
+            <tr>
+              <td>Zondag</td>
+              <td><strong>07:30 – 13:00</strong></td>
+            </tr>
+            <tr class="closed">
+              <td>Maandag</td>
+              <td><em>Gesloten</em></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <a href="/contact" class="btn btn-ghost">Stuur ons een bericht</a>
+    </div>
+
+    <div class="location-map">
+      <!-- Google Maps embed — Antwerpen centrum (generieke coördinaten; niet geokodeerd op fictief adres) -->
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10017.61908386394!2d4.398777!3d51.220780!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3f640bc92c9a5%3A0xa0b3ea6e7e1e5a20!2sAntwerpen!5e0!3m2!1snl!2sbe!4v1699999999999"
+        width="100%"
+        height="400"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Bakkerij De Desemhoek op de kaart — Antwerpen"
+        aria-label="Interactieve kaart met de locatie van Bakkerij De Desemhoek in Antwerpen"
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+<style>
+  .location-block {
+    background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg));
+    padding-block: var(--space-16);
+  }
+
+  .location-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+
+  @media (min-width: 1024px) {
+    .location-inner {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .location-info h2 {
+    font-size: var(--text-3xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-6);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  address {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+
+  .location-address {
+    font-size: var(--text-lg);
+    color: var(--brand-fg);
+    line-height: 1.5;
+  }
+
+  address a {
+    font-size: var(--text-base);
+    color: var(--brand-primary);
+    font-weight: 600;
+  }
+
+  .location-hours {
+    margin-bottom: var(--space-8);
+  }
+
+  .location-hours h3 {
+    font-size: var(--text-lg);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-4);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--text-base);
+  }
+
+  td {
+    padding-block: var(--space-2);
+  }
+
+  td:first-child {
+    padding-right: var(--space-8);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    min-width: 8rem;
+  }
+
+  td:last-child {
+    color: var(--brand-primary);
+  }
+
+  tr + tr td {
+    border-top: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg));
+  }
+
+  .closed td {
+    opacity: 0.4;
+    font-style: italic;
+  }
+
+  .location-map {
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--brand-primary) 15%, var(--brand-bg));
+  }
+
+  .location-map iframe {
+    display: block;
+    width: 100%;
+  }
+</style>

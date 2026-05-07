@@ -1,0 +1,371 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import LocationBlock from '../components/LocationBlock.astro';
+
+const siteUrl = 'https://bakkerij-example-antw-ref1.pages.dev';
+---
+
+<Base
+  title="Bakkerij De Desemhoek — Ambachtelijke bakker in Antwerpen"
+  description="Bakkerij De Desemhoek bakt dagvers ambachtelijk brood, croissants en patisserie in Antwerpen. Zuurdesem, Belgisch graan, familiebakkerij sinds 1973. Di–Za 06:30–18:00."
+  canonical={siteUrl}
+>
+  <Header slot="header" />
+
+  <!-- HERO -->
+  <section class="hero" aria-label="Welkomstbannier Bakkerij De Desemhoek">
+    <figure class="hero-image img-placeholder" aria-hidden="true" style="aspect-ratio: 16/7; min-height: 60vh;">
+      <!-- Foto: interieur van een Antwerpse ambachtelijke bakkerij, warm licht, broden op houten planken — Unsplash: bakery antwerp interior -->
+      <span>Bakkerij De Desemhoek — interieur Antwerpen (foto te vervangen)</span>
+    </figure>
+    <div class="hero-overlay">
+      <div class="container hero-content hero-animate">
+        <span class="hero-preheading">Ambacht sinds 1973</span>
+        <h1 class="hero-title">Bakkerij<br />De Desemhoek</h1>
+        <p class="hero-tagline hero-animate-delay">Elke dag vers gebakken in Antwerpen</p>
+        <div class="hero-meta hero-animate-delay">
+          <span class="hero-meta-item">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            Lange Kievitstraat 48, 2018 Antwerpen
+          </span>
+          <span class="hero-meta-item">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Di–Za 06:30–18:00 · Zo 07:30–13:00
+          </span>
+        </div>
+        <a href="/assortiment" class="btn btn-primary">Bekijk ons assortiment</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VANDAAG VERS -->
+  <section class="vandaag-vers" aria-labelledby="vandaag-vers-title">
+    <div class="container">
+      <h2 id="vandaag-vers-title" class="section-title">Vandaag vers uit de oven</h2>
+      <p class="section-subtitle">Elke ochtend voor u gebakken — met ons eigen zuurdesem en Belgisch graan.</p>
+      <div class="vers-grid" role="list">
+        <article class="vers-item" role="listitem">
+          <figure class="vers-image img-placeholder" aria-label="Klassiek zuurdesembrood van De Desemhoek" style="aspect-ratio: 1/1;">
+            <!-- Foto: close-up zuurdesembrood met korstige schil — Unsplash: sourdough bread artisan -->
+            <span>Zuurdesembrood (foto te vervangen)</span>
+          </figure>
+          <h3>Klassiek Zuurdesem</h3>
+          <p>Ons handtekeningbrood. Gebakken met onze 50 jaar oude starter, gerijpt op Belgische tarwe van de Guldensporenstreek. Krokante korst, volle smaak.</p>
+        </article>
+        <article class="vers-item" role="listitem">
+          <figure class="vers-image img-placeholder" aria-label="Verse croissants van Bakkerij De Desemhoek" style="aspect-ratio: 1/1;">
+            <!-- Foto: croissant flatlay, goudbruin, op linnen — Unsplash: croissant flatlay artisan -->
+            <span>Croissants (foto te vervangen)</span>
+          </figure>
+          <h3>Beurre Croissant</h3>
+          <p>Gelaagd met Belgische boter, 48 uur rijpingstijd. Elke ochtend voor 07:00 vers uit de oven. Op zaterdag ook als amandelvulling.</p>
+        </article>
+        <article class="vers-item" role="listitem">
+          <figure class="vers-image img-placeholder" aria-label="Seizoenstaart van De Desemhoek" style="aspect-ratio: 1/1;">
+            <!-- Foto: ambachtelijke taart op houten plank — Unsplash: artisan cake belgium -->
+            <span>Seizoenstaart (foto te vervangen)</span>
+          </figure>
+          <h3>Seizoenstaart</h3>
+          <p>Elke week een andere creatie, afgestemd op wat lokale tuinen en markten bieden. Vraag naar de taart van de week aan de toonbank.</p>
+        </article>
+      </div>
+      <div class="vers-cta">
+        <a href="/assortiment" class="btn btn-ghost">Volledig assortiment bekijken</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALERIE TEASER -->
+  <section class="gallery-teaser" aria-labelledby="gallery-title">
+    <div class="container">
+      <h2 id="gallery-title" class="section-title">Een blik achter de oven</h2>
+      <p class="section-subtitle">Bakken is een ambacht dat je ziet en ruikt. Kom langs en beleef het zelf.</p>
+      <div class="gallery-grid" role="list" aria-label="Fotogalerij van de bakkerij">
+        <figure class="gallery-item img-placeholder" aria-label="Bakker kneedt deeg in De Desemhoek" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: baker hands kneading dough -->
+          <span>Deeg kneden (foto)</span>
+        </figure>
+        <figure class="gallery-item img-placeholder" aria-label="Houten broodplanken vol ambachtelijk brood" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: bread bakery shelves artisan -->
+          <span>Broodplanken (foto)</span>
+        </figure>
+        <figure class="gallery-item img-placeholder" aria-label="Verse croissants op bakplaat" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: fresh croissants baking tray -->
+          <span>Verse croissants (foto)</span>
+        </figure>
+        <figure class="gallery-item img-placeholder" aria-label="Toonbank van de bakkerij met assortiment" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: bakery counter display Belgium -->
+          <span>Toonbank (foto)</span>
+        </figure>
+        <figure class="gallery-item img-placeholder" aria-label="Zuurdesem starter in glazen pot" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: sourdough starter jar -->
+          <span>Zuurdesem starter (foto)</span>
+        </figure>
+        <figure class="gallery-item img-placeholder" aria-label="Taart versieren in de bakkerij" style="aspect-ratio: 3/2;" role="listitem">
+          <!-- Unsplash: cake decoration artisan patisserie -->
+          <span>Taart versieren (foto)</span>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERHAALANKER -->
+  <section class="story-anchor" aria-labelledby="story-title">
+    <div class="container story-inner">
+      <div class="story-image-wrap">
+        <figure class="img-placeholder" aria-label="Eigenaar Pieter Van Hoorebeke voor de bakkerij" style="aspect-ratio: 4/5;">
+          <!-- Foto: portret eigenaar of team voor bakkerij — eigen foto gewenst -->
+          <span>Portret familie Van Hoorebeke (foto te vervangen)</span>
+        </figure>
+      </div>
+      <div class="story-text">
+        <span class="story-year">Sinds 1973</span>
+        <h2 id="story-title">Twee generaties bakkersvak</h2>
+        <p>
+          Bakkerij De Desemhoek begon als een kleine buurtbakkerij op de Lange Kievitstraat. Luc Van Hoorebeke, vader van de huidige zaakvoerder Pieter, opende de deuren in 1973 met één oven en een onblusbaar geloof in slow baking.
+        </p>
+        <p>
+          Vandaag bakken Pieter en zijn team met diezelfde starter, dezelfde Belgische graanmolens en hetzelfde geduld. Geen shortcuts, geen industrieel gist. Enkel tijd, vakmanschap en eerlijke ingrediënten.
+        </p>
+        <a href="/over" class="btn btn-ghost">Ons verhaal lezen</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOCATIE -->
+  <LocationBlock />
+
+  <Footer slot="footer" />
+</Base>
+
+<style>
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    z-index: 0;
+  }
+
+  .hero-overlay {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--brand-fg) 85%, transparent) 0%,
+      color-mix(in srgb, var(--brand-fg) 40%, transparent) 60%,
+      transparent 100%
+    );
+    padding-block: var(--space-24);
+  }
+
+  .hero-content {
+    max-width: 36rem;
+  }
+
+  .hero-preheading {
+    display: inline-block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brand-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .hero-title {
+    font-size: var(--text-4xl);
+    color: var(--brand-bg);
+    line-height: 1.1;
+    margin-bottom: var(--space-4);
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 640px) {
+    .hero-title {
+      font-size: var(--text-5xl);
+    }
+  }
+
+  .hero-tagline {
+    font-size: var(--text-xl);
+    color: var(--brand-bg);
+    opacity: 0.9;
+    margin-bottom: var(--space-6);
+    font-style: italic;
+    max-width: 30ch;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+  }
+
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--brand-bg);
+    opacity: 0.85;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-meta-item svg {
+    flex-shrink: 0;
+    color: var(--brand-accent);
+  }
+
+  /* VANDAAG VERS */
+  .vandaag-vers {
+    padding-block: var(--space-24);
+  }
+
+  .vers-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    margin-bottom: var(--space-12);
+  }
+
+  @media (min-width: 640px) {
+    .vers-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .vers-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .vers-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .vers-image {
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .vers-item h3 {
+    font-size: var(--text-xl);
+    color: var(--brand-primary);
+    font-family: 'Lora', Georgia, serif;
+    margin: 0;
+  }
+
+  .vers-item p {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    line-height: 1.7;
+  }
+
+  .vers-cta {
+    text-align: center;
+    margin-top: var(--space-8);
+  }
+
+  /* GALERIE TEASER */
+  .gallery-teaser {
+    background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg));
+    padding-block: var(--space-24);
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 768px) {
+    .gallery-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .gallery-item {
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+    transition: opacity var(--dur-micro) var(--ease);
+  }
+
+  .gallery-item:hover {
+    opacity: 0.85;
+  }
+
+  /* VERHAALANKER */
+  .story-anchor {
+    padding-block: var(--space-24);
+  }
+
+  .story-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .story-inner {
+      grid-template-columns: 2fr 3fr;
+    }
+  }
+
+  .story-image-wrap figure {
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .story-year {
+    display: inline-block;
+    font-family: 'Lora', Georgia, serif;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--brand-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .story-text h2 {
+    font-size: var(--text-3xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-6);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .story-text p {
+    font-size: var(--text-base);
+    color: var(--brand-fg);
+    margin-bottom: var(--space-4);
+    line-height: 1.8;
+    max-width: 55ch;
+  }
+
+  .story-text .btn {
+    margin-top: var(--space-4);
+  }
+</style>

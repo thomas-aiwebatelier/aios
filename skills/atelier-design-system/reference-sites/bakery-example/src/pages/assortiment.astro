@@ -1,0 +1,268 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ProductCard from '../components/ProductCard.astro';
+
+const siteUrl = 'https://bakkerij-example-antw-ref1.pages.dev';
+
+const broden = [
+  {
+    name: 'Klassiek Zuurdesem',
+    description: 'Ons handtekeningbrood met een 50 jaar oude starter. Gerijpt op Belgische tarwe, 24 uur rijpingstijd. Krokante korst, licht zure, volle smaak. Beschikbaar als heel of half brood.',
+    price: '€ 7,50',
+    category: 'Broden',
+    imageAlt: 'Klassiek zuurdesembrood van Bakkerij De Desemhoek',
+  },
+  {
+    name: 'Volkoren Spelt',
+    description: 'Gebakken op volkorenmeel van Belgische spelt, licht van structuur en rijk van smaak. Ideaal voor dagelijks gebruik. Bevat geen conserveringsmiddelen.',
+    price: '€ 6,80',
+    category: 'Broden',
+    imageAlt: 'Volkoren speltbrood van De Desemhoek',
+  },
+  {
+    name: 'Traditioneel Witteboor',
+    description: 'Het klassieke Belgische witteboor: zacht van kruim, goudbruin van korst. Gebakken met tarwebloem en een vleugje boter. Ons populairste brood bij gezinnen.',
+    price: '€ 4,20',
+    category: 'Broden',
+    imageAlt: 'Traditioneel Belgisch witteboor',
+  },
+  {
+    name: 'Rogge & Zonnebloempitten',
+    description: 'Donker roggebrood verrijkt met zonnebloempitten en een snuifje karwijzaad. Stevig van structuur, ideaal bij kaas of charcuterie. Beperkt beschikbaar: dagelijks 12 stuks.',
+    price: '€ 8,20',
+    category: 'Broden',
+    imageAlt: 'Roggebrood met zonnebloempitten van De Desemhoek',
+  },
+  {
+    name: 'Pistolets (6 stuks)',
+    description: 'Krokante kleine broodjes met zachte binnenkant. Elke ochtend vers, perfect voor een Belgisch ontbijt of lunch. Ook verkrijgbaar als sesam- of maanvariant.',
+    price: '€ 3,60',
+    category: 'Broden',
+    imageAlt: 'Verse pistolets van Bakkerij De Desemhoek',
+  },
+];
+
+const patisserie = [
+  {
+    name: 'Beurre Croissant',
+    description: 'Gelaagd met Belgische boter (beurrage), 48 uur rijpingstijd, dagelijks gebakken voor 07:00. Luchtig en krokant, de beste manier om uw dag te beginnen.',
+    price: '€ 2,80',
+    category: 'Patisserie',
+    imageAlt: 'Ambachtelijke beurre croissant van De Desemhoek',
+  },
+  {
+    name: 'Amandelcroissant',
+    description: 'Onze klassieke croissant gevuld met amandelfrangipane en belegd met geschaafde amandelen. Beschikbaar op zaterdag en zondag zolang de voorraad strekt.',
+    price: '€ 3,40',
+    category: 'Patisserie',
+    imageAlt: 'Amandelcroissant van Bakkerij De Desemhoek',
+  },
+  {
+    name: 'Pain au Chocolat',
+    description: 'Twee staafjes pure Belgische chocolade in een krokant viennoiseriedeeg. Net als de croissant gebakken met Belgische boter en een lange rijpingstijd.',
+    price: '€ 3,10',
+    category: 'Patisserie',
+    imageAlt: 'Pain au chocolat van De Desemhoek',
+  },
+  {
+    name: 'Boterkoek',
+    description: 'Vlaams huisrecept, ingegeven door grootmoeder Van Hoorebeke. Rijkelijk gevuld met roomboter en kandijsuiker. Warm het beste — nog even in de oven?',
+    price: '€ 4,50',
+    category: 'Patisserie',
+    imageAlt: 'Traditionele Vlaamse boterkoek van De Desemhoek',
+  },
+  {
+    name: 'Seizoenstaart (punt)',
+    description: 'Elke week een andere taartcreatie, afgestemd op lokale seizoensproducten. Van aardbeien-mascarpone in juni tot peer-caramel in november. Vraag naar de taart van de week.',
+    price: '€ 4,80',
+    category: 'Patisserie',
+    imageAlt: 'Seizoenstaart van Bakkerij De Desemhoek',
+  },
+  {
+    name: 'Taart op Bestelling',
+    description: 'Feesttaarten voor verjaardagen, communies of andere vieringen. Minimaal 4 werkdagen op voorhand bestellen. Vraag naar ons seizoensaanbod of bespreek uw idee.',
+    price: 'Vraag prijs',
+    category: 'Patisserie',
+    imageAlt: 'Feesttaart op bestelling bij Bakkerij De Desemhoek',
+  },
+];
+
+const koffie = [
+  {
+    name: 'Koffie & Pistolet',
+    description: 'Een kop filterkoffie van Belgisch gebrande bonen, geserveerd met een vers pistolet en boter. Het ideale ontbijt voor wie op doorreis is langs de Kievitstraat.',
+    price: '€ 4,50',
+    category: 'Koffie & Ontbijt',
+    imageAlt: 'Koffie met vers pistolet bij De Desemhoek',
+  },
+  {
+    name: 'Ontbijttafel (2 pers.)',
+    description: 'Vers assortiment broodjes, croissant, pain au chocolat, huisgemaakte confituur en roomboter voor twee. Op zaterdag en zondag beschikbaar aan de ontbijttafel in de winkel. Reserveer van tevoren.',
+    price: '€ 22,00',
+    category: 'Koffie & Ontbijt',
+    imageAlt: 'Ontbijttafel bij Bakkerij De Desemhoek Antwerpen',
+  },
+];
+---
+
+<Base
+  title="Assortiment — Bakkerij De Desemhoek Antwerpen"
+  description="Ontdek het volledig assortiment van Bakkerij De Desemhoek: ambachtelijke zuurdesembroden, verse croissants, patisserie en een ontbijttafel op weekends. Dagvers in Antwerpen."
+  canonical={`${siteUrl}/assortiment`}
+>
+  <Header slot="header" />
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <h1>Ons assortiment</h1>
+      <p class="page-hero-lead">Elke dag vers gebakken met Belgisch graan en ons eigen zuurdesem. Geen industrieel gist, geen haast.</p>
+    </div>
+  </section>
+
+  <!-- BRODEN -->
+  <section class="product-section" aria-labelledby="broden-title">
+    <div class="container">
+      <h2 id="broden-title" class="section-title">Broden</h2>
+      <p class="section-subtitle">Dagvers, handgemaakt, zonder conserveringsmiddelen.</p>
+      <div class="product-grid">
+        {broden.map(product => (
+          <ProductCard {...product} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PATISSERIE -->
+  <section class="product-section product-section--alt" aria-labelledby="patisserie-title">
+    <div class="container">
+      <h2 id="patisserie-title" class="section-title">Patisserie & Viennoiserie</h2>
+      <p class="section-subtitle">Van klassieke croissants tot taarten op bestelling.</p>
+      <div class="product-grid">
+        {patisserie.map(product => (
+          <ProductCard {...product} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- KOFFIE & ONTBIJT -->
+  <section class="product-section" aria-labelledby="koffie-title">
+    <div class="container">
+      <h2 id="koffie-title" class="section-title">Koffie & Ontbijt</h2>
+      <p class="section-subtitle">Kom gerust even zitten. Op weekends is onze ontbijttafel gedekt.</p>
+      <div class="product-grid product-grid--small">
+        {koffie.map(product => (
+          <ProductCard {...product} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- BESTELLING CTA -->
+  <section class="order-cta">
+    <div class="container">
+      <div class="order-cta-inner">
+        <h2>Taart op bestelling?</h2>
+        <p>Voor feesten, verjaardagen of andere bijzondere gelegenheden bakt ons team een taart op maat. Minimaal 4 werkdagen op voorhand bestellen.</p>
+        <a href="/contact" class="btn btn-primary">Neem contact op</a>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</Base>
+
+<style>
+  .page-hero {
+    padding-block: var(--space-16);
+    background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg));
+    border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+  }
+
+  .page-hero h1 {
+    font-size: var(--text-4xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .page-hero-lead {
+    font-size: var(--text-lg);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    max-width: 55ch;
+  }
+
+  .product-section {
+    padding-block: var(--space-16);
+  }
+
+  .product-section--alt {
+    background-color: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .product-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .product-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .product-grid--small {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .order-cta {
+    background-color: var(--brand-primary);
+    padding-block: var(--space-16);
+  }
+
+  .order-cta-inner {
+    max-width: 40rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .order-cta h2 {
+    color: var(--brand-bg);
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .order-cta p {
+    color: var(--brand-bg);
+    opacity: 0.85;
+    margin-bottom: var(--space-8);
+    font-size: var(--text-base);
+    max-width: 45ch;
+    margin-inline: auto;
+  }
+
+  .order-cta .btn-primary {
+    background-color: var(--brand-bg);
+    color: var(--brand-primary);
+    border-color: var(--brand-bg);
+  }
+
+  .order-cta .btn-primary:hover {
+    background-color: color-mix(in srgb, var(--brand-bg) 85%, var(--brand-fg));
+    border-color: color-mix(in srgb, var(--brand-bg) 85%, var(--brand-fg));
+    color: var(--brand-primary);
+  }
+</style>

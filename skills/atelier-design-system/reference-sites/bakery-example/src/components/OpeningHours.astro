@@ -1,0 +1,61 @@
+---
+---
+
+<div class="opening-hours">
+  <h3>Openingsuren</h3>
+  <table aria-label="Openingsuren Bakkerij De Desemhoek">
+    <tbody>
+      <tr>
+        <td>Dinsdag – Zaterdag</td>
+        <td><strong>06:30 – 18:00</strong></td>
+      </tr>
+      <tr>
+        <td>Zondag</td>
+        <td><strong>07:30 – 13:00</strong></td>
+      </tr>
+      <tr class="closed">
+        <td>Maandag</td>
+        <td><em>Gesloten</em></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .opening-hours h3 {
+    font-size: var(--text-xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-4);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+  }
+
+  td {
+    padding: var(--space-2) 0;
+    vertical-align: top;
+  }
+
+  td:first-child {
+    padding-right: var(--space-8);
+    color: var(--brand-fg);
+    opacity: 0.8;
+  }
+
+  td:last-child {
+    color: var(--brand-primary);
+  }
+
+  tr + tr td {
+    border-top: 1px solid color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg));
+  }
+
+  .closed td {
+    opacity: 0.45;
+    font-style: italic;
+  }
+</style>

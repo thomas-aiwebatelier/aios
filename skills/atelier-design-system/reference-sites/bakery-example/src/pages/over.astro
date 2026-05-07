@@ -1,0 +1,417 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const siteUrl = 'https://bakkerij-example-antw-ref1.pages.dev';
+---
+
+<Base
+  title="Over ons — Bakkerij De Desemhoek | Ambacht sinds 1973"
+  description="Leer de familie Van Hoorebeke kennen — twee generaties bakkersvak in Antwerpen. Belgisch graan, eigen zuurdesem, en een passie voor eerlijk ambachtelijk brood."
+  canonical={`${siteUrl}/over`}
+>
+  <Header slot="header" />
+
+  <!-- PAGE HERO -->
+  <section class="over-hero">
+    <div class="container">
+      <span class="over-hero-preheading">Ambacht in hart en nieren</span>
+      <h1>Over Bakkerij De Desemhoek</h1>
+      <p class="over-hero-lead">Wij bakken al meer dan vijftig jaar dagvers brood in Antwerpen. Niet omdat het moet, maar omdat we het niet anders weten.</p>
+    </div>
+  </section>
+
+  <!-- VERHAAL -->
+  <section class="story-section" aria-labelledby="story-main-title">
+    <div class="container story-grid">
+      <div class="story-content">
+        <h2 id="story-main-title">Hoe het begon</h2>
+        <p>
+          In 1973 opende Luc Van Hoorebeke de deuren van zijn bakkerij op de Lange Kievitstraat. De buurt rook het al voor hij de luiken optrok: zuurdesem, karnemelk en geroosterd graan. Luc leerde bakken van zijn vader, die het op zijn beurt had geleerd van een meester-bakker uit Gent. Geen schoolboeken, geen YouTube-video's. Wel: vroeg opstaan, handen in het deeg en leren door te doen.
+        </p>
+        <p>
+          Zijn zuurdesem starter — die wij vandaag nog steeds "de oude" noemen — is inmiddels meer dan vijftig jaar oud. Hij leeft in een glazen pot achter de toonbank, gevoed met Belgische tarwebloem, elke dag stipt om 22:00. Dat ding is ons kostbaarste bezit.
+        </p>
+        <p>
+          In 2008 nam Pieter, Lucs zoon, de bakkerij over. Pieter studeerde patisserie in Brussel, deed stages in Parijs en Lyon, en keerde daarna terug naar de Kievitstraat. "Ik heb in sterrenrestaurants gebakken," zegt hij, "maar mijn mooiste moment blijft wanneer een kind hier zijn eerste pistolet opeet."
+        </p>
+      </div>
+      <aside class="story-aside">
+        <figure class="story-portrait img-placeholder" aria-label="Pieter Van Hoorebeke, zaakvoerder van Bakkerij De Desemhoek" style="aspect-ratio: 3/4;">
+          <!-- Foto: portret Pieter Van Hoorebeke — eigen foto gewenst -->
+          <span>Portret Pieter Van Hoorebeke (foto te vervangen)</span>
+        </figure>
+        <figcaption class="portrait-caption">
+          Pieter Van Hoorebeke, tweede generatie<br />
+          <em>Bakkerij De Desemhoek, Antwerpen</em>
+        </figcaption>
+      </aside>
+    </div>
+  </section>
+
+  <!-- BRONNEN & SOURCING -->
+  <section class="sourcing-section" aria-labelledby="sourcing-title">
+    <div class="container">
+      <h2 id="sourcing-title" class="section-title">Onze ingrediënten</h2>
+      <p class="section-subtitle">We weten waar elk zakje meel vandaan komt. Dat is geen marketing — dat is gewoon hoe wij bakken.</p>
+      <div class="sourcing-grid">
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">🌾</span>
+          <h3>Belgisch Graan</h3>
+          <p>Ons tarwemeel komt van de Molens van Orshagen in Mechelen, die samenwerken met Vlaamse graanboeren binnen een straal van 80 km. Wij specificeren welke graansoorten we willen — geen kant-en-klaar bakkersformule.</p>
+        </article>
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">🧪</span>
+          <h3>Eigen Zuurdesem</h3>
+          <p>Onze starter is een levende cultuur van wilde gisten en melkzuurbacteriën uit de Antwerpse lucht. Geen gist uit een zakje. De starter bepaalt het ritme van onze bakkerij — niet de klok.</p>
+        </article>
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">🧈</span>
+          <h3>Belgische Boter</h3>
+          <p>Voor onze viennoiserie gebruiken we uitsluitend Belgische roomboter met een hoog vetgehalte (84%). De smaak van een goede croissant zit in de boter — daar besparen we niet op.</p>
+        </article>
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">🍓</span>
+          <h3>Seizoensvruchten</h3>
+          <p>Voor onze seizoenstaarten werken we samen met de marktkramen van het Exotisch Markt Antwerpen en lokale fruittelers in de Antwerpse Kempen. Wat de natuur geeft, bakken wij.</p>
+        </article>
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">☕</span>
+          <h3>Koffie</h3>
+          <p>Onze filterkoffie wordt geleverd door een Antwerpse branderij die samenwerkt met eerlijke handelscoöperatieven in Ethiopië en Colombia. Elke kop heeft een herkomst die we u graag vertellen.</p>
+        </article>
+        <article class="sourcing-item">
+          <span class="sourcing-icon" aria-hidden="true">🚫</span>
+          <h3>Wat wij niet gebruiken</h3>
+          <p>Geen emulgatoren, geen verbeteraars, geen conserveringsmiddelen. Onze broden worden ouder dan die van de supermarkt — dat is een kwaliteitsteken, geen tekortkoming.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="team-section" aria-labelledby="team-title">
+    <div class="container">
+      <h2 id="team-title" class="section-title">Ons team</h2>
+      <p class="section-subtitle">Vroeg opstaan, veel deeg en genoeg koffie. Dat is het geheim van een goede bakker.</p>
+      <div class="team-grid">
+        <article class="team-member">
+          <figure class="team-photo img-placeholder" aria-label="Pieter Van Hoorebeke, hoofdbakker" style="aspect-ratio: 1/1;">
+            <!-- Foto: portret Pieter — eigen foto gewenst -->
+            <span>Pieter (foto)</span>
+          </figure>
+          <h3>Pieter Van Hoorebeke</h3>
+          <p class="team-role">Zaakvoerder & Hoofdbakker</p>
+          <p>Tweede generatie, opgeleid in Brussel en Parijs. Terug op de Kievitstraat met veel bagage en één doel: de bakkerij van zijn vader doorzetten.</p>
+        </article>
+        <article class="team-member">
+          <figure class="team-photo img-placeholder" aria-label="Nathalie Lemmens, patissier bij De Desemhoek" style="aspect-ratio: 1/1;">
+            <!-- Foto: portret Nathalie — eigen foto gewenst -->
+            <span>Nathalie (foto)</span>
+          </figure>
+          <h3>Nathalie Lemmens</h3>
+          <p class="team-role">Patissier</p>
+          <p>Afgestudeerd aan het PIVA in Antwerpen. Nathalie is verantwoordelijk voor de seizoenstaarten en de viennoiserie. Haar amandelcroissants zijn legendarisch op de Kievitstraat.</p>
+        </article>
+        <article class="team-member">
+          <figure class="team-photo img-placeholder" aria-label="Jonas De Smedt, broodbakker bij De Desemhoek" style="aspect-ratio: 1/1;">
+            <!-- Foto: portret Jonas — eigen foto gewenst -->
+            <span>Jonas (foto)</span>
+          </figure>
+          <h3>Jonas De Smedt</h3>
+          <p class="team-role">Broodbakker</p>
+          <p>Begon als stagiair, bleef voor de sfeer en het zuurdesem. Jonas is de eerste die elke ochtend arriveert — om 03:00, wanneer de rest van de stad nog slaapt.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- BAKKERIJ FOTOGALERIJ -->
+  <section class="bakery-gallery" aria-labelledby="gallery-over-title">
+    <div class="container">
+      <h2 id="gallery-over-title" class="section-title">Binnenkijken</h2>
+      <div class="gallery-2col">
+        <figure class="img-placeholder" aria-label="De oven van Bakkerij De Desemhoek" style="aspect-ratio: 4/3;">
+          <!-- Unsplash: wood fired oven bakery artisan -->
+          <span>De oven (foto)</span>
+        </figure>
+        <figure class="img-placeholder" aria-label="Deeg rijzen op houten plank" style="aspect-ratio: 4/3;">
+          <!-- Unsplash: bread dough proofing banneton -->
+          <span>Rijzend deeg (foto)</span>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="over-cta">
+    <div class="container">
+      <div class="over-cta-inner">
+        <h2>Kom eens langs</h2>
+        <p>Woorden vertellen het halve verhaal. De geur van vers gebakken brood vertelt de rest. Wij zijn er elke dag — op maandag na.</p>
+        <div class="over-cta-buttons">
+          <a href="/contact" class="btn btn-primary">Onze contactgegevens</a>
+          <a href="/assortiment" class="btn btn-ghost btn-ghost--light">Ons assortiment</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</Base>
+
+<style>
+  .over-hero {
+    padding-block: var(--space-16);
+    background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg));
+    border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+  }
+
+  .over-hero-preheading {
+    display: inline-block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brand-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .over-hero h1 {
+    font-size: var(--text-4xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .over-hero-lead {
+    font-size: var(--text-lg);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    max-width: 55ch;
+  }
+
+  /* VERHAAL */
+  .story-section {
+    padding-block: var(--space-24);
+  }
+
+  .story-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .story-grid {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+
+  .story-content h2 {
+    font-size: var(--text-3xl);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-6);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .story-content p {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--brand-fg);
+    margin-bottom: var(--space-4);
+    max-width: 65ch;
+  }
+
+  .story-portrait {
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .portrait-caption {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    opacity: 0.7;
+    margin-top: var(--space-3);
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  /* SOURCING */
+  .sourcing-section {
+    background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg));
+    padding-block: var(--space-24);
+  }
+
+  .sourcing-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 640px) {
+    .sourcing-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .sourcing-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .sourcing-item {
+    padding: var(--space-8);
+    background-color: var(--brand-bg);
+    border: 1px solid color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+    border-radius: 4px;
+  }
+
+  .sourcing-icon {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-4);
+    display: block;
+  }
+
+  .sourcing-item h3 {
+    font-size: var(--text-lg);
+    color: var(--brand-primary);
+    margin-bottom: var(--space-3);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .sourcing-item p {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    line-height: 1.7;
+  }
+
+  /* TEAM */
+  .team-section {
+    padding-block: var(--space-24);
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 640px) {
+    .team-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .team-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .team-member {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .team-photo {
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .team-member h3 {
+    font-size: var(--text-lg);
+    color: var(--brand-primary);
+    font-family: 'Lora', Georgia, serif;
+    margin: 0;
+  }
+
+  .team-role {
+    font-size: var(--text-sm);
+    color: var(--brand-accent);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .team-member p:last-child {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    opacity: 0.8;
+    line-height: 1.7;
+  }
+
+  /* GALERIE */
+  .bakery-gallery {
+    padding-block: var(--space-16);
+    background-color: color-mix(in srgb, var(--brand-primary) 3%, var(--brand-bg));
+  }
+
+  .gallery-2col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 768px) {
+    .gallery-2col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .gallery-2col figure {
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  /* CTA */
+  .over-cta {
+    background-color: var(--brand-primary);
+    padding-block: var(--space-16);
+  }
+
+  .over-cta-inner {
+    max-width: 40rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .over-cta h2 {
+    color: var(--brand-bg);
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .over-cta p {
+    color: var(--brand-bg);
+    opacity: 0.85;
+    margin-bottom: var(--space-8);
+    font-size: var(--text-base);
+    max-width: 45ch;
+    margin-inline: auto;
+  }
+
+  .over-cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    justify-content: center;
+  }
+
+  .btn-ghost--light {
+    color: var(--brand-bg);
+    border-color: var(--brand-bg);
+  }
+
+  .btn-ghost--light:hover {
+    background-color: var(--brand-bg);
+    color: var(--brand-primary);
+  }
+</style>

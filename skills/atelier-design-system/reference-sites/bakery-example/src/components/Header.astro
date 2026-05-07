@@ -1,0 +1,209 @@
+---
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/assortiment', label: 'Assortiment' },
+  { href: '/over', label: 'Over ons' },
+  { href: '/contact', label: 'Contact' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="site-header" role="banner">
+  <div class="container header-inner">
+    <a href="/" class="site-logo" aria-label="Bakkerij De Desemhoek — naar de homepagina">
+      <span class="logo-mark">DD</span>
+      <span class="logo-text">
+        <span class="logo-name">Bakkerij De Desemhoek</span>
+        <span class="logo-tagline">Ambacht sinds 1973</span>
+      </span>
+    </a>
+
+    <button class="nav-toggle" aria-label="Menu openen" aria-expanded="false" aria-controls="main-nav">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
+    <nav id="main-nav" aria-label="Hoofdnavigatie">
+      <ul role="list">
+        {navLinks.map(link => (
+          <li>
+            <a
+              href={link.href}
+              aria-current={currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href)) ? 'page' : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <a href="/contact" class="btn btn-primary header-cta">Kom langs</a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--brand-bg);
+    border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 15%, var(--brand-bg));
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--brand-fg) 8%, transparent);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding-block: var(--space-4);
+  }
+
+  .site-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .site-logo:hover {
+    text-decoration: none;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: var(--brand-primary);
+    color: var(--brand-bg);
+    font-family: 'Lora', Georgia, serif;
+    font-size: var(--text-base);
+    font-weight: 700;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .logo-name {
+    font-family: 'Lora', Georgia, serif;
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--brand-primary);
+    line-height: 1.2;
+  }
+
+  .logo-tagline {
+    font-size: var(--text-xs);
+    color: var(--brand-fg);
+    opacity: 0.6;
+    font-style: italic;
+    line-height: 1.2;
+  }
+
+  nav ul {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  nav a {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--brand-fg);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color var(--dur-micro) var(--ease);
+  }
+
+  nav a:hover,
+  nav a[aria-current="page"] {
+    color: var(--brand-primary);
+  }
+
+  nav a[aria-current="page"] {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  .header-cta {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+    margin-left: auto;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--brand-fg);
+    transition: transform var(--dur-micro) var(--ease);
+  }
+
+  @media (max-width: 767px) {
+    .nav-toggle {
+      display: flex;
+    }
+
+    .header-cta {
+      display: none;
+    }
+
+    nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: var(--brand-bg);
+      border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 15%, var(--brand-bg));
+      padding: var(--space-4);
+    }
+
+    nav.is-open {
+      display: block;
+    }
+
+    nav ul {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector('.nav-toggle') as HTMLButtonElement;
+  const nav = document.querySelector('#main-nav') as HTMLElement;
+
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? 'Menu sluiten' : 'Menu openen');
+    });
+  }
+</script>

@@ -1,0 +1,208 @@
+/* Auto-generated — DO NOT EDIT MANUALLY */
+/* Site: bakkerij-desem-antwerpen */
+@import url('/styles/tokens.css');
+
+:root {
+  /* Bakkerij De Desemhoek — brand palette */
+  /* Terracotta diepbruin primary, warm donkergoud accent, crème bg, donkere inkt fg */
+  --brand-primary: #7c3a2d;   /* terracotta-bruin — contrast on bg: 7.80:1 */
+  --brand-accent:  #8b5e10;   /* donker warm goud — contrast on bg: 5.26:1 */
+  --brand-bg:      #faf6f0;   /* warme crème */
+  --brand-fg:      #2a1f14;   /* donkere inkt — contrast on bg: 14.95:1 */
+}
+
+/* ============================================================
+   BASE RESET & GLOBAL STYLES
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 100%;
+  overflow-x: clip;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.7;
+  color: var(--brand-fg);
+  background-color: var(--brand-bg);
+  overflow-x: clip;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lora', Georgia, serif;
+  line-height: 1.25;
+  color: var(--brand-primary);
+}
+
+h1 { font-size: var(--text-5xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+/* Below 480px (iPhone SE etc.) display headings shrink one stop to avoid horizontal overflow */
+@media (max-width: 480px) {
+  h1 { font-size: var(--text-4xl); }
+  h2 { font-size: var(--text-2xl); }
+}
+
+/* Below 380px (small phones) shrink one further stop and enable mid-word wrap on long compound names like "De Desemhoek" */
+@media (max-width: 380px) {
+  h1, h2, h3 { overflow-wrap: anywhere; word-break: break-word; }
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-xl); }
+}
+
+p {
+  max-width: 65ch;
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: color var(--dur-micro) var(--ease);
+}
+
+a:hover {
+  color: color-mix(in srgb, var(--brand-primary) 80%, black);
+}
+
+a:focus-visible {
+  outline: 3px solid var(--brand-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   CONTAINER
+   ============================================================ */
+
+.container {
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-8);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease),
+              color var(--dur-micro) var(--ease),
+              border-color var(--dur-micro) var(--ease);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--brand-accent);
+  outline-offset: 3px;
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: var(--brand-bg);
+  border-color: var(--brand-primary);
+}
+
+.btn-primary:hover {
+  background-color: color-mix(in srgb, var(--brand-primary) 80%, black);
+  border-color: color-mix(in srgb, var(--brand-primary) 80%, black);
+  color: var(--brand-bg);
+  text-decoration: none;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-ghost:hover {
+  background-color: var(--brand-primary);
+  color: var(--brand-bg);
+  text-decoration: none;
+}
+
+/* ============================================================
+   SECTION SPACING
+   ============================================================ */
+
+section {
+  padding-block: var(--space-16);
+}
+
+.section-title {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+  color: var(--brand-primary);
+}
+
+.section-subtitle {
+  font-size: var(--text-lg);
+  color: var(--brand-fg);
+  opacity: 0.75;
+  margin-bottom: var(--space-12);
+  max-width: 55ch;
+}
+
+/* ============================================================
+   FIGURE PLACEHOLDERS (voor ontbrekende foto's)
+   ============================================================ */
+
+.img-placeholder {
+  width: 100%;
+  background-color: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-primary);
+  font-size: var(--text-sm);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  text-align: center;
+  padding: var(--space-4);
+}
+
+/* ============================================================
+   HERO ANIMATION
+   ============================================================ */
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(var(--space-4)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-animate {
+  animation: heroFadeIn var(--dur-hero) var(--ease) both;
+}
+
+.hero-animate-delay {
+  animation: heroFadeIn var(--dur-hero) var(--ease) var(--dur-standard) both;
+}

@@ -1,0 +1,217 @@
+---
+---
+
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="footer-logo" aria-label="Bakkerij De Desemhoek — naar de homepagina">
+        <span class="footer-logo-mark">DD</span>
+        <span class="footer-logo-name">Bakkerij De Desemhoek</span>
+      </a>
+      <p class="footer-tagline">Ambachtelijk bakker in Antwerpen<br />Sinds 1973 elke dag vers.</p>
+      <div class="footer-social" aria-label="Sociale media">
+        <a href="#" aria-label="Bakkerij De Desemhoek op Facebook" rel="noopener noreferrer">Facebook</a>
+        <a href="#" aria-label="Bakkerij De Desemhoek op Instagram" rel="noopener noreferrer">Instagram</a>
+      </div>
+    </div>
+
+    <div class="footer-contact">
+      <h3>Contact</h3>
+      <address>
+        <p>Lange Kievitstraat 48<br />2018 Antwerpen</p>
+        <p><a href="tel:+3232328754">03 232 87 54</a></p>
+        <p><a href="mailto:info@desemhoek.be">info@desemhoek.be</a></p>
+      </address>
+    </div>
+
+    <div class="footer-hours">
+      <h3>Openingsuren</h3>
+      <table class="hours-table" aria-label="Openingsuren Bakkerij De Desemhoek">
+        <tbody>
+          <tr><td>Dinsdag – Zaterdag</td><td>06:30 – 18:00</td></tr>
+          <tr><td>Zondag</td><td>07:30 – 13:00</td></tr>
+          <tr class="closed"><td>Maandag</td><td>Gesloten</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-nav">
+      <h3>Navigatie</h3>
+      <nav aria-label="Voettekst navigatie">
+        <ul role="list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/assortiment">Assortiment</a></li>
+          <li><a href="/over">Over ons</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <p>&copy; {new Date().getFullYear()} Bakkerij De Desemhoek · Lange Kievitstraat 48, 2018 Antwerpen</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background-color: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg));
+    border-top: 2px solid color-mix(in srgb, var(--brand-primary) 20%, var(--brand-bg));
+    padding-top: var(--space-16);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+
+  @media (min-width: 768px) {
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .footer-grid {
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+    }
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    margin-bottom: var(--space-4);
+  }
+
+  .footer-logo:hover {
+    text-decoration: none;
+  }
+
+  .footer-logo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: var(--brand-primary);
+    color: var(--brand-bg);
+    font-family: 'Lora', Georgia, serif;
+    font-size: var(--text-base);
+    font-weight: 700;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .footer-logo-name {
+    font-family: 'Lora', Georgia, serif;
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--brand-primary);
+  }
+
+  .footer-tagline {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    opacity: 0.75;
+    line-height: 1.6;
+    margin-bottom: var(--space-6);
+  }
+
+  .footer-social {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .footer-social a {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--brand-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .footer-contact h3,
+  .footer-hours h3,
+  .footer-nav h3 {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: var(--space-4);
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  address {
+    font-style: normal;
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  address a {
+    color: var(--brand-primary);
+  }
+
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+
+  .hours-table td {
+    padding-block: var(--space-1);
+  }
+
+  .hours-table td:first-child {
+    padding-right: var(--space-4);
+    color: var(--brand-fg);
+  }
+
+  .hours-table td:last-child {
+    font-weight: 600;
+    color: var(--brand-primary);
+  }
+
+  .hours-table .closed td {
+    opacity: 0.5;
+    font-style: italic;
+  }
+
+  .footer-nav nav ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .footer-nav nav a {
+    font-size: var(--text-sm);
+    color: var(--brand-fg);
+    text-decoration: none;
+    transition: color var(--dur-micro) var(--ease);
+  }
+
+  .footer-nav nav a:hover {
+    color: var(--brand-primary);
+    text-decoration: underline;
+  }
+
+  .footer-bottom {
+    margin-top: var(--space-12);
+    padding-block: var(--space-6);
+    border-top: 1px solid color-mix(in srgb, var(--brand-primary) 15%, var(--brand-bg));
+  }
+
+  .footer-bottom p {
+    font-size: var(--text-xs);
+    color: var(--brand-fg);
+    opacity: 0.6;
+    max-width: none;
+  }
+</style>

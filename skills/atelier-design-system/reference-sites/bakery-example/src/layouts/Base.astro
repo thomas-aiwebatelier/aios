@@ -1,0 +1,81 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  ogImage?: string;
+}
+
+const { title, description, canonical, ogImage } = Astro.props;
+
+const isAccepted = import.meta.env.SITE_STATUS === 'accepted';
+
+const siteUrl = 'https://bakkerij-example-antw-ref1.pages.dev';
+const defaultOg = `${siteUrl}/images/og-default.jpg`;
+const resolvedOg = ogImage ?? defaultOg;
+
+const businessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Bakery",
+  "name": "Bakkerij De Desemhoek",
+  "description": "Ambachtelijke bakkerij in Antwerpen, opgericht in 1973. Traditionele Belgische broden, croissants en patisserie.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Lange Kievitstraat 48",
+    "addressLocality": "Antwerpen",
+    "postalCode": "2018",
+    "addressCountry": "BE"
+  },
+  "telephone": "03 232 87 54",
+  "email": "info@desemhoek.be",
+  "url": siteUrl,
+  "openingHours": [
+    "Tu-Sa 06:30-18:00",
+    "Su 07:30-13:00"
+  ],
+  "foundingDate": "1973",
+  "priceRange": "€"
+};
+---
+<!doctype html>
+<html lang="nl-BE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    {!isAccepted && (
+      <meta name="robots" content="noindex,nofollow" />
+    )}
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={resolvedOg} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={resolvedOg} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(businessJsonLd)} is:inline />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" />
+
+    <link rel="stylesheet" href="/styles/tokens.css" />
+  </head>
+  <body>
+    <slot name="header" />
+    <main>
+      <slot />
+    </main>
+    <slot name="footer" />
+  </body>
+</html>
