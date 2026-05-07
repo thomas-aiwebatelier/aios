@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -16,6 +17,14 @@ export function createDb(path: string) {
 }
 
 export type Db = ReturnType<typeof createDb>;
+
+/**
+ * Run Drizzle migrations from the given folder path.
+ * Idempotent — safe to call on every boot.
+ */
+export function runMigrations(db: Db, migrationsFolder: string) {
+  migrate(db, { migrationsFolder });
+}
 
 /**
  * Create all tables in the given database instance by executing migration SQL files.
