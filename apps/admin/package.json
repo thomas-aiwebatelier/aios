@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node --import tsx/esm ./node_modules/next/dist/bin/next dev",
+    "build": "node --import tsx/esm ./node_modules/next/dist/bin/next build",
+    "start": "node --import tsx/esm ./node_modules/next/dist/bin/next start",
     "lint": "next lint",
     "test": "vitest run"
   },
   "dependencies": {
     "@atelier/db": "workspace:^",
+    "@atelier/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "nanoid": "^5.1.11",
     "next": "^15.3.2",
@@ -34,6 +35,7 @@
     "eslint-config-next": "^15.3.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   }

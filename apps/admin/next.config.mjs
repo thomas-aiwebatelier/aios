@@ -5,11 +5,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Externalize Node.js-only packages so webpack doesn't try to bundle them
+  // Externalize Node.js-only packages so webpack doesn't try to bundle them.
+  // @atelier/* workspace packages are also kept external — they are TypeScript source
+  // loaded at runtime via the tsx ESM loader (NODE_OPTIONS=--import tsx/esm).
   serverExternalPackages: [
     "better-sqlite3",
     "drizzle-orm",
     "@atelier/db",
+    "@atelier/shared",
     "winston",
     "winston-daily-rotate-file",
     "node-cron",
@@ -44,6 +47,7 @@ const nextConfig = {
     const nodeOnlyPackages = [
       /^better-sqlite3/,
       /^@atelier\/db/,
+      /^@atelier\/shared/,
       /^drizzle-orm/,
       /^winston/,
       /^node-cron/,

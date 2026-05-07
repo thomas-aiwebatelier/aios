@@ -1,0 +1,19 @@
+{
+  "name": "@atelier/shared",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.11",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}

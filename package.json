@@ -9,5 +9,8 @@
     "db:generate": "pnpm --filter @atelier/db generate",
     "db:migrate": "pnpm --filter @atelier/db migrate",
     "smoke": "pnpm tsx scripts/smoke-test.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
   }
 }

@@ -6,13 +6,20 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
 
   apps/admin:
     dependencies:
       '@atelier/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@atelier/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -77,6 +84,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(tsx@4.21.0)
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -102,6 +112,19 @@ importers:
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@25.6.0)
+
+  packages/shared:
+    dependencies:
+      nanoid:
+        specifier: ^5.1.11
+        version: 5.1.11
+      slugify:
+        specifier: ^1.6.6
+        version: 1.6.9
+    devDependencies:
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@25.6.0)
@@ -2832,6 +2855,10 @@ packages:
 
   simple-get@4.0.1:
     resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
+
+  slugify@1.6.9:
+    resolution: {integrity: sha512-vZ7rfeehZui7wQs438JXBckYLkIIdfHOXsaVEUMyS5fHo1483l1bMdo0EDSWYclY0yZKFOipDy4KHuKs6ssvdg==}
+    engines: {node: '>=8.0.0'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5746,6 +5773,8 @@ snapshots:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
+
+  slugify@1.6.9: {}
 
   source-map-js@1.2.1: {}
 
