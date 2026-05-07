@@ -4,6 +4,7 @@ import {
   integer,
   real,
 } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 // ── leads ────────────────────────────────────────────────────────────────────
 
@@ -40,8 +41,8 @@ export const leads = sqliteTable("leads", {
   industryKey:                      text("industry_key").notNull(),
   industryClassificationConfidence: real("industry_classification_confidence"),
   language:                         text("language").default("nl"),
-  createdAt:                        integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
-  updatedAt:                        integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt:                        integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
+  updatedAt:                        integer("updated_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
   approvedAt:                       integer("approved_at", { mode: "timestamp_ms" }),
   sentAt:                           integer("sent_at", { mode: "timestamp_ms" }),
   respondedAt:                      integer("responded_at", { mode: "timestamp_ms" }),
@@ -86,7 +87,7 @@ export type InventoryAsset = {
 export const siteInventories = sqliteTable("site_inventories", {
   id:        text("id").primaryKey(),
   leadId:    text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
-  crawledAt: integer("crawled_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  crawledAt: integer("crawled_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
   pages:     text("pages", { mode: "json" }).$type<InventoryPage[]>(),
   assets:    text("assets", { mode: "json" }).$type<InventoryAsset[]>(),
 });
@@ -121,7 +122,7 @@ export const generatedSites = sqliteTable("generated_sites", {
   lighthouseScores:         text("lighthouse_scores", { mode: "json" }).$type<Record<string, number>>(),
   designSystemVersion:      text("design_system_version"),
   industryGuideVersion:     text("industry_guide_version"),
-  createdAt:                integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt:                integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
   createdVia:               text("created_via", { enum: generatedSiteCreatedViaValues }).notNull(),
   promptUsed:               text("prompt_used"),
 });
@@ -163,7 +164,7 @@ export const pipelineJobs = sqliteTable("pipeline_jobs", {
   payload:         text("payload", { mode: "json" }).$type<Record<string, unknown>>(),
   attemptCount:    integer("attempt_count").notNull().default(0),
   lastHeartbeatAt: integer("last_heartbeat_at", { mode: "timestamp_ms" }),
-  createdAt:       integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt:       integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
 });
 
 // ── inbound_inquiries ─────────────────────────────────────────────────────────
@@ -180,6 +181,6 @@ export const inboundInquiries = sqliteTable("inbound_inquiries", {
   name:      text("name"),
   email:     text("email"),
   message:   text("message"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
   status:    text("status", { enum: inboundInquiryStatusValues }).notNull().default("new"),
 });

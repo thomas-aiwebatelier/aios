@@ -10,9 +10,13 @@ console.log(`[migrate] Opening database at: ${dbPath}`);
 
 const db = createDb(dbPath);
 
-migrate(db, {
-  migrationsFolder: path.join(__dirname, "../migrations"),
-});
-
-console.log("[migrate] Migrations applied successfully.");
+try {
+  migrate(db, { migrationsFolder: path.join(__dirname, "../migrations") });
+  console.log("[migrate] Migrations applied successfully.");
+} catch (err) {
+  console.error("[migrate] Migration failed:", err);
+  process.exit(1);
+} finally {
+  db.$client.close();
+}
 process.exit(0);
