@@ -1,6 +1,10 @@
+let _registered = false;
+
 export async function register() {
   // Only run in Node.js runtime (not Edge)
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  if (_registered) return;
+  _registered = true;
 
   const { createDb, runMigrations } = await import("@atelier/db");
   const { reconcileStuckJobs } = await import("./lib/queue");
@@ -21,6 +25,7 @@ export async function register() {
     logger.info("admin instrumentation: migrations applied");
   } catch (err) {
     logger.error("admin instrumentation: migration failed", { err });
+    throw err;
   }
 
   // Reconcile stuck jobs on boot
