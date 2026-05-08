@@ -82,12 +82,47 @@ async function getFreePort(): Promise<number> {
   });
 }
 
+/**
+ * Kill a process by pid, including its descendants.
+ *
+ * On Windows, `proc.kill('SIGTERM')` only signals the immediate child (the
+ * shell spawned via `shell: true`); the actual node/astro grandchildren
+ * remain alive and keep the preview port bound. Use `taskkill /F /T /PID`
+ * to terminate the entire tree.
+ *
+ * On POSIX, send SIGTERM and then SIGKILL after a grace period.
+ */
+function killProcessTree(pid: number | undefined): void {
+  if (pid === undefined) return;
+  try {
+    if (process.platform === "win32") {
+      execSync(`taskkill /F /T /PID ${pid}`, { stdio: "ignore" });
+    } else {
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch {
+        // already gone
+      }
+      // After 1s, force-kill if still alive.
+      setTimeout(() => {
+        try {
+          process.kill(pid, "SIGKILL");
+        } catch {
+          // already gone
+        }
+      }, 1000).unref();
+    }
+  } catch {
+    // taskkill returns non-zero if process already exited — that's fine.
+  }
+}
+
 /** Start `astro preview` as a child process. Returns url + stop function. */
 async function startPreview(
   projectPath: string,
   port: number,
   log: (msg: string) => void
-): Promise<{ url: string; stop: () => void }> {
+): Promise<{ url: string; stop: () => Promise<void> }> {
   const url = `http://localhost:${port}`;
 
   // Resolve the astro binary inside the project's node_modules
@@ -111,7 +146,7 @@ async function startPreview(
     let resolved = false;
     const timeout = setTimeout(() => {
       if (!resolved) {
-        proc.kill();
+        killProcessTree(proc.pid);
         reject(new Error(`astro preview did not start within 30s on port ${port}`));
       }
     }, 30_000);
@@ -125,12 +160,10 @@ async function startPreview(
         clearTimeout(timeout);
         resolve({
           url,
-          stop: () => {
-            try {
-              proc.kill("SIGTERM");
-            } catch {
-              // ignore
-            }
+          stop: async () => {
+            killProcessTree(proc.pid);
+            // Brief grace for the OS to release the port before the next run.
+            await new Promise((r) => setTimeout(r, 300));
           },
         });
       }
@@ -491,7 +524,7 @@ export async function runQualityChecks(
       await browser.close();
     }
   } finally {
-    stop();
+    await stop();
   }
 
   // ── 8. Token usage check (filesystem-based, no server needed) ───────────

@@ -198,7 +198,37 @@ Every generated site must render correctly (no overflow, no broken layout, no il
 - Images must not overflow their container at 320px.
 - Mobile-first CSS: base styles target 320px, then progressively enhance via `min-width` media queries.
 
-**quality-checks.ts** uses Playwright to screenshot the built site at all 5 widths and checks for horizontal overflow (`document.body.scrollWidth > window.innerWidth`).
+### 7.1 Small-screen typography fallback (mandatory)
+
+Belgian / Flemish business names commonly contain compound words ("Bakkerij De Desemhoek", "Kinesitherapeuten Vlaanderen", "Vastgoedmakelaar Antwerpen") that exceed the 320px content area at display sizes (`--text-4xl` / `--text-5xl`). The base `:root` heading scale is desktop-tuned. Every generated site MUST include the following two-tier fallback in its global stylesheet:
+
+```css
+/* Tier 1 — phones (≤ 480px): step every display heading down one stop. */
+@media (max-width: 480px) {
+  h1 { font-size: var(--text-4xl); }
+  h2 { font-size: var(--text-2xl); }
+}
+
+/* Tier 2 — small phones (≤ 380px): step down again AND allow word wrap on
+   compound names. Without `overflow-wrap: anywhere`, Dutch compounds like
+   "Desemhoek" are unbreakable and force horizontal overflow. */
+@media (max-width: 380px) {
+  h1, h2, h3 { overflow-wrap: anywhere; word-break: break-word; }
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-xl); }
+}
+
+/* Safety net — clip any residual overflow on html + body so a single
+   misbehaving element never produces a horizontal scrollbar. Use `clip`
+   (modern alternative to `hidden`) so position:sticky still works. */
+html, body {
+  overflow-x: clip;
+}
+```
+
+This is non-negotiable. Scoped Astro `<style>` blocks override the global rule via specificity, so any per-component `.hero-title`, `.section-title`, etc. that sets `font-size` MUST also include its own `@media (max-width: 480px)` and `@media (max-width: 380px)` overrides — OR delegate to the underlying `h1`/`h2` element without per-class size override. The clip safety net catches what slips through component scoping.
+
+**quality-checks.ts** uses Playwright to screenshot the built site at all 5 widths and checks for horizontal overflow (`document.body.scrollWidth > window.innerWidth`). Sites that fail are NOT deployable.
 
 ---
 
