@@ -51,16 +51,37 @@ export function registerCronJobs(): void {
     // TODO: spawn scripts/cron/poll-replies.ts (Task 4.x)
   }));
 
-  // 03:00 daily — delete CF projects for declined leads
-  tasks.push(cron.schedule("0 3 * * *", () => {
-    logger.info("cron: teardown-declined tick", { ts: new Date().toISOString() });
-    // TODO: spawn scripts/cron/teardown-declined.ts (Task 4.x)
+  // 03:00 daily — delete CF projects for declined leads (Task 4.10)
+  tasks.push(cron.schedule("0 3 * * *", async () => {
+    try {
+      // Dynamic import: keeps better-sqlite3 out of Next.js static analysis
+      const { tearDownDeclinedLeads } = await import(
+        "../../../scripts/cron/teardown-declined.js"
+      );
+      const n = await tearDownDeclinedLeads();
+      logger.info(`cron: teardown-declined tick — ${n} leads torn down`, {
+        ts: new Date().toISOString(),
+      });
+    } catch (err) {
+      logger.error("cron: teardown-declined failed", { err });
+    }
   }));
 
-  // 02:00 daily — SQLite backup
-  tasks.push(cron.schedule("0 2 * * *", () => {
-    logger.info("cron: backup-db tick", { ts: new Date().toISOString() });
-    // TODO: spawn scripts/cron/backup-db.ts (Task 4.x)
+  // 02:00 daily — SQLite backup (Task 4.10)
+  tasks.push(cron.schedule("0 2 * * *", async () => {
+    try {
+      // Dynamic import: keeps better-sqlite3 out of Next.js static analysis
+      const { backupDatabase } = await import(
+        "../../../scripts/cron/backup-db.js"
+      );
+      const { backupPath, retained } = await backupDatabase();
+      logger.info(
+        `cron: backup-db tick — ${backupPath} (retained ${retained})`,
+        { ts: new Date().toISOString() },
+      );
+    } catch (err) {
+      logger.error("cron: backup-db failed", { err });
+    }
   }));
 
   logger.info("cron: 5 schedules registered");

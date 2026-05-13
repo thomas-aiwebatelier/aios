@@ -1,64 +1,169 @@
 ---
-// Terms page — Task 4.9 stub
-// Task 4.9 will flesh out with full Belgian-law terms of service.
 import Base from "../layouts/Base.astro";
 import Footer from "../components/Footer.astro";
+
+const lastUpdated = new Date().toLocaleDateString("nl-BE", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 ---
 <Base
-  title="Gebruiksvoorwaarden — AI Web Atelier"
-  description="Gebruiksvoorwaarden van AI Web Atelier."
+  title="Algemene voorwaarden — AI Web Atelier"
+  description="Algemene voorwaarden van AI Web Atelier. Tarieven, eigendom, annulering en toepasselijk Belgisch recht."
 >
   <main class="legal-page">
     <div class="container">
       <div class="legal-page__content">
         <a href="/" class="legal-page__back">← Terug naar home</a>
-        <h1 class="legal-page__title">Gebruiksvoorwaarden</h1>
-        <p class="legal-page__updated">Laatste update: mei 2026</p>
+        <h1 class="legal-page__title">Algemene voorwaarden</h1>
+        <p class="legal-page__updated">Laatste update: {lastUpdated}</p>
 
         <div class="legal-page__body">
+
+          <h2>1. De dienst</h2>
           <p>
-            Door gebruik te maken van <strong>aiwebatelier.com</strong> gaat u akkoord met de onderstaande voorwaarden.
-            AI Web Atelier is een eenmanszaak van Thomas Cortebeeck, gevestigd in Antwerpen, België.
+            <strong>AI Web Atelier</strong> is een eenmanszaak van Thomas Cortebeeck (hierna: "wij", "ons" of
+            "AI Web Atelier"), gevestigd in België. Wij leveren <strong>maatwerk websites voor Belgische KMO's</strong>:
+            van onderzoek en ontwerp tot oplevering en domeinverbinding. Deze voorwaarden zijn van toepassing
+            op alle offertes, bestellingen en overeenkomsten die wij met u sluiten.
           </p>
 
-          <h2>1. Diensten</h2>
+          <h2>2. Werkwijze en doorlooptijd</h2>
+          <p>Onze standaardwerkwijze verloopt in vier stappen:</p>
+          <ol>
+            <li><strong>Onderzoek:</strong> wij analyseren uw huidige online aanwezigheid, sector en concurrenten.</li>
+            <li><strong>AI-generatie:</strong> op basis van dat onderzoek bouwen wij een gepersonaliseerde voorstel-website.</li>
+            <li><strong>Review:</strong> u bekijkt de live preview. U kunt één herzieningsronde aanvragen.</li>
+            <li><strong>Lancering:</strong> na uw goedkeuring koppelen wij het domein en gaan we live.</li>
+          </ol>
           <p>
-            AI Web Atelier biedt de ontwikkeling van websites aan op basis van een forfaitair tarief van €499 eenmalig,
-            inclusief één herzieningsronde. Meerwerk buiten deze herzieningsronde wordt afzonderlijk geoffreerd.
+            De typische doorlooptijd bedraagt <strong>7 werkdagen</strong> na uw akkoord op de offerte, afhankelijk van
+            de beschikbaarheid van uw materiaal en de snelheid van domeinpropagatie.
           </p>
 
-          <h2>2. Betaling</h2>
+          <h2>3. Tarief</h2>
           <p>
-            Betaling vindt plaats nadat u de live preview van uw website heeft goedgekeurd.
-            Er is geen betaling vereist vóór uw expliciete goedkeuring.
+            Het vaste tarief bedraagt <strong>€499 eenmalig</strong>, inclusief één herzieningsronde op basis van
+            door u aangeleverde wensen. Er zijn geen verborgen kosten. Meerwerk buiten de herzieningsronde wordt
+            vooraf apart geoffreerd en uitgevoerd alleen na uw expliciete schriftelijk akkoord.
+          </p>
+          <p>
+            Betaling vindt plaats per factuur met een betaaltermijn van <strong>30 kalenderdagen</strong>. Wij
+            sturen u de factuur nadat u de live preview heeft goedgekeurd. Er is <strong>geen vooruitbetaling</strong>
+            vereist vóór uw expliciete goedkeuring van het voorstel.
           </p>
 
-          <h2>3. Intellectueel eigendom</h2>
+          <h2>4. Wat is inbegrepen</h2>
+          <ul>
+            <li>
+              <strong>Domeinverbinding:</strong> koppeling van uw bestaand domein <em>of</em> eenmalige registratie
+              van één <code>.be</code>- of <code>.com</code>-domein voor het eerste jaar.
+            </li>
+            <li>
+              <strong>Hosting op Cloudflare Pages</strong> inclusief wereldwijd CDN — de eerste 12 maanden
+              kosteloos inbegrepen in het vaste tarief.
+            </li>
+            <li>
+              <strong>SSL-certificaat</strong> (HTTPS) — automatisch via Cloudflare, inbegrepen voor de volledige
+              looptijd van de hostingrelatie.
+            </li>
+            <li>
+              <strong>Eerste 12 maanden monitoring</strong> — wij houden de uptime en de technische werking
+              van de site in de gaten.
+            </li>
+            <li>
+              <strong>Volledige overdracht van de broncode:</strong> u ontvangt alle bestanden van de website
+              en mag deze onbeperkt elders hosten of aanpassen.
+            </li>
+          </ul>
+
+          <h2>5. Wat is niet inbegrepen</h2>
+          <ul>
+            <li>
+              <strong>Domeinverlenging na jaar 1:</strong> domeinregistratie na het eerste jaar is uw
+              verantwoordelijkheid en valt buiten het vaste tarief.
+            </li>
+            <li>
+              <strong>Contentverzameling (tekst en foto's):</strong> wij werken met uw bestaand materiaal of
+              materiaal dat u aanlevert. Professionele tekstschrijverij of fotografie valt buiten de scope.
+            </li>
+            <li>
+              <strong>E-mailhosting:</strong> een zakelijk e-mailadres (bijv. <code>info@uwbedrijf.be</code>)
+              maakt geen deel uit van het pakket. Wij adviseren Google Workspace of Microsoft 365 als losse dienst.
+            </li>
+            <li>
+              <strong>Uitbreidingen buiten het oorspronkelijke voorstel:</strong> nieuwe secties, functionaliteit
+              of pagina's die na goedkeuring worden aangevraagd, worden afzonderlijk geoffreerd.
+            </li>
+          </ul>
+
+          <h2>6. Eigendom en auteursrecht</h2>
           <p>
-            Na volledige betaling draagt AI Web Atelier alle rechten op de geleverde website over aan de opdrachtgever.
-            Gebruikte stockfoto's en lettertypen vallen onder hun respectievelijke licenties.
+            Na volledige betaling van het factuurbedrag gaat <strong>alle eigendom van de website</strong> —
+            inclusief de gegenereerde code, het ontwerp en alle aanpassingen — volledig over naar u.
+            AI Web Atelier behoudt na eigendomsoverdracht geen enkele aanspraak op de code, het ontwerp of
+            de inhoud.
+          </p>
+          <p>
+            De website mag door u worden gehost bij een andere aanbieder, worden aangepast door derden of worden
+            doorverkocht, zonder enige beperking of toestemming van AI Web Atelier.
+          </p>
+          <p>
+            Teksten, afbeeldingen en handelsmerken die u aanlevert of die van uw bestaande website worden gebruikt,
+            blijven eigendom van u of de respectievelijke rechthebbenden. AI Web Atelier maakt hierop geen
+            aanspraak.
           </p>
 
-          <h2>4. Aansprakelijkheid</h2>
+          <h2>7. Annulering</h2>
+          <ul>
+            <li>
+              <strong>Vóór akkoord op het voorstel:</strong> u kunt op elk moment en zonder kosten afzien van
+              een voorstel. Er is geen factuur, geen verplichting.
+            </li>
+            <li>
+              <strong>Na akkoord, binnen 7 werkdagen:</strong> bij annulering binnen 7 werkdagen na uw schriftelijk
+              akkoord bedragen de kosten <strong>50% van het factuurbedrag</strong> (€249,50), ter dekking van
+              reeds geleverd werk.
+            </li>
+            <li>
+              <strong>Na akkoord, na 7 werkdagen:</strong> bij annulering na 7 werkdagen is het volledige bedrag
+              (<strong>100%</strong>, €499) verschuldigd.
+            </li>
+          </ul>
+
+          <h2>8. Aansprakelijkheid</h2>
           <p>
-            AI Web Atelier is niet aansprakelijk voor indirecte schade of gevolgschade. De aansprakelijkheid is
-            in alle gevallen beperkt tot het bedrag dat voor de opdracht in kwestie werd betaald.
+            De aansprakelijkheid van AI Web Atelier is in alle gevallen beperkt tot
+            <strong>tweemaal het factuurbedrag van de betreffende opdracht</strong> (maximaal €998).
+            AI Web Atelier is niet aansprakelijk voor indirecte schade, gevolgschade, gederfde winst of
+            verlies van gegevens.
+          </p>
+          <p>
+            AI Web Atelier is niet aansprakelijk voor inhoud die u aanlevert (teksten, afbeeldingen,
+            handelsmerken). U garandeert dat u de rechten bezit of de toestemming heeft om dit materiaal
+            te gebruiken.
           </p>
 
-          <h2>5. Toepasselijk recht</h2>
+          <h2>9. Toepasselijk recht en bevoegde rechter</h2>
           <p>
-            Het Belgisch recht is van toepassing. Geschillen worden voorgelegd aan de rechtbanken van het arrondissement Antwerpen.
+            Op alle overeenkomsten met AI Web Atelier is uitsluitend het <strong>Belgisch recht</strong> van
+            toepassing. Bij geschillen die niet in der minne kunnen worden opgelost, zijn de rechtbanken van
+            het <strong>arrondissement Antwerpen</strong> exclusief bevoegd.
           </p>
 
-          <h2>6. Contact</h2>
+          <h2>10. Wijzigingen</h2>
+          <p>
+            Wij behouden het recht om deze voorwaarden te wijzigen. De meest recente versie is altijd
+            raadpleegbaar via <a href="/terms">aiwebatelier.com/terms</a>. Bij ingrijpende wijzigingen
+            informeren wij actieve klanten per e-mail. Wijzigingen hebben geen terugwerkende kracht op
+            lopende overeenkomsten.
+          </p>
           <p>
             Vragen over deze voorwaarden? Stuur een e-mail naar
             <a href="mailto:thomas@aiwebatelier.com">thomas@aiwebatelier.com</a>.
           </p>
 
-          <!-- TODO Task 4.9: Expand with full Belgian commercial law terms,
-               copyright posture language, AI-generated content disclosure,
-               and warranty limitations. -->
         </div>
       </div>
     </div>
@@ -73,7 +178,7 @@ import Footer from "../components/Footer.astro";
   }
 
   .legal-page__content {
-    max-width: var(--max-width-text);
+    max-width: 70ch;
     margin: 0 auto;
   }
 
@@ -118,15 +223,40 @@ import Footer from "../components/Footer.astro";
     margin-top: var(--space-4);
   }
 
-  .legal-page__body p {
+  .legal-page__body p,
+  .legal-page__body li {
     font-size: var(--text-base);
     color: var(--color-ink-soft);
     line-height: 1.8;
+  }
+
+  .legal-page__body ul,
+  .legal-page__body ol {
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .legal-page__body ul li {
+    list-style: disc;
+  }
+
+  .legal-page__body ol li {
+    list-style: decimal;
   }
 
   .legal-page__body a {
     color: var(--color-gold-dark);
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+
+  .legal-page__body code {
+    font-family: monospace;
+    font-size: 0.9em;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
   }
 </style>
