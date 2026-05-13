@@ -6,13 +6,15 @@ export async function register() {
   if (_registered) return;
   _registered = true;
 
-  const { createDb, runMigrations } = await import("@atelier/db");
+  const { runMigrations } = await import("@atelier/db");
   const { reconcileStuckJobs } = await import("./lib/queue");
   const { registerCronJobs } = await import("./lib/cron");
   const { logger } = await import("./lib/logger");
+  const { getDb } = await import("./lib/db");
 
-  const dbPath = process.env.DATABASE_PATH ?? "./data/atelier.db";
-  const db = createDb(dbPath);
+  // Use the same singleton API routes use — lib/db.ts handles relative-path
+  // resolution against the repo root + mkdir on the data dir.
+  const db = getDb();
 
   // Migrations folder: relative to cwd (apps/admin at Next.js runtime)
   // DATABASE_MIGRATIONS_PATH can override for non-standard setups
@@ -46,21 +48,13 @@ export async function register() {
   logger.info("admin instrumentation: queue + cron + reconciler ready");
 
   // ── Worker pull-loops ──────────────────────────────────────────────────────
-  // The /* webpackIgnore: true */ magic comments tell Next.js's webpack NOT to
-  // analyze or bundle these imports. The worker files transitively import
-  // playwright / node-vibrant / google-auth-library / Node `node:*` builtins
-  // which webpack can't bundle. At runtime the Node ESM loader (with tsx)
-  // resolves them normally. Without these comments, `next build` fails on
-  // `Cannot find module 'node:url'` from research-branding.
-  const { startWorker, stopAllWorkers } = await import(
-    /* webpackIgnore: true */ "./lib/worker-runner.js"
-  );
-  const { processDiscoveryJob } = await import(
-    /* webpackIgnore: true */ "./workers/discovery.js"
-  );
-  const { processResearchJob } = await import(
-    /* webpackIgnore: true */ "./workers/research.js"
-  );
+  // Bundled normally by webpack. The transitive node:* imports inside the worker
+  // files are externalized via next.config.mjs's nodeOnlyPackages regex (/^node:/),
+  // and the third-party deps (playwright, node-vibrant, googleapis, sharp) are
+  // listed in serverExternalPackages so webpack require()s them at runtime.
+  const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
+  const { processDiscoveryJob } = await import("./workers/discovery.js");
+  const { processResearchJob } = await import("./workers/research.js");
 
   startWorker({
     step: "discovery",

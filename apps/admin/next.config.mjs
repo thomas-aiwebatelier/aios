@@ -64,6 +64,10 @@ const nextConfig = {
       /^sharp/,
       /^googleapis/,
       /^google-auth-library/,
+      // node:* protocol scheme — webpack v5 chokes on these without an explicit
+      // externals rule. Externalizing as commonjs lets Node's loader handle them
+      // at runtime, which is correct for server bundles.
+      /^node:/,
     ];
 
     const existingExternals = config.externals ?? [];
