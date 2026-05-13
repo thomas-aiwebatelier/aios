@@ -37,7 +37,7 @@ export const leads = sqliteTable("leads", {
   googleMapsPlaceId:                text("google_maps_place_id").unique(),
   googleMapsUrl:                    text("google_maps_url"),
   existingWebsiteUrl:               text("existing_website_url"),
-  websiteStalnessScore:             integer("website_staleness_score"),
+  websiteStalenessScore:            integer("website_staleness_score"),
   industryKey:                      text("industry_key").notNull(),
   industryClassificationConfidence: real("industry_classification_confidence"),
   language:                         text("language").default("nl"),

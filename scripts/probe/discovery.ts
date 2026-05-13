@@ -47,7 +47,7 @@ for (const [i, lead] of rows.entries()) {
   console.log(`   industry: ${lead.industryKey} (conf: ${lead.industryClassificationConfidence})`);
   if (lead.existingWebsiteUrl) {
     console.log(`   website:  ${lead.existingWebsiteUrl}`);
-    console.log(`   staleness: ${lead.websiteStalnessScore ?? "n/a"}/100`);
+    console.log(`   staleness: ${lead.websiteStalenessScore ?? "n/a"}/100`);
   }
   console.log("");
 }

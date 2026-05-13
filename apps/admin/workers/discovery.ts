@@ -308,7 +308,7 @@ export async function runDiscoveryWorker(db: Db): Promise<number> {
           googleMapsPlaceId: place.id,
           googleMapsUrl: place.googleMapsUri ?? null,
           existingWebsiteUrl: place.websiteUri ?? null,
-          websiteStalnessScore: stalenessScore !== null ? Math.round(stalenessScore) : null,
+          websiteStalenessScore: stalenessScore !== null ? Math.round(stalenessScore) : null,
           industryKey: classification.industry_key,
           industryClassificationConfidence: classification.confidence,
           language: "nl",
