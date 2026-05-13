@@ -175,3 +175,76 @@ export async function deleteDraft(draftId: string): Promise<void> {
   await gmail.users.drafts.delete({ userId: "me", id: draftId });
   logger.info("[gmail] draft deleted", { draftId });
 }
+
+// ── Thread read (Migration Plan B — reply-poll) ───────────────────────────────
+
+export interface GmailThreadMessage {
+  id: string;
+  /** Gmail-internal sender header (e.g. "Owner <owner@example.com>"). */
+  from: string | null;
+  /** Plain-text body if available, otherwise empty string. */
+  body: string;
+  /** Epoch ms from Gmail's internalDate field, or null if unavailable. */
+  internalDate: number | null;
+}
+
+export interface GmailThread {
+  id: string;
+  messages: GmailThreadMessage[];
+}
+
+function extractHeader(headers: Array<{ name?: string | null; value?: string | null }> | undefined, name: string): string | null {
+  if (!headers) return null;
+  const lower = name.toLowerCase();
+  for (const h of headers) {
+    if (h.name?.toLowerCase() === lower) return h.value ?? null;
+  }
+  return null;
+}
+
+function decodeBase64Url(data: string): string {
+  const padded = data.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(padded, "base64").toString("utf8");
+}
+
+function extractPlainBody(payload: { mimeType?: string | null; body?: { data?: string | null } | null; parts?: unknown }): string {
+  // Top-level text/plain
+  if (payload.mimeType === "text/plain" && payload.body?.data) {
+    return decodeBase64Url(payload.body.data);
+  }
+  // Walk parts depth-first looking for the first text/plain leaf
+  const parts = (payload as { parts?: Array<{ mimeType?: string | null; body?: { data?: string | null } | null; parts?: unknown }> }).parts;
+  if (Array.isArray(parts)) {
+    for (const part of parts) {
+      const found = extractPlainBody(part);
+      if (found) return found;
+    }
+  }
+  return "";
+}
+
+/**
+ * Fetch a Gmail thread by id and return a flat list of its messages.
+ * Used by the reply-poll worker to count messages and pull reply bodies.
+ */
+export async function getThread(threadId: string): Promise<GmailThread> {
+  const gmail = getGmailClient();
+  const res = await gmail.users.threads.get({
+    userId: "me",
+    id: threadId,
+    format: "full",
+  });
+
+  const messages = (res.data.messages ?? []).map((m): GmailThreadMessage => ({
+    id: m.id ?? "",
+    from: extractHeader(m.payload?.headers ?? undefined, "From"),
+    body: m.payload ? extractPlainBody(m.payload) : "",
+    internalDate: m.internalDate ? Number(m.internalDate) : null,
+  }));
+
+  return { id: res.data.id ?? threadId, messages };
+}
+
+/** The From-header value used for outbound messages. Used by reply-poll to
+ *  filter out our own replies on a thread. Kept in sync with buildRaw above. */
+export const SENDER_ADDRESS = "thomas@aiwebatelier.com";

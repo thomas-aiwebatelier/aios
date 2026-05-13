@@ -157,15 +157,22 @@ export const outreachStatusValues = ["draft", "sent", "bounced", "replied", "arc
 export type OutreachStatus = (typeof outreachStatusValues)[number];
 
 export const outreachMessages = pgTable("outreach_messages", {
-  id:             text("id").primaryKey(),
-  leadId:         text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
-  direction:      text("direction").$type<OutreachDirection>().notNull(),
-  subject:        text("subject"),
-  body:           text("body"),
-  gmailThreadId:  text("gmail_thread_id"),
-  gmailMessageId: text("gmail_message_id"),
-  status:         text("status").$type<OutreachStatus>().notNull().default("draft"),
-  sentAt:         timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  id:                text("id").primaryKey(),
+  leadId:            text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  direction:         text("direction").$type<OutreachDirection>().notNull(),
+  subject:           text("subject"),
+  body:              text("body"),
+  gmailThreadId:     text("gmail_thread_id"),
+  gmailMessageId:    text("gmail_message_id"),
+  status:            text("status").$type<OutreachStatus>().notNull().default("draft"),
+  sentAt:            timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  // Reply-poll bookkeeping (Migration Plan B). Tracks per-thread Gmail
+  // message count so the poller can detect new replies without re-pulling
+  // every message. replyBody / replyReceivedAt capture the first inbound
+  // reply that flips lead.status to 'accepted' or surfaces in the inbox.
+  gmailMessageCount: integer("gmail_message_count").notNull().default(1),
+  replyBody:         text("reply_body"),
+  replyReceivedAt:   timestamp("reply_received_at", { withTimezone: true, mode: "date" }),
 });
 
 // ── pipeline_jobs ─────────────────────────────────────────────────────────────
