@@ -24,12 +24,16 @@ export function enqueue(db: Db, args: EnqueueArgs): string {
   return id;
 }
 
-export function claimNext(db: Db, _workerName: string) {
+export function claimNext(db: Db, _workerName: string, step?: string) {
   return db.transaction((tx) => {
+    const whereClause = step
+      ? and(eq(pipelineJobs.status, "queued"), eq(pipelineJobs.pipelineStep, step))
+      : eq(pipelineJobs.status, "queued");
+
     const job = tx
       .select()
       .from(pipelineJobs)
-      .where(eq(pipelineJobs.status, "queued"))
+      .where(whereClause)
       .orderBy(pipelineJobs.createdAt)
       .limit(1)
       .get();

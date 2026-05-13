@@ -44,4 +44,31 @@ export async function register() {
   }, 60 * 60 * 1000);
 
   logger.info("admin instrumentation: queue + cron + reconciler ready");
+
+  // ── Worker pull-loops ──────────────────────────────────────────────────────
+  const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
+  const { processDiscoveryJob } = await import("./workers/discovery.js");
+  const { processResearchJob } = await import("./workers/research.js");
+
+  startWorker({
+    step: "discovery",
+    workerName: "discovery-worker",
+    process: processDiscoveryJob,
+  });
+
+  startWorker({
+    step: "research",
+    workerName: "research-worker",
+    process: processResearchJob,
+  });
+
+  // Graceful shutdown — Next.js dev calls SIGINT on Ctrl+C
+  process.once("SIGINT", () => {
+    logger.info("instrumentation: SIGINT — stopping workers");
+    void stopAllWorkers().then(() => process.exit(0));
+  });
+  process.once("SIGTERM", () => {
+    logger.info("instrumentation: SIGTERM — stopping workers");
+    void stopAllWorkers().then(() => process.exit(0));
+  });
 }

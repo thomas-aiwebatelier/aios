@@ -16,6 +16,14 @@ import { leads } from "@atelier/db";
 import { generateSlug } from "@atelier/shared";
 import type { Db } from "@atelier/db";
 import { claimNext, heartbeat, completeJob, failJob } from "../lib/queue.js";
+
+// ── Job type (matches runner contract) ───────────────────────────────────────
+
+export interface DiscoveryJob {
+  id: string;
+  payload: unknown;
+  leadId: string | null;
+}
 import { classifyIndustry } from "../lib/industry-classify.js";
 import { scoreStaleness } from "../lib/staleness.js";
 import { logger } from "../lib/logger.js";
@@ -204,21 +212,14 @@ function rawToPlace(raw: RawPlace): PlaceResult {
 // ── Worker ────────────────────────────────────────────────────────────────────
 
 /**
- * Run one discovery job cycle:
- *   1. Claim next 'discovery' job
- *   2. Fetch places (query or URL)
- *   3. Deduplicate, classify, score, insert
- *   4. Complete or fail the job
+ * processDiscoveryJob — runner-shaped processor for the worker-runner pull-loop.
  *
- * Returns the number of leads inserted (0 if no job found).
+ * Takes an already-claimed job, runs the full discovery logic, calls
+ * completeJob on success. Throws on failure (runner converts to failJob).
+ *
+ * Returns the number of leads inserted (useful for legacy callers).
  */
-export async function runDiscoveryWorker(db: Db): Promise<number> {
-  const job = claimNext(db, "discovery-worker");
-  if (!job) {
-    logger.debug("[discovery] no queued discovery jobs");
-    return 0;
-  }
-
+export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<number> {
   // Heartbeat every 30s
   const hbInterval = setInterval(() => {
     try {
@@ -332,12 +333,30 @@ export async function runDiscoveryWorker(db: Db): Promise<number> {
       skipped,
     });
     return inserted;
+  } finally {
+    clearInterval(hbInterval);
+  }
+}
+
+/**
+ * runDiscoveryWorker — legacy one-shot helper (kept for backwards compat /
+ * manual CLI invocations). Wraps processDiscoveryJob with its own claim/fail.
+ *
+ * Returns the number of leads inserted (0 if no job found).
+ */
+export async function runDiscoveryWorker(db: Db): Promise<number> {
+  const job = claimNext(db, "discovery-worker", "discovery");
+  if (!job) {
+    logger.debug("[discovery] no queued discovery jobs");
+    return 0;
+  }
+
+  try {
+    return await processDiscoveryJob(db, job);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("[discovery] job failed", { jobId: job.id, error: message });
     failJob(db, job.id, message);
     throw err;
-  } finally {
-    clearInterval(hbInterval);
   }
 }

@@ -69,4 +69,52 @@ describe("queue", () => {
     const reconciled = reconcileStuckJobs(db);
     expect(reconciled).toBe(0);
   });
+
+  // ── claimNext step filter (Option A) ──────────────────────────────────────
+
+  it("claimNext with step filter claims only matching step", () => {
+    enqueue(db, { step: "research", payload: {} });
+    const discId = enqueue(db, { step: "discovery", payload: {} });
+
+    // Worker only interested in 'discovery'
+    const job = claimNext(db, "discovery-worker", "discovery");
+    expect(job?.id).toBe(discId);
+    expect(job?.status).toBe("running");
+
+    // Research job must still be queued
+    const researchRow = db
+      .select()
+      .from(pipelineJobs)
+      .where(eq(pipelineJobs.pipelineStep, "research"))
+      .get();
+    expect(researchRow?.status).toBe("queued");
+  });
+
+  it("claimNext with step filter returns null when no matching job exists", () => {
+    enqueue(db, { step: "research", payload: {} }); // wrong step
+
+    const job = claimNext(db, "discovery-worker", "discovery");
+    expect(job).toBeNull();
+  });
+
+  it("claimNext without step filter claims any queued job (backwards compat)", () => {
+    const id = enqueue(db, { step: "any-step", payload: {} });
+    const job = claimNext(db, "generic-worker");
+    expect(job?.id).toBe(id);
+  });
+
+  it("two workers with different steps do not steal each other's jobs", () => {
+    const discId = enqueue(db, { step: "discovery", payload: {} });
+    const resId = enqueue(db, { step: "research", payload: {} });
+
+    const discJob = claimNext(db, "discovery-worker", "discovery");
+    const resJob = claimNext(db, "research-worker", "research");
+
+    expect(discJob?.id).toBe(discId);
+    expect(resJob?.id).toBe(resId);
+
+    // Both now running
+    const rows = db.select().from(pipelineJobs).all();
+    expect(rows.every((r) => r.status === "running")).toBe(true);
+  });
 });
