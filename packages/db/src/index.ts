@@ -1,4 +1,10 @@
-export { createDb, createSchema, runMigrations, type Db } from "./client.js";
+export {
+  getProdDb,
+  closeProdDb,
+  getTestDb,
+  runMigrations,
+  type Db,
+} from "./client.js";
 
 export * as schema from "./schema.js";
 
@@ -20,6 +26,12 @@ export {
   pipelineJobStatusValues,
   inboundInquiryStatusValues,
   // Types
+  type LeadStatus,
+  type GeneratedSiteCreatedVia,
+  type OutreachDirection,
+  type OutreachStatus,
+  type PipelineJobStatus,
+  type InboundInquiryStatus,
   type InventoryPage,
   type InventoryAsset,
 } from "./schema.js";

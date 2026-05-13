@@ -1,10 +1,29 @@
+/**
+ * Postgres schema — ported from SQLite (Migration Plan A).
+ *
+ * Type mapping (vs prior sqlite-core schema):
+ *   sqlite text                                  → pg text
+ *   sqlite text(enum: ...)                       → pg text + zod-validated app-side enums
+ *                                                  (kept as text rather than pgEnum to avoid
+ *                                                  drift between code-defined unions and DB enum
+ *                                                  types when statuses evolve — application
+ *                                                  guards them already)
+ *   sqlite integer(mode: "timestamp_ms")         → pg timestamp({ withTimezone: true, mode: "date" })
+ *                                                  with defaultNow() where applicable
+ *   sqlite text(mode: "json")                    → pg jsonb with $type<T>()
+ *   sqlite real                                  → pg doublePrecision
+ *   sqlite integer (counter / score)             → pg integer
+ *   FK with onDelete: "cascade"                  → same syntax
+ */
+
 import {
-  sqliteTable,
+  pgTable,
   text,
   integer,
-  real,
-} from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+  doublePrecision,
+  jsonb,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // ── leads ────────────────────────────────────────────────────────────────────
 
@@ -23,11 +42,12 @@ export const leadStatusValues = [
   "declined",
   "archived",
 ] as const;
+export type LeadStatus = (typeof leadStatusValues)[number];
 
-export const leads = sqliteTable("leads", {
+export const leads = pgTable("leads", {
   id:                               text("id").primaryKey(),
   slug:                             text("slug").notNull().unique(),
-  status:                           text("status", { enum: leadStatusValues }).notNull(),
+  status:                           text("status").$type<LeadStatus>().notNull(),
   businessName:                     text("business_name").notNull(),
   phone:                            text("phone"),
   email:                            text("email"),
@@ -39,28 +59,28 @@ export const leads = sqliteTable("leads", {
   existingWebsiteUrl:               text("existing_website_url"),
   websiteStalenessScore:            integer("website_staleness_score"),
   industryKey:                      text("industry_key").notNull(),
-  industryClassificationConfidence: real("industry_classification_confidence"),
+  industryClassificationConfidence: doublePrecision("industry_classification_confidence"),
   language:                         text("language").default("nl"),
-  createdAt:                        integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
-  updatedAt:                        integer("updated_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
-  approvedAt:                       integer("approved_at", { mode: "timestamp_ms" }),
-  sentAt:                           integer("sent_at", { mode: "timestamp_ms" }),
-  respondedAt:                      integer("responded_at", { mode: "timestamp_ms" }),
+  createdAt:                        timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:                        timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+  approvedAt:                       timestamp("approved_at", { withTimezone: true, mode: "date" }),
+  sentAt:                           timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  respondedAt:                      timestamp("responded_at", { withTimezone: true, mode: "date" }),
 });
 
 // ── brand_profiles ───────────────────────────────────────────────────────────
 
-export const brandProfiles = sqliteTable("brand_profiles", {
-  id:                text("id").primaryKey(),
-  leadId:            text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
-  logoPath:          text("logo_path"),
-  extractedPalette:  text("extracted_palette", { mode: "json" }).$type<string[]>(),
-  primaryColor:      text("primary_color"),
-  secondaryColor:    text("secondary_color"),
-  accentColor:       text("accent_color"),
-  fontsDetected:     text("fonts_detected", { mode: "json" }).$type<{ heading: string; body: string }>(),
+export const brandProfiles = pgTable("brand_profiles", {
+  id:                 text("id").primaryKey(),
+  leadId:             text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  logoPath:           text("logo_path"),
+  extractedPalette:   jsonb("extracted_palette").$type<string[]>(),
+  primaryColor:       text("primary_color"),
+  secondaryColor:     text("secondary_color"),
+  accentColor:        text("accent_color"),
+  fontsDetected:      jsonb("fonts_detected").$type<{ heading: string; body: string }>(),
   toneOfVoiceSummary: text("tone_of_voice_summary"),
-  socialLinks:       text("social_links", { mode: "json" }).$type<Record<string, string>>(),
+  socialLinks:        jsonb("social_links").$type<Record<string, string>>(),
 });
 
 // ── site_inventories ─────────────────────────────────────────────────────────
@@ -84,23 +104,23 @@ export type InventoryAsset = {
   downloadedBytes?: number;
 };
 
-export const siteInventories = sqliteTable("site_inventories", {
+export const siteInventories = pgTable("site_inventories", {
   id:        text("id").primaryKey(),
   leadId:    text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
-  crawledAt: integer("crawled_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
-  pages:     text("pages", { mode: "json" }).$type<InventoryPage[]>(),
-  assets:    text("assets", { mode: "json" }).$type<InventoryAsset[]>(),
+  crawledAt: timestamp("crawled_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  pages:     jsonb("pages").$type<InventoryPage[]>(),
+  assets:    jsonb("assets").$type<InventoryAsset[]>(),
 });
 
 // ── competitors ───────────────────────────────────────────────────────────────
 
-export const competitors = sqliteTable("competitors", {
+export const competitors = pgTable("competitors", {
   id:               text("id").primaryKey(),
   leadId:           text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
   competitorUrl:    text("competitor_url").notNull(),
   competitorName:   text("competitor_name"),
   selectionReason:  text("selection_reason"),
-  structureSummary: text("structure_summary", { mode: "json" }).$type<Record<string, unknown>>(),
+  structureSummary: jsonb("structure_summary").$type<Record<string, unknown>>(),
   learnings:        text("learnings"),
 });
 
@@ -110,8 +130,9 @@ export const generatedSiteCreatedViaValues = [
   "initial_generation",
   "prompt_edit",
 ] as const;
+export type GeneratedSiteCreatedVia = (typeof generatedSiteCreatedViaValues)[number];
 
-export const generatedSites = sqliteTable("generated_sites", {
+export const generatedSites = pgTable("generated_sites", {
   id:                       text("id").primaryKey(),
   leadId:                   text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
   version:                  integer("version").notNull().default(1),
@@ -119,29 +140,32 @@ export const generatedSites = sqliteTable("generated_sites", {
   cloudflareProjectName:    text("cloudflare_project_name"),
   cloudflarePreviewUrl:     text("cloudflare_preview_url"),
   cloudflareDeploymentId:   text("cloudflare_deployment_id"),
-  lighthouseScores:         text("lighthouse_scores", { mode: "json" }).$type<Record<string, number>>(),
+  lighthouseScores:         jsonb("lighthouse_scores").$type<Record<string, number>>(),
   designSystemVersion:      text("design_system_version"),
   industryGuideVersion:     text("industry_guide_version"),
-  createdAt:                integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
-  createdVia:               text("created_via", { enum: generatedSiteCreatedViaValues }).notNull(),
+  createdAt:                timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  createdVia:               text("created_via").$type<GeneratedSiteCreatedVia>().notNull(),
   promptUsed:               text("prompt_used"),
 });
 
 // ── outreach_messages ─────────────────────────────────────────────────────────
 
 export const outreachDirectionValues = ["outbound", "inbound"] as const;
-export const outreachStatusValues = ["draft", "sent", "bounced", "replied", "archived"] as const;
+export type OutreachDirection = (typeof outreachDirectionValues)[number];
 
-export const outreachMessages = sqliteTable("outreach_messages", {
+export const outreachStatusValues = ["draft", "sent", "bounced", "replied", "archived"] as const;
+export type OutreachStatus = (typeof outreachStatusValues)[number];
+
+export const outreachMessages = pgTable("outreach_messages", {
   id:             text("id").primaryKey(),
   leadId:         text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
-  direction:      text("direction", { enum: outreachDirectionValues }).notNull(),
+  direction:      text("direction").$type<OutreachDirection>().notNull(),
   subject:        text("subject"),
   body:           text("body"),
   gmailThreadId:  text("gmail_thread_id"),
   gmailMessageId: text("gmail_message_id"),
-  status:         text("status", { enum: outreachStatusValues }).notNull().default("draft"),
-  sentAt:         integer("sent_at", { mode: "timestamp_ms" }),
+  status:         text("status").$type<OutreachStatus>().notNull().default("draft"),
+  sentAt:         timestamp("sent_at", { withTimezone: true, mode: "date" }),
 });
 
 // ── pipeline_jobs ─────────────────────────────────────────────────────────────
@@ -153,19 +177,20 @@ export const pipelineJobStatusValues = [
   "failed",
   "cancelled",
 ] as const;
+export type PipelineJobStatus = (typeof pipelineJobStatusValues)[number];
 
-export const pipelineJobs = sqliteTable("pipeline_jobs", {
+export const pipelineJobs = pgTable("pipeline_jobs", {
   id:              text("id").primaryKey(),
   leadId:          text("lead_id").references(() => leads.id, { onDelete: "cascade" }),
   pipelineStep:    text("pipeline_step").notNull(),
-  status:          text("status", { enum: pipelineJobStatusValues }).notNull().default("queued"),
-  startedAt:       integer("started_at", { mode: "timestamp_ms" }),
-  finishedAt:      integer("finished_at", { mode: "timestamp_ms" }),
+  status:          text("status").$type<PipelineJobStatus>().notNull().default("queued"),
+  startedAt:       timestamp("started_at", { withTimezone: true, mode: "date" }),
+  finishedAt:      timestamp("finished_at", { withTimezone: true, mode: "date" }),
   errorMessage:    text("error_message"),
-  payload:         text("payload", { mode: "json" }).$type<Record<string, unknown>>(),
+  payload:         jsonb("payload").$type<Record<string, unknown>>(),
   attemptCount:    integer("attempt_count").notNull().default(0),
-  lastHeartbeatAt: integer("last_heartbeat_at", { mode: "timestamp_ms" }),
-  createdAt:       integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
+  lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true, mode: "date" }),
+  createdAt:       timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 });
 
 // ── inbound_inquiries ─────────────────────────────────────────────────────────
@@ -176,12 +201,13 @@ export const inboundInquiryStatusValues = [
   "replied",
   "archived",
 ] as const;
+export type InboundInquiryStatus = (typeof inboundInquiryStatusValues)[number];
 
-export const inboundInquiries = sqliteTable("inbound_inquiries", {
+export const inboundInquiries = pgTable("inbound_inquiries", {
   id:        text("id").primaryKey(),
   name:      text("name"),
   email:     text("email"),
   message:   text("message"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch('now') * 1000)`).$defaultFn(() => new Date()),
-  status:    text("status", { enum: inboundInquiryStatusValues }).notNull().default("new"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  status:    text("status").$type<InboundInquiryStatus>().notNull().default("new"),
 });
