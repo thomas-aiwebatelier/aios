@@ -34,8 +34,10 @@ export interface WorkerSpec {
   step: string;
   /** Display name for log lines ("discovery-worker") */
   workerName: string;
-  /** Per-job processor. Throws on failure; runner converts thrown error to failJob. */
-  process: (db: Db, job: WorkerJob) => Promise<void>;
+  /** Per-job processor. Throws on failure; runner converts thrown error to failJob.
+   *  Return value is ignored by the runner — processors may return `void` (research)
+   *  or any other value (discovery returns insert count) without changing semantics. */
+  process: (db: Db, job: WorkerJob) => Promise<unknown>;
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────

@@ -16,6 +16,13 @@ const nextConfig = {
     "winston",
     "winston-daily-rotate-file",
     "node-cron",
+    // Workers-only deps (research pipeline Tasks 3.2-3.5):
+    "playwright",
+    "playwright-core",
+    "node-vibrant",
+    "sharp",
+    "googleapis",
+    "google-auth-library",
   ],
 
   webpack: (config, { isServer }) => {
@@ -51,6 +58,12 @@ const nextConfig = {
       /^drizzle-orm/,
       /^winston/,
       /^node-cron/,
+      // Workers-only deps (Tasks 3.2-3.5 research pipeline):
+      /^playwright/,
+      /^node-vibrant/,
+      /^sharp/,
+      /^googleapis/,
+      /^google-auth-library/,
     ];
 
     const existingExternals = config.externals ?? [];

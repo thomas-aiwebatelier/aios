@@ -46,9 +46,21 @@ export async function register() {
   logger.info("admin instrumentation: queue + cron + reconciler ready");
 
   // ── Worker pull-loops ──────────────────────────────────────────────────────
-  const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
-  const { processDiscoveryJob } = await import("./workers/discovery.js");
-  const { processResearchJob } = await import("./workers/research.js");
+  // The /* webpackIgnore: true */ magic comments tell Next.js's webpack NOT to
+  // analyze or bundle these imports. The worker files transitively import
+  // playwright / node-vibrant / google-auth-library / Node `node:*` builtins
+  // which webpack can't bundle. At runtime the Node ESM loader (with tsx)
+  // resolves them normally. Without these comments, `next build` fails on
+  // `Cannot find module 'node:url'` from research-branding.
+  const { startWorker, stopAllWorkers } = await import(
+    /* webpackIgnore: true */ "./lib/worker-runner.js"
+  );
+  const { processDiscoveryJob } = await import(
+    /* webpackIgnore: true */ "./workers/discovery.js"
+  );
+  const { processResearchJob } = await import(
+    /* webpackIgnore: true */ "./workers/research.js"
+  );
 
   startWorker({
     step: "discovery",
