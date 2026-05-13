@@ -1,13 +1,22 @@
 /**
- * backup-db.ts — Task 4.10
+ * backup-db.ts — Task 4.10  [DEFERRED during Migration Plan A]
  *
- * Creates a timestamped SQLite snapshot using better-sqlite3's native
- * backup() API (safe against a live WAL database — no lock contention).
- * Retains the last 14 daily snapshots and prunes older ones.
+ * The body of this script still imports better-sqlite3 and uses its native
+ * .backup() API. Since the admin DB migrated from SQLite to Postgres
+ * (Migration Plan A), this script is no longer functional. The cron
+ * schedule that invoked it is commented out in apps/admin/lib/cron.ts.
  *
- * Output: data/backups/atelier-<ISO-stamp>.db
+ * TODO (post-migration): replace with one of:
+ *   1. Cloud SQL's native automated backups + PITR (simplest — drop this
+ *      script entirely).
+ *   2. A pg_dump wrapper that writes data/backups/atelier-<stamp>.dump and
+ *      prunes to RETAIN_COUNT, preserving the existing operational contract.
  *
- * CLI: pnpm tsx --env-file=.env scripts/cron/backup-db.ts
+ * Until then the file is kept in place so its git history is preserved and
+ * so the existing test (backup-db.test.ts) can be revisited when option 2
+ * is implemented.
+ *
+ * Original implementation (SQLite, retained as reference) follows.
  */
 
 import {
