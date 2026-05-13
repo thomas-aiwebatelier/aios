@@ -44,10 +44,27 @@ export async function enqueueDelayed(
   args: Omit<EnqueueArgs, "notBefore">,
   delayMs: number,
 ): Promise<string> {
+  // Computed in JS rather than SQL (`now() + interval '...'`) because the
+  // createdAt timestamp value is passed as a parameter via postgres-js — the
+  // server sees an absolute timestamptz, equivalent to `now() + interval`.
   return enqueue(db, { ...args, notBefore: new Date(Date.now() + delayMs) });
 }
 
 export async function claimNext(db: Db, _workerName: string, step?: string) {
+  // Hardened against concurrent multi-worker contention.
+  //
+  // The SELECT phase issues `FOR UPDATE SKIP LOCKED`, taking a row-level lock
+  // on the candidate job and instructing Postgres to skip any rows already
+  // locked by another in-flight `claimNext` transaction. This guarantees:
+  //   - Two workers polling the same step never claim the same job
+  //   - A slow worker doesn't block faster ones (skip rather than wait)
+  //   - The flip to status='running' inside the same transaction is atomic
+  //     with the lock acquisition.
+  //
+  // SQLite's previous single-writer model masked this requirement; on
+  // Postgres with N>1 workers per step (or any worker + cron tick), an
+  // unlocked SELECT could hand the same row to two transactions. SKIP LOCKED
+  // is the canonical Postgres queue pattern.
   return db.transaction(async (tx) => {
     const now = new Date();
 
@@ -67,7 +84,8 @@ export async function claimNext(db: Db, _workerName: string, step?: string) {
       .from(pipelineJobs)
       .where(whereClause)
       .orderBy(pipelineJobs.createdAt)
-      .limit(1);
+      .limit(1)
+      .for("update", { skipLocked: true });
 
     const job = candidates[0];
     if (!job) return null;
