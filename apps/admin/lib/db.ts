@@ -1,30 +1,33 @@
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import { createDb } from "@atelier/db";
+import { getProdDb, closeProdDb, type Db } from "@atelier/db";
 
-let _db: ReturnType<typeof createDb> | undefined;
+let _db: Db | undefined;
 
 /**
- * Resolve DATABASE_PATH to an absolute path on disk.
+ * Resolve a Drizzle handle backed by the configured Postgres instance.
  *
- * The admin process runs from `apps/admin/` (Next.js dev/build cwd), but the
- * canonical data location is `data/` at the repo root (spec §5). So when the
- * env var is a relative path, anchor it to the repo root (two levels up from
- * apps/admin), not to process.cwd(). Absolute paths pass through unchanged.
- *
- * Ensures the parent directory exists before returning — better-sqlite3 won't
- * create missing directories on its own and throws "Cannot open database
- * because the directory does not exist" otherwise.
+ * Connection string lives in DATABASE_URL — postgres-js handles pooling.
+ * One handle per process, singleton shared between server components, API
+ * routes, workers, and cron jobs (same pattern as the prior SQLite handle).
  */
-function resolveDatabasePath(): string {
-  const raw = process.env.DATABASE_PATH ?? "./data/atelier.db";
-  const repoRoot = path.resolve(process.cwd(), "..", "..");
-  const resolved = path.isAbsolute(raw) ? raw : path.resolve(repoRoot, raw);
-  mkdirSync(path.dirname(resolved), { recursive: true });
-  return resolved;
+export function getDb(): Db {
+  if (!_db) {
+    const url = process.env.DATABASE_URL;
+    if (!url) {
+      throw new Error(
+        "DATABASE_URL is not set. Local dev: " +
+          "postgresql://postgres:postgres@localhost:5432/atelier_dev",
+      );
+    }
+    _db = getProdDb(url);
+  }
+  return _db;
 }
 
-export function getDb() {
-  if (!_db) _db = createDb(resolveDatabasePath());
-  return _db;
+/**
+ * Graceful-shutdown hook. Drains the postgres-js pool with a short timeout.
+ * Called from instrumentation.ts alongside stopAllWorkers + closeBrowserPool.
+ */
+export async function closeDb(): Promise<void> {
+  await closeProdDb();
+  _db = undefined;
 }

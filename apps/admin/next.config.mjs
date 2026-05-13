@@ -9,7 +9,7 @@ const nextConfig = {
   // @atelier/* workspace packages are also kept external — they are TypeScript source
   // loaded at runtime via the tsx ESM loader (NODE_OPTIONS=--import tsx/esm).
   serverExternalPackages: [
-    "better-sqlite3",
+    "postgres",
     "drizzle-orm",
     "@atelier/db",
     "@atelier/shared",
@@ -52,13 +52,12 @@ const nextConfig = {
         net: false,
         tls: false,
         child_process: false,
-        "better-sqlite3": false,
       };
     }
 
     // Externalize node-only packages from both client and server static analysis
     const nodeOnlyPackages = [
-      /^better-sqlite3/,
+      /^postgres$/,
       /^@atelier\/db/,
       /^@atelier\/shared/,
       /^drizzle-orm/,

@@ -7,6 +7,7 @@
     "build": "node --import tsx/esm ./node_modules/next/dist/bin/next build",
     "start": "node --import tsx/esm ./node_modules/next/dist/bin/next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
@@ -25,7 +26,6 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.0.0",
     "@types/node-cron": "^3.0.11",
     "@types/react": "^19.0.0",

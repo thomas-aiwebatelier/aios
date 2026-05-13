@@ -10,20 +10,21 @@ export async function register() {
   const { reconcileStuckJobs } = await import("./lib/queue");
   const { registerCronJobs } = await import("./lib/cron");
   const { logger } = await import("./lib/logger");
-  const { getDb } = await import("./lib/db");
+  const { getDb, closeDb } = await import("./lib/db");
 
-  // Use the same singleton API routes use — lib/db.ts handles relative-path
-  // resolution against the repo root + mkdir on the data dir.
+  // Singleton handle, same one API routes/workers use.
   const db = getDb();
 
-  // Migrations folder: relative to cwd (apps/admin at Next.js runtime)
-  // DATABASE_MIGRATIONS_PATH can override for non-standard setups
-  const migrationsFolder =
-    process.env.DATABASE_MIGRATIONS_PATH ?? "../../packages/db/migrations";
-
-  // Run migrations on boot (idempotent)
+  // Run migrations on boot (idempotent). Drizzle picks the bundled
+  // packages/db/drizzle/ folder by default; override only for non-standard layouts.
   try {
-    runMigrations(db, migrationsFolder);
+    if (process.env.DATABASE_MIGRATIONS_PATH) {
+      // @ts-expect-error db typed as union; postgres-js migrator handles it
+      await runMigrations(db, process.env.DATABASE_MIGRATIONS_PATH);
+    } else {
+      // @ts-expect-error db typed as union; postgres-js migrator handles it
+      await runMigrations(db);
+    }
     logger.info("admin instrumentation: migrations applied");
   } catch (err) {
     logger.error("admin instrumentation: migration failed", { err });
@@ -31,7 +32,7 @@ export async function register() {
   }
 
   // Reconcile stuck jobs on boot
-  const reconciled = reconcileStuckJobs(db);
+  const reconciled = await reconcileStuckJobs(db);
   if (reconciled > 0) {
     logger.warn(`admin instrumentation: reconciled ${reconciled} stuck jobs on boot`);
   }
@@ -41,17 +42,14 @@ export async function register() {
 
   // Hourly reconcile safety net
   setInterval(() => {
-    const n = reconcileStuckJobs(db);
-    if (n > 0) logger.warn(`hourly reconciler: ${n} stuck jobs`);
+    void reconcileStuckJobs(db).then((n) => {
+      if (n > 0) logger.warn(`hourly reconciler: ${n} stuck jobs`);
+    });
   }, 60 * 60 * 1000);
 
   logger.info("admin instrumentation: queue + cron + reconciler ready");
 
   // ── Worker pull-loops ──────────────────────────────────────────────────────
-  // Bundled normally by webpack. The transitive node:* imports inside the worker
-  // files are externalized via next.config.mjs's nodeOnlyPackages regex (/^node:/),
-  // and the third-party deps (playwright, node-vibrant, googleapis, sharp) are
-  // listed in serverExternalPackages so webpack require()s them at runtime.
   const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
   const { processDiscoveryJob } = await import("./workers/discovery.js");
   const { processResearchJob } = await import("./workers/research.js");
@@ -90,12 +88,20 @@ export async function register() {
   });
 
   // Graceful shutdown — Next.js dev calls SIGINT on Ctrl+C
-  process.once("SIGINT", () => {
-    logger.info("instrumentation: SIGINT — stopping workers");
-    void stopAllWorkers().then(() => process.exit(0));
-  });
-  process.once("SIGTERM", () => {
-    logger.info("instrumentation: SIGTERM — stopping workers");
-    void stopAllWorkers().then(() => process.exit(0));
-  });
+  const shutdown = async (signal: string) => {
+    logger.info(`instrumentation: ${signal} — stopping workers`);
+    try {
+      await stopAllWorkers();
+    } catch (err) {
+      logger.error("instrumentation: stopAllWorkers failed", { err: String(err) });
+    }
+    try {
+      await closeDb();
+    } catch (err) {
+      logger.error("instrumentation: closeDb failed", { err: String(err) });
+    }
+    process.exit(0);
+  };
+  process.once("SIGINT", () => void shutdown("SIGINT"));
+  process.once("SIGTERM", () => void shutdown("SIGTERM"));
 }

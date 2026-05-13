@@ -23,9 +23,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": __dirname,
-      // Resolve drizzle-orm from the db package's node_modules
+      // Resolve drizzle-orm from the db package's node_modules to avoid version drift
       "drizzle-orm": path.resolve(dbPkg, "node_modules/drizzle-orm"),
-      "better-sqlite3": path.resolve(dbPkg, "node_modules/better-sqlite3"),
     },
   },
 });
