@@ -10,15 +10,14 @@ export async function POST(
   const { id } = await params;
   const db = getDb();
 
-  const lead = db.select().from(leads).where(eq(leads.id, id)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, id))))[0];
   if (!lead) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
 
-  db.update(leads)
+  await db.update(leads)
     .set({ status: "archived", updatedAt: new Date() })
-    .where(eq(leads.id, id))
-    .run();
+    .where(eq(leads.id, id));
 
   return NextResponse.json({ ok: true });
 }

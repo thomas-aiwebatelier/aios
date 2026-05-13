@@ -42,7 +42,7 @@ export async function POST(
   const db = getDb();
 
   // 1. Archive the outreach_messages draft
-  db.update(outreachMessages)
+  await db.update(outreachMessages)
     .set({ status: "archived" })
     .where(
       and(
@@ -50,14 +50,13 @@ export async function POST(
         eq(outreachMessages.leadId, leadId),
         eq(outreachMessages.status, "draft"),
       ),
-    )
-    .run();
+    );
 
   // 2. Cancel the queued pipeline job — match by payload LIKE pattern
   // The payload is stored as JSON, e.g. {"outreachMessageId":"abc123"}
   // We escape the ID and use LIKE to avoid JSON operator compatibility issues.
   const payloadPattern = `%"outreachMessageId":"${outreachMessageId}"%`;
-  db.update(pipelineJobs)
+  await db.update(pipelineJobs)
     .set({ status: "cancelled" })
     .where(
       and(
@@ -65,14 +64,12 @@ export async function POST(
         eq(pipelineJobs.status, "queued"),
         like(pipelineJobs.payload as any, payloadPattern),
       ),
-    )
-    .run();
+    );
 
   // 3. Flip lead status back to deployed
-  db.update(leads)
+  await db.update(leads)
     .set({ status: "deployed", updatedAt: new Date() })
-    .where(eq(leads.id, leadId))
-    .run();
+    .where(eq(leads.id, leadId));
 
   return NextResponse.json({ ok: true });
 }

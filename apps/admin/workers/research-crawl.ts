@@ -189,15 +189,14 @@ export async function crawlSite(
   }
 
   // ── Persist site_inventories row ───────────────────────────────────────────
-  db.insert(siteInventories)
+  await db.insert(siteInventories)
     .values({
       id: nanoid(),
       leadId,
       crawledAt: new Date(),
       pages: structuredPages,
       assets,
-    })
-    .run();
+    });
 
   logger.info("[research-crawl] done", {
     leadId,

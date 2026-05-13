@@ -74,7 +74,7 @@ export default async function SitesPage() {
   ] as const;
 
   // Fetch all leads in the pipeline
-  const pipelineLeads = db
+  const pipelineLeads = await db
     .select({
       id: leads.id,
       businessName: leads.businessName,
@@ -84,8 +84,7 @@ export default async function SitesPage() {
       status: leads.status,
     })
     .from(leads)
-    .where(inArray(leads.status, [...PIPELINE_STATUSES]))
-    .all();
+    .where(inArray(leads.status, [...PIPELINE_STATUSES]));
 
   // Fetch the latest generated_sites row for each lead
   // SQLite doesn't support lateral joins — fetch all rows and dedupe in JS
@@ -93,7 +92,7 @@ export default async function SitesPage() {
 
   const allSiteRows =
     leadIds.length > 0
-      ? db
+      ? await db
           .select({
             id: generatedSites.id,
             leadId: generatedSites.leadId,
@@ -106,7 +105,6 @@ export default async function SitesPage() {
           .from(generatedSites)
           .where(inArray(generatedSites.leadId, leadIds))
           .orderBy(desc(generatedSites.version))
-          .all()
       : [];
 
   // Latest site per lead (first row per leadId since sorted desc by version)

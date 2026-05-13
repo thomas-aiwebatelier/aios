@@ -5,7 +5,7 @@ import { RetryButton } from "./RetryButton";
 
 export async function FailedJobsPanel() {
   const db = getDb();
-  const rows = db
+  const rows = await db
     .select({
       id: pipelineJobs.id,
       pipelineStep: pipelineJobs.pipelineStep,
@@ -19,8 +19,7 @@ export async function FailedJobsPanel() {
     .leftJoin(leads, eq(pipelineJobs.leadId, leads.id))
     .where(eq(pipelineJobs.status, "failed"))
     .orderBy(desc(pipelineJobs.finishedAt))
-    .limit(20)
-    .all();
+    .limit(20);
 
   if (rows.length === 0) {
     return (

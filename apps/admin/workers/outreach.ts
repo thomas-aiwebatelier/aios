@@ -37,9 +37,9 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
   logger.info("[outreach] starting job", { jobId: job.id, outreachMessageId });
 
   // Heartbeat every 30s
-  const hbInterval = setInterval(() => {
+  const hbInterval = setInterval(async () => {
     try {
-      heartbeat(db, job.id);
+      await heartbeat(db, job.id);
     } catch (err) {
       logger.warn("[outreach] heartbeat failed", { error: String(err) });
     }
@@ -47,11 +47,11 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
 
   try {
     // 2. Load outreach_messages row
-    const row = db
+    const row = ((await db
       .select()
       .from(outreachMessages)
       .where(eq(outreachMessages.id, outreachMessageId))
-      .get();
+      ))[0];
 
     if (!row) {
       throw new Error(`[outreach] outreach_messages row not found: ${outreachMessageId}`);
@@ -63,16 +63,16 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
         outreachMessageId,
         status: row.status,
       });
-      completeJob(db, job.id);
+      await completeJob(db, job.id);
       return;
     }
 
     // 4. Load lead for email address
-    const lead = db
+    const lead = ((await db
       .select()
       .from(leads)
       .where(eq(leads.id, row.leadId))
-      .get();
+      ))[0];
 
     if (!lead) {
       throw new Error(`[outreach] lead not found for outreachMessage ${outreachMessageId}`);
@@ -98,15 +98,14 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
 
     // 6. Update outreach_messages row
     const now = new Date();
-    db.update(outreachMessages)
+    await db.update(outreachMessages)
       .set({
         status: "sent",
         gmailMessageId: result.messageId,
         gmailThreadId: result.threadId,
         sentAt: now,
       })
-      .where(eq(outreachMessages.id, outreachMessageId))
-      .run();
+      .where(eq(outreachMessages.id, outreachMessageId));
 
     logger.info("[outreach] outreach_messages updated", {
       outreachMessageId,
@@ -115,19 +114,18 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
     });
 
     // 7. Update lead status → email_sent
-    db.update(leads)
+    await db.update(leads)
       .set({
         status: "email_sent",
         sentAt: now,
         updatedAt: now,
       })
-      .where(eq(leads.id, lead.id))
-      .run();
+      .where(eq(leads.id, lead.id));
 
     logger.info("[outreach] lead status → email_sent", { leadId: lead.id });
 
     // 8. Complete job
-    completeJob(db, job.id);
+    await completeJob(db, job.id);
     logger.info("[outreach] job complete", { jobId: job.id });
   } finally {
     clearInterval(hbInterval);

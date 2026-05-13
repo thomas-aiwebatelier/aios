@@ -10,12 +10,12 @@ export async function GET(
   const { id } = await params;
   const db = getDb();
 
-  const lead = db.select().from(leads).where(eq(leads.id, id)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, id))))[0];
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
-  const brand = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, id)).get() ?? null;
-  const inventory = db.select().from(siteInventories).where(eq(siteInventories.leadId, id)).get() ?? null;
-  const competitor = db.select().from(competitors).where(eq(competitors.leadId, id)).get() ?? null;
+  const brand = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, id))))[0] ?? null;
+  const inventory = ((await db.select().from(siteInventories).where(eq(siteInventories.leadId, id))))[0] ?? null;
+  const competitor = ((await db.select().from(competitors).where(eq(competitors.leadId, id))))[0] ?? null;
 
   return NextResponse.json({ brand, inventory, competitor });
 }

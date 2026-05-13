@@ -38,7 +38,7 @@ export async function POST(
   const db = getDb();
 
   // 1. Validate lead
-  const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
   if (!lead) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
@@ -53,7 +53,7 @@ export async function POST(
 
   // 2. Insert outreach_messages draft row
   const outreachMessageId = nanoid();
-  db.insert(outreachMessages)
+  await db.insert(outreachMessages)
     .values({
       id: outreachMessageId,
       leadId,
@@ -61,17 +61,15 @@ export async function POST(
       subject: body.subject as string,
       body: body.body as string,
       status: "draft",
-    })
-    .run();
+    });
 
   // 3. Flip lead status to email_drafted
-  db.update(leads)
+  await db.update(leads)
     .set({ status: "email_drafted", updatedAt: new Date() })
-    .where(eq(leads.id, leadId))
-    .run();
+    .where(eq(leads.id, leadId));
 
   // 4. Enqueue delayed outreach job (worker won't claim until createdAt <= now())
-  const jobId = enqueueDelayed(
+  const jobId = await enqueueDelayed(
     db,
     {
       leadId,

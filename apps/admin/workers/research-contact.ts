@@ -91,10 +91,10 @@ export async function enrichContact(
   }
 
   // Load current lead data (phone may already be set from Maps)
-  const lead = db.select({ phone: leads.phone, email: leads.email })
+  const lead = ((await db.select({ phone: leads.phone, email: leads.email })
     .from(leads)
     .where(eq(leads.id, leadId))
-    .get();
+    ))[0];
 
   if (!lead) {
     logger.warn("[research-contact] lead not found", { leadId });
@@ -200,7 +200,7 @@ export async function enrichContact(
   if (resolvedPhone && !mapsPhone) updates.phone = resolvedPhone;
 
   if (Object.keys(updates).length > 0) {
-    db.update(leads).set(updates).where(eq(leads.id, leadId)).run();
+    await db.update(leads).set(updates).where(eq(leads.id, leadId));
     logger.info("[research-contact] lead updated", { leadId, ...updates });
   } else {
     logger.info("[research-contact] no new contact data found", { leadId });

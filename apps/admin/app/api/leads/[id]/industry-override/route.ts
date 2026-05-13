@@ -27,19 +27,18 @@ export async function POST(
 
   const db = getDb();
 
-  const lead = db.select().from(leads).where(eq(leads.id, id)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, id))))[0];
   if (!lead) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
 
-  db.update(leads)
+  await db.update(leads)
     .set({
       industryKey,
       industryClassificationConfidence: 1.0,
       updatedAt: new Date(),
     })
-    .where(eq(leads.id, id))
-    .run();
+    .where(eq(leads.id, id));
 
   return NextResponse.json({ ok: true, industryKey });
 }

@@ -6,23 +6,23 @@ import type { InventoryPage } from "@atelier/db";
 export async function ResearchPreview({ leadId }: { leadId: string }) {
   const db = getDb();
 
-  const brand = db
+  const brand = ((await db
     .select()
     .from(brandProfiles)
     .where(eq(brandProfiles.leadId, leadId))
-    .get();
+    ))[0];
 
-  const inventory = db
+  const inventory = ((await db
     .select()
     .from(siteInventories)
     .where(eq(siteInventories.leadId, leadId))
-    .get();
+    ))[0];
 
-  const competitor = db
+  const competitor = ((await db
     .select()
     .from(competitors)
     .where(eq(competitors.leadId, leadId))
-    .get();
+    ))[0];
 
   const pages = (inventory?.pages as InventoryPage[] | null) ?? [];
   const firstPage = pages[0];

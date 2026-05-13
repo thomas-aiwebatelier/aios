@@ -11,12 +11,12 @@ export async function POST(
   const { id } = await params;
   const db = getDb();
 
-  const lead = db.select().from(leads).where(eq(leads.id, id)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, id))))[0];
   if (!lead) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
 
-  const jobId = enqueue(db, {
+  const jobId = await enqueue(db, {
     leadId: id,
     step: "research",
     payload: { leadId: id },

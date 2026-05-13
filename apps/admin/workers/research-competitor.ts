@@ -125,7 +125,7 @@ export async function researchCompetitor(
 
   if (candidates.length === 0) {
     logger.warn("[research-competitor] no valid candidates — inserting fallback row", { leadId });
-    db.insert(competitors)
+    await db.insert(competitors)
       .values({
         id: nanoid(),
         leadId,
@@ -134,8 +134,7 @@ export async function researchCompetitor(
         selectionReason: "no competitor identified",
         structureSummary: null,
         learnings: "no competitor identified",
-      })
-      .run();
+      });
     return;
   }
 
@@ -220,7 +219,7 @@ export async function researchCompetitor(
     pages: crawledPages.map((p) => ({ url: p.url, title: p.title })),
   };
 
-  db.insert(competitors)
+  await db.insert(competitors)
     .values({
       id: nanoid(),
       leadId,
@@ -229,8 +228,7 @@ export async function researchCompetitor(
       selectionReason,
       structureSummary,
       learnings,
-    })
-    .run();
+    });
 
   logger.info("[research-competitor] done", {
     leadId,

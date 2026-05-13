@@ -13,7 +13,15 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { createDb, createSchema, leads, brandProfiles, siteInventories, competitors, generatedSites, pipelineJobs } from "@atelier/db";
+import {
+  getTestDb,
+  leads,
+  brandProfiles,
+  siteInventories,
+  competitors,
+  generatedSites,
+  pipelineJobs
+} from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -109,18 +117,18 @@ function createMockSpawn(output: string) {
   return child;
 }
 
-function makeDb() {
-  const db = createDb(":memory:");
-  createSchema(db);
+async function makeDb() {
+  const db = await getTestDb();
+
   return db;
 }
 
-function insertTestLead(
-  db: ReturnType<typeof makeDb>,
+async function insertTestLead(
+  db: Awaited<ReturnType<typeof makeDb>>,
   overrides: Partial<typeof leads.$inferInsert> = {},
 ) {
   const id = nanoid();
-  db.insert(leads)
+  await db.insert(leads)
     .values({
       id,
       slug: `test-bakkerij-antwerpen`,
@@ -132,40 +140,40 @@ function insertTestLead(
       language: "nl",
       ...overrides,
     })
-    .run();
+;
   return id;
 }
 
-function insertBrandProfile(db: ReturnType<typeof makeDb>, leadId: string) {
-  db.insert(brandProfiles)
+async function insertBrandProfile(db: Awaited<ReturnType<typeof makeDb>>, leadId: string) {
+  await db.insert(brandProfiles)
     .values({
       id: nanoid(),
       leadId,
       primaryColor: "#c8a96e",
       toneOfVoiceSummary: "Warm and artisanal",
     })
-    .run();
+;
 }
 
-function insertSiteInventory(db: ReturnType<typeof makeDb>, leadId: string) {
-  db.insert(siteInventories)
+async function insertSiteInventory(db: Awaited<ReturnType<typeof makeDb>>, leadId: string) {
+  await db.insert(siteInventories)
     .values({
       id: nanoid(),
       leadId,
       pages: [{ url: "https://example.be", title: "Home" }],
     })
-    .run();
+;
 }
 
-function insertCompetitor(db: ReturnType<typeof makeDb>, leadId: string) {
-  db.insert(competitors)
+async function insertCompetitor(db: Awaited<ReturnType<typeof makeDb>>, leadId: string) {
+  await db.insert(competitors)
     .values({
       id: nanoid(),
       leadId,
       competitorUrl: "https://competitor.be",
       competitorName: "Competitor Bakkerij",
     })
-    .run();
+;
 }
 
 function makeJob(leadId: string): Parameters<typeof processGenerationJob>[1] {
@@ -175,10 +183,10 @@ function makeJob(leadId: string): Parameters<typeof processGenerationJob>[1] {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("processGenerationJob", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
     // Reset mocks to default success state
     vi.mocked(runClaudeCode).mockResolvedValue("claude output");
@@ -194,30 +202,30 @@ describe("processGenerationJob", () => {
   // ── Scenario 1: Happy path ──────────────────────────────────────────────────
 
   it("happy path — completes, lead status = generated, generated_sites row created with version=1, deploy job enqueued", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
     insertBrandProfile(db, leadId);
     insertSiteInventory(db, leadId);
-    insertCompetitor(db, leadId);
+    await insertCompetitor(db, leadId);
 
     const job = makeJob(leadId);
     await processGenerationJob(db, job);
 
     // Lead status flipped to 'generated'
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generated");
 
     // generated_sites row with version=1
-    const site = db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId)).get();
+    const site = ((await db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId))))[0];
     expect(site).toBeDefined();
     expect(site?.version).toBe(1);
     expect(site?.createdVia).toBe("initial_generation");
 
     // Deploy job enqueued
-    const deployJob = db
+    const deployJob = ((await db
       .select()
       .from(pipelineJobs)
       .where(eq(pipelineJobs.pipelineStep, "deploy"))
-      .get();
+      ))[0];
     expect(deployJob).toBeDefined();
     expect((deployJob?.payload as { leadId: string })?.leadId).toBe(leadId);
 
@@ -228,7 +236,7 @@ describe("processGenerationJob", () => {
   // ── Scenario 2: First build fails, second succeeds ──────────────────────────
 
   it("first build fails, second succeeds — status=generated, deploy job enqueued once, version=1", async () => {
-    const leadId = insertTestLead(db, { slug: "test-bakkerij-2" });
+    const leadId = await insertTestLead(db, { slug: "test-bakkerij-2" });
     vi.mocked(resetProjectDir).mockReturnValue("/mock/generated-sites/test-bakkerij-2");
 
     // First call to execSync (pnpm install) throws on attempt 1
@@ -246,20 +254,20 @@ describe("processGenerationJob", () => {
     await processGenerationJob(db, job);
 
     // Lead status = generated
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generated");
 
     // Only one generated_sites row (from successful attempt 2)
-    const sites = db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId)).all();
+    const sites = await db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId));
     expect(sites).toHaveLength(1);
     expect(sites[0].version).toBe(1);
 
     // Deploy job enqueued exactly once
-    const deployJobs = db
+    const deployJobs = await db
       .select()
       .from(pipelineJobs)
       .where(eq(pipelineJobs.pipelineStep, "deploy"))
-      .all();
+;
     expect(deployJobs).toHaveLength(1);
 
     // runClaudeCode called twice (one per attempt)
@@ -269,7 +277,7 @@ describe("processGenerationJob", () => {
   // ── Scenario 3: Both attempts fail ─────────────────────────────────────────
 
   it("both attempts fail — status=generation_failed, generated_sites row inserted, no deploy", async () => {
-    const leadId = insertTestLead(db, { slug: "test-bakkerij-fail" });
+    const leadId = await insertTestLead(db, { slug: "test-bakkerij-fail" });
     vi.mocked(resetProjectDir).mockReturnValue("/mock/generated-sites/test-bakkerij-fail");
 
     vi.mocked(execSync).mockImplementation(() => {
@@ -280,19 +288,19 @@ describe("processGenerationJob", () => {
     await expect(processGenerationJob(db, job)).rejects.toThrow();
 
     // Lead status = generation_failed
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generation_failed");
 
     // generated_sites row inserted (records the failed attempt)
-    const site = db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId)).get();
+    const site = ((await db.select().from(generatedSites).where(eq(generatedSites.leadId, leadId))))[0];
     expect(site).toBeDefined();
 
     // No deploy job
-    const deployJob = db
+    const deployJob = ((await db
       .select()
       .from(pipelineJobs)
       .where(eq(pipelineJobs.pipelineStep, "deploy"))
-      .get();
+      ))[0];
     expect(deployJob).toBeUndefined();
 
     // runClaudeCode called twice
@@ -302,7 +310,7 @@ describe("processGenerationJob", () => {
   // ── Scenario 4: Greenfield (no site_inventory) ──────────────────────────────
 
   it("greenfield mode — no site_inventory, bundle composed, claude called once, success", async () => {
-    const leadId = insertTestLead(db, { slug: "test-bakkerij-green" });
+    const leadId = await insertTestLead(db, { slug: "test-bakkerij-green" });
     vi.mocked(resetProjectDir).mockReturnValue("/mock/generated-sites/test-bakkerij-green");
     insertBrandProfile(db, leadId);
     // No site inventory, no competitor
@@ -311,7 +319,7 @@ describe("processGenerationJob", () => {
     await processGenerationJob(db, job);
 
     // Lead status = generated
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generated");
 
     // runClaudeCode called once
@@ -326,11 +334,11 @@ describe("processGenerationJob", () => {
   // ── Scenario 5: Version increment ──────────────────────────────────────────
 
   it("version increment — lead with existing version=2 gets new row with version=3", async () => {
-    const leadId = insertTestLead(db, { slug: "test-bakkerij-v3" });
+    const leadId = await insertTestLead(db, { slug: "test-bakkerij-v3" });
     vi.mocked(resetProjectDir).mockReturnValue("/mock/generated-sites/test-bakkerij-v3");
 
     // Pre-insert two generated_sites rows for this lead (simulating prior runs)
-    db.insert(generatedSites)
+    await db.insert(generatedSites)
       .values({
         id: nanoid(),
         leadId,
@@ -338,8 +346,8 @@ describe("processGenerationJob", () => {
         astroProjectPath: "/mock/v1",
         createdVia: "initial_generation",
       })
-      .run();
-    db.insert(generatedSites)
+;
+    await db.insert(generatedSites)
       .values({
         id: nanoid(),
         leadId,
@@ -347,16 +355,16 @@ describe("processGenerationJob", () => {
         astroProjectPath: "/mock/v2",
         createdVia: "initial_generation",
       })
-      .run();
+;
 
     const job = makeJob(leadId);
     await processGenerationJob(db, job);
 
-    const sites = db
+    const sites = await db
       .select()
       .from(generatedSites)
       .where(eq(generatedSites.leadId, leadId))
-      .all();
+;
     expect(sites).toHaveLength(3);
 
     const newest = sites.find((s) => s.astroProjectPath !== "/mock/v1" && s.astroProjectPath !== "/mock/v2");
@@ -366,7 +374,7 @@ describe("processGenerationJob", () => {
   // ── Scenario 6: Missing brand_profiles ────────────────────────────────────
 
   it("missing brand_profiles — uses null brand, no crash, status=generated", async () => {
-    const leadId = insertTestLead(db, { slug: "test-bakkerij-nobrand" });
+    const leadId = await insertTestLead(db, { slug: "test-bakkerij-nobrand" });
     vi.mocked(resetProjectDir).mockReturnValue("/mock/generated-sites/test-bakkerij-nobrand");
     // No brand profile inserted
     insertSiteInventory(db, leadId);
@@ -374,7 +382,7 @@ describe("processGenerationJob", () => {
     const job = makeJob(leadId);
     await processGenerationJob(db, job);
 
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generated");
 
     // Should have still called claude

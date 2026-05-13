@@ -5,13 +5,12 @@ import { RetryButton } from "./RetryButton";
 
 export async function FailedJobs() {
   const db = getDb();
-  const rows = db
+  const rows = await db
     .select()
     .from(pipelineJobs)
     .where(eq(pipelineJobs.status, "failed"))
     .orderBy(desc(pipelineJobs.finishedAt))
-    .limit(20)
-    .all();
+    .limit(20);
 
   if (rows.length === 0) {
     return (

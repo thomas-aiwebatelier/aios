@@ -12,11 +12,10 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import {
-  createDb,
-  createSchema,
+  getTestDb,
   leads,
   outreachMessages,
-  pipelineJobs,
+  pipelineJobs
 } from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -39,15 +38,15 @@ import { completeJob, failJob } from "../lib/queue.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function createInMemoryDb(): Db {
-  const db = createDb(":memory:");
-  createSchema(db);
+async function createInMemoryDb(): Promise<Db> {
+  const db = await getTestDb();
+
   return db;
 }
 
-function createTestLead(db: Db, overrides: Partial<{ email: string; status: string }> = {}) {
+async function createTestLead(db: Db, overrides: Partial<{ email: string; status: string }> = {}) {
   const id = nanoid();
-  db.insert(leads)
+  await db.insert(leads)
     .values({
       id,
       slug: `test-lead-${id}`,
@@ -57,11 +56,11 @@ function createTestLead(db: Db, overrides: Partial<{ email: string; status: stri
       industryKey: "bakery",
       email: overrides.email ?? "owner@testbakkerij.be",
     })
-    .run();
+;
   return { id };
 }
 
-function createTestOutreachMessage(
+async function createTestOutreachMessage(
   db: Db,
   leadId: string,
   overrides: Partial<{
@@ -70,7 +69,7 @@ function createTestOutreachMessage(
   }> = {},
 ) {
   const id = nanoid();
-  db.insert(outreachMessages)
+  await db.insert(outreachMessages)
     .values({
       id,
       leadId,
@@ -80,13 +79,13 @@ function createTestOutreachMessage(
       status: (overrides.status ?? "draft") as typeof outreachMessages.$inferInsert["status"],
       gmailThreadId: overrides.gmailThreadId ?? null,
     })
-    .run();
+;
   return { id };
 }
 
-function createTestJob(db: Db, leadId: string, outreachMessageId: string) {
+async function createTestJob(db: Db, leadId: string, outreachMessageId: string) {
   const id = nanoid();
-  db.insert(pipelineJobs)
+  await db.insert(pipelineJobs)
     .values({
       id,
       leadId,
@@ -95,7 +94,7 @@ function createTestJob(db: Db, leadId: string, outreachMessageId: string) {
       payload: { outreachMessageId },
       attemptCount: 1,
     })
-    .run();
+;
   return { id, leadId, payload: { outreachMessageId } };
 }
 
@@ -104,8 +103,8 @@ function createTestJob(db: Db, leadId: string, outreachMessageId: string) {
 describe("processOutreachJob", () => {
   let db: Db;
 
-  beforeEach(() => {
-    db = createInMemoryDb();
+  beforeEach(async () => {
+    db = await createInMemoryDb();
     vi.clearAllMocks();
     vi.mocked(sendEmail).mockResolvedValue({
       messageId: "msg-abc123",
@@ -118,9 +117,9 @@ describe("processOutreachJob", () => {
   });
 
   it("happy path: draft row → sendEmail → row status=sent, lead status=email_sent, sentAt set", async () => {
-    const { id: leadId } = createTestLead(db);
-    const { id: outreachMessageId } = createTestOutreachMessage(db, leadId);
-    const job = createTestJob(db, leadId, outreachMessageId);
+    const { id: leadId } = await createTestLead(db);
+    const { id: outreachMessageId } = await createTestOutreachMessage(db, leadId);
+    const job = await createTestJob(db, leadId, outreachMessageId);
 
     await processOutreachJob(db, job as any);
 
@@ -135,36 +134,36 @@ describe("processOutreachJob", () => {
     );
 
     // outreach_messages row updated
-    const row = db
+    const row = ((await db
       .select()
       .from(outreachMessages)
       .where(eq(outreachMessages.id, outreachMessageId))
-      .get();
+      ))[0];
     expect(row?.status).toBe("sent");
     expect(row?.gmailMessageId).toBe("msg-abc123");
     expect(row?.gmailThreadId).toBe("thread-xyz789");
     expect(row?.sentAt).toBeInstanceOf(Date);
 
     // lead status updated
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("email_sent");
     expect(lead?.sentAt).toBeInstanceOf(Date);
 
     // job completed
-    const jobRow = db
+    const jobRow = ((await db
       .select()
       .from(pipelineJobs)
       .where(eq(pipelineJobs.id, job.id))
-      .get();
+      ))[0];
     expect(jobRow?.status).toBe("succeeded");
   });
 
   it("cancelled row (status=archived before worker picks up): no-op, no send", async () => {
-    const { id: leadId } = createTestLead(db, { status: "deployed" });
-    const { id: outreachMessageId } = createTestOutreachMessage(db, leadId, {
+    const { id: leadId } = await createTestLead(db, { status: "deployed" });
+    const { id: outreachMessageId } = await createTestOutreachMessage(db, leadId, {
       status: "archived",
     });
-    const job = createTestJob(db, leadId, outreachMessageId);
+    const job = await createTestJob(db, leadId, outreachMessageId);
 
     await processOutreachJob(db, job as any);
 
@@ -172,46 +171,46 @@ describe("processOutreachJob", () => {
     expect(sendEmail).not.toHaveBeenCalled();
 
     // lead status unchanged (still deployed)
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("deployed");
 
     // job still completed (idempotent no-op)
-    const jobRow = db
+    const jobRow = ((await db
       .select()
       .from(pipelineJobs)
       .where(eq(pipelineJobs.id, job.id))
-      .get();
+      ))[0];
     expect(jobRow?.status).toBe("succeeded");
   });
 
   it("sendEmail throws → worker throws → row.status remains draft", async () => {
     vi.mocked(sendEmail).mockRejectedValue(new Error("[gmail] API error: 503"));
 
-    const { id: leadId } = createTestLead(db);
-    const { id: outreachMessageId } = createTestOutreachMessage(db, leadId);
-    const job = createTestJob(db, leadId, outreachMessageId);
+    const { id: leadId } = await createTestLead(db);
+    const { id: outreachMessageId } = await createTestOutreachMessage(db, leadId);
+    const job = await createTestJob(db, leadId, outreachMessageId);
 
     await expect(processOutreachJob(db, job as any)).rejects.toThrow("API error: 503");
 
     // Row still draft (worker threw, no update applied)
-    const row = db
+    const row = ((await db
       .select()
       .from(outreachMessages)
       .where(eq(outreachMessages.id, outreachMessageId))
-      .get();
+      ))[0];
     expect(row?.status).toBe("draft");
 
     // Lead status unchanged
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("email_drafted");
   });
 
   it("threadId present in row → passed through to sendEmail", async () => {
-    const { id: leadId } = createTestLead(db);
-    const { id: outreachMessageId } = createTestOutreachMessage(db, leadId, {
+    const { id: leadId } = await createTestLead(db);
+    const { id: outreachMessageId } = await createTestOutreachMessage(db, leadId, {
       gmailThreadId: "existing-thread-id",
     });
-    const job = createTestJob(db, leadId, outreachMessageId);
+    const job = await createTestJob(db, leadId, outreachMessageId);
 
     await processOutreachJob(db, job as any);
 

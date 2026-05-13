@@ -11,18 +11,17 @@ export async function POST(
   const { id } = await params;
   const db = getDb();
 
-  const lead = db.select().from(leads).where(eq(leads.id, id)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, id))))[0];
   if (!lead) {
     return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   }
 
-  db.update(leads)
+  await db.update(leads)
     .set({ status: "approved", approvedAt: new Date(), updatedAt: new Date() })
-    .where(eq(leads.id, id))
-    .run();
+    .where(eq(leads.id, id));
 
   // Enqueue generation job — worker lands in Task 4.1, sits queued until then
-  const jobId = enqueue(db, {
+  const jobId = await enqueue(db, {
     leadId: id,
     step: "generation",
     payload: { leadId: id },

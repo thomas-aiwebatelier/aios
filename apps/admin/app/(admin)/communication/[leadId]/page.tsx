@@ -28,23 +28,23 @@ export default async function ComposerPage({ params, searchParams }: PageProps) 
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
   // 1. Load lead
-  const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
   if (!lead) notFound();
 
   // 2. Load brandProfile (optional)
-  const brandProfile = db
+  const brandProfile = ((await db
     .select()
     .from(brandProfiles)
     .where(eq(brandProfiles.leadId, leadId))
-    .get() ?? null;
+    ))[0] ?? null;
 
   // 3. Load latest generatedSite
-  const generatedSite = db
+  const generatedSite = ((await db
     .select()
     .from(generatedSites)
     .where(eq(generatedSites.leadId, leadId))
     .orderBy(desc(generatedSites.version))
-    .get();
+    ))[0];
 
   if (!generatedSite?.cloudflarePreviewUrl) {
     return (
@@ -60,12 +60,12 @@ export default async function ComposerPage({ params, searchParams }: PageProps) 
 
   // 4. If already sent, show confirmation
   if (resolvedSearchParams.sent === "1") {
-    const latestMsg = db
+    const latestMsg = ((await db
       .select()
       .from(outreachMessages)
       .where(eq(outreachMessages.leadId, leadId))
       .orderBy(desc(outreachMessages.sentAt))
-      .get();
+      ))[0];
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-stone-900">{lead.businessName}</h1>

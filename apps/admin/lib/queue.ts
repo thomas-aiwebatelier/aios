@@ -13,21 +13,19 @@ export interface EnqueueArgs {
   notBefore?: Date;
 }
 
-export function enqueue(db: Db, args: EnqueueArgs): string {
+export async function enqueue(db: Db, args: EnqueueArgs): Promise<string> {
   const id = nanoid();
-  db.insert(pipelineJobs)
-    .values({
-      id,
-      leadId: args.leadId ?? null,
-      pipelineStep: args.step,
-      status: "queued",
-      payload: args.payload,
-      attemptCount: 0,
-      // createdAt acts as "not-before" for delayed jobs (Task 4.6 undo window).
-      // Normal jobs pass undefined → schema default = now().
-      ...(args.notBefore ? { createdAt: args.notBefore } : {}),
-    })
-    .run();
+  await db.insert(pipelineJobs).values({
+    id,
+    leadId: args.leadId ?? null,
+    pipelineStep: args.step,
+    status: "queued",
+    payload: args.payload,
+    attemptCount: 0,
+    // createdAt acts as "not-before" for delayed jobs (Task 4.6 undo window).
+    // Normal jobs pass undefined → schema default = now().
+    ...(args.notBefore ? { createdAt: args.notBefore } : {}),
+  });
   return id;
 }
 
@@ -41,18 +39,18 @@ export function enqueue(db: Db, args: EnqueueArgs): string {
  * to workers until the delay expires. Cancelling within the window is done
  * by flipping the job status to 'cancelled' before claimNext picks it up.
  */
-export function enqueueDelayed(db: Db, args: Omit<EnqueueArgs, "notBefore">, delayMs: number): string {
+export async function enqueueDelayed(
+  db: Db,
+  args: Omit<EnqueueArgs, "notBefore">,
+  delayMs: number,
+): Promise<string> {
   return enqueue(db, { ...args, notBefore: new Date(Date.now() + delayMs) });
 }
 
-export function claimNext(db: Db, _workerName: string, step?: string) {
-  return db.transaction((tx) => {
+export async function claimNext(db: Db, _workerName: string, step?: string) {
+  return db.transaction(async (tx) => {
     const now = new Date();
 
-    // Three conditions must all hold:
-    //   1. status = 'queued'          (not yet running / done / cancelled)
-    //   2. pipeline_step matches      (when step filter is given)
-    //   3. created_at <= now()        (delay window has passed — supports 30s undo)
     const whereClause = step
       ? and(
           eq(pipelineJobs.status, "queued"),
@@ -64,57 +62,58 @@ export function claimNext(db: Db, _workerName: string, step?: string) {
           lte(pipelineJobs.createdAt, now),
         );
 
-    const job = tx
+    const candidates = await tx
       .select()
       .from(pipelineJobs)
       .where(whereClause)
       .orderBy(pipelineJobs.createdAt)
-      .limit(1)
-      .get();
+      .limit(1);
 
+    const job = candidates[0];
     if (!job) return null;
 
-    tx.update(pipelineJobs)
+    await tx
+      .update(pipelineJobs)
       .set({
         status: "running",
         startedAt: now,
         lastHeartbeatAt: now,
         attemptCount: (job.attemptCount ?? 0) + 1,
       })
-      .where(eq(pipelineJobs.id, job.id))
-      .run();
+      .where(eq(pipelineJobs.id, job.id));
 
     return { ...job, status: "running" as const };
   });
 }
 
-export function heartbeat(db: Db, jobId: string) {
-  db.update(pipelineJobs)
+export async function heartbeat(db: Db, jobId: string) {
+  await db
+    .update(pipelineJobs)
     .set({ lastHeartbeatAt: new Date() })
-    .where(eq(pipelineJobs.id, jobId))
-    .run();
+    .where(eq(pipelineJobs.id, jobId));
 }
 
-export function completeJob(db: Db, jobId: string) {
-  db.update(pipelineJobs)
+export async function completeJob(db: Db, jobId: string) {
+  await db
+    .update(pipelineJobs)
     .set({ status: "succeeded", finishedAt: new Date() })
-    .where(eq(pipelineJobs.id, jobId))
-    .run();
+    .where(eq(pipelineJobs.id, jobId));
 }
 
-export function failJob(db: Db, jobId: string, error: string) {
-  db.update(pipelineJobs)
+export async function failJob(db: Db, jobId: string, error: string) {
+  await db
+    .update(pipelineJobs)
     .set({ status: "failed", finishedAt: new Date(), errorMessage: error })
-    .where(eq(pipelineJobs.id, jobId))
-    .run();
+    .where(eq(pipelineJobs.id, jobId));
 }
 
 const STALE_HEARTBEAT_MS = 5 * 60 * 1000; // 5 minutes per spec §7
 
-export function reconcileStuckJobs(db: Db): number {
+export async function reconcileStuckJobs(db: Db): Promise<number> {
   const staleThreshold = new Date(Date.now() - STALE_HEARTBEAT_MS);
 
-  const result = db
+  // Postgres-js returns rowCount on UPDATE; pglite returns the same shape.
+  const result = (await db
     .update(pipelineJobs)
     .set({
       status: "failed",
@@ -126,11 +125,11 @@ export function reconcileStuckJobs(db: Db): number {
         eq(pipelineJobs.status, "running"),
         or(
           isNull(pipelineJobs.lastHeartbeatAt),
-          lt(pipelineJobs.lastHeartbeatAt, staleThreshold)
-        )
-      )
+          lt(pipelineJobs.lastHeartbeatAt, staleThreshold),
+        ),
+      ),
     )
-    .run();
+    .returning());
 
-  return result.changes;
+  return result.length;
 }

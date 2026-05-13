@@ -7,7 +7,7 @@ import { DiscoveryTable } from "./DiscoveryTable";
 export default async function DiscoveryPage() {
   const db = getDb();
 
-  const rows = db
+  const rows = await db
     .select({
       id: leads.id,
       businessName: leads.businessName,
@@ -21,8 +21,7 @@ export default async function DiscoveryPage() {
       createdAt: leads.createdAt,
     })
     .from(leads)
-    .where(inArray(leads.status, ["discovered", "researching"]))
-    .all();
+    .where(inArray(leads.status, ["discovered", "researching"]));
 
   const serialized = rows.map((r) => ({
     ...r,

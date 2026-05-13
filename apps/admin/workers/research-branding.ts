@@ -286,9 +286,9 @@ interface BrandData {
 
 async function upsertBrandProfile(db: Db, leadId: string, data: BrandData): Promise<void> {
   // Delete existing row first (simple upsert pattern — avoids UNIQUE conflicts)
-  db.delete(brandProfiles).where(eq(brandProfiles.leadId, leadId)).run();
+  await db.delete(brandProfiles).where(eq(brandProfiles.leadId, leadId));
 
-  db.insert(brandProfiles)
+  await db.insert(brandProfiles)
     .values({
       id: nanoid(),
       leadId,
@@ -300,6 +300,5 @@ async function upsertBrandProfile(db: Db, leadId: string, data: BrandData): Prom
       fontsDetected: data.fontsDetected,
       toneOfVoiceSummary: data.toneOfVoiceSummary,
       socialLinks: data.socialLinks,
-    })
-    .run();
+    });
 }

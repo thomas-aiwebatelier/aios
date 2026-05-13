@@ -7,7 +7,7 @@ import { ApprovalTable } from "./ApprovalTable";
 export default async function ApprovalPage() {
   const db = getDb();
 
-  const rows = db
+  const rows = await db
     .select({
       id: leads.id,
       businessName: leads.businessName,
@@ -18,8 +18,7 @@ export default async function ApprovalPage() {
       updatedAt: leads.updatedAt,
     })
     .from(leads)
-    .where(eq(leads.status, "awaiting_approval"))
-    .all();
+    .where(eq(leads.status, "awaiting_approval"));
 
   const serialized = rows.map((r) => ({
     ...r,

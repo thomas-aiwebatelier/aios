@@ -49,7 +49,7 @@ export default async function CommunicationPage({
   const tab = resolvedParams.tab === "inbound" ? "inbound" : "outreach";
 
   // Outreach leads
-  const outreachLeads = db
+  const outreachLeads = await db
     .select({
       id: leads.id,
       businessName: leads.businessName,
@@ -60,10 +60,10 @@ export default async function CommunicationPage({
     })
     .from(leads)
     .where(inArray(leads.status, [...OUTREACH_STATUSES]))
-    .all();
+;
 
-  // Inbound inquiries — sorted newest first in JS (SQLite integer timestamp)
-  const inquiries = db
+  // Inbound inquiries — sorted newest first in JS
+  const inquiriesRaw = await db
     .select({
       id: inboundInquiries.id,
       name: inboundInquiries.name,
@@ -72,13 +72,12 @@ export default async function CommunicationPage({
       status: inboundInquiries.status,
       createdAt: inboundInquiries.createdAt,
     })
-    .from(inboundInquiries)
-    .all()
-    .sort((a, b) => {
-      const aMs = a.createdAt ? Number(a.createdAt) : 0;
-      const bMs = b.createdAt ? Number(b.createdAt) : 0;
-      return bMs - aMs;
-    });
+    .from(inboundInquiries);
+  const inquiries = inquiriesRaw.sort((a, b) => {
+    const aMs = a.createdAt ? Number(a.createdAt) : 0;
+    const bMs = b.createdAt ? Number(b.createdAt) : 0;
+    return bMs - aMs;
+  });
 
   return (
     <div className="space-y-6">

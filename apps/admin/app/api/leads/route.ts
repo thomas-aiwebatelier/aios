@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const db = getDb();
 
   if (!statusParam) {
-    const rows = db.select().from(leads).all();
+    const rows = await db.select().from(leads);
     return NextResponse.json({ leads: rows });
   }
 
@@ -24,6 +24,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const rows = db.select().from(leads).where(inArray(leads.status, statuses)).all();
+  const rows = await db.select().from(leads).where(inArray(leads.status, statuses));
   return NextResponse.json({ leads: rows });
 }

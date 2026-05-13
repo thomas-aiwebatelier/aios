@@ -1,17 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, createSchema, leads, pipelineJobs } from "@atelier/db";
+import {
+  getTestDb,
+  leads,
+  pipelineJobs
+} from "@atelier/db";
 import { nanoid } from "nanoid";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function makeDb() {
-  const db = createDb(":memory:");
-  createSchema(db);
+async function makeDb() {
+  const db = await getTestDb();
+
   return db;
 }
 
-function insertLead(
-  db: ReturnType<typeof createDb>,
+async function insertLead(
+  db: Awaited<ReturnType<typeof makeDb>>,
   overrides: Partial<{
     status: string;
     businessName: string;
@@ -21,7 +25,7 @@ function insertLead(
   }> = {}
 ) {
   const id = nanoid();
-  db.insert(leads)
+  await db.insert(leads)
     .values({
       id,
       slug: overrides.slug ?? `slug-${id}`,
@@ -30,13 +34,13 @@ function insertLead(
       city: overrides.city ?? "Antwerpen",
       industryKey: overrides.industryKey ?? "bakery-restaurant",
     })
-    .run();
+;
   return id;
 }
 
 // ── mock @/lib/db to return an in-memory DB ───────────────────────────────────
 
-let currentDb: ReturnType<typeof createDb>;
+let currentDb: Awaited<ReturnType<typeof makeDb>>;
 
 vi.mock("@/lib/db", () => ({
   getDb: () => currentDb,
@@ -62,13 +66,13 @@ vi.mock("@/lib/industry-keys", () => ({
 // ── GET /api/leads ─────────────────────────────────────────────────────────
 
 describe("GET /api/leads", () => {
-  beforeEach(() => {
-    currentDb = makeDb();
+  beforeEach(async () => {
+    currentDb = await makeDb();
   });
 
   it("returns all leads when no status filter", async () => {
-    insertLead(currentDb, { status: "discovered" });
-    insertLead(currentDb, { status: "awaiting_approval" });
+    await insertLead(currentDb, { status: "discovered" });
+    await insertLead(currentDb, { status: "awaiting_approval" });
 
     const { GET } = await import("../leads/route.js");
     const req = new Request("http://localhost/api/leads");
@@ -80,8 +84,8 @@ describe("GET /api/leads", () => {
   });
 
   it("filters by single status", async () => {
-    insertLead(currentDb, { status: "discovered" });
-    insertLead(currentDb, { status: "awaiting_approval" });
+    await insertLead(currentDb, { status: "discovered" });
+    await insertLead(currentDb, { status: "awaiting_approval" });
 
     const { GET } = await import("../leads/route.js");
     const req = new Request("http://localhost/api/leads?status=discovered");
@@ -105,12 +109,12 @@ describe("GET /api/leads", () => {
 // ── POST /api/leads/[id]/approve ──────────────────────────────────────────────
 
 describe("POST /api/leads/[id]/approve", () => {
-  beforeEach(() => {
-    currentDb = makeDb();
+  beforeEach(async () => {
+    currentDb = await makeDb();
   });
 
   it("flips status to approved and enqueues generation job", async () => {
-    const id = insertLead(currentDb, { status: "awaiting_approval" });
+    const id = await insertLead(currentDb, { status: "awaiting_approval" });
 
     const { POST } = await import("../leads/[id]/approve/route.js");
     const req = new Request(`http://localhost/api/leads/${id}/approve`, { method: "POST" });
@@ -121,11 +125,12 @@ describe("POST /api/leads/[id]/approve", () => {
     expect(json.ok).toBe(true);
     expect(json.jobId).toBeTruthy();
 
-    const lead = currentDb.select().from(leads).all().find((l: any) => l.id === id);
+    const allLeads = await currentDb.select().from(leads);
+    const lead = allLeads.find((l: any) => l.id === id);
     expect(lead?.status).toBe("approved");
     expect(lead?.approvedAt).toBeTruthy();
 
-    const jobs = currentDb.select().from(pipelineJobs).all();
+    const jobs = await currentDb.select().from(pipelineJobs);
     expect(jobs).toHaveLength(1);
     expect(jobs[0].pipelineStep).toBe("generation");
     expect(jobs[0].leadId).toBe(id);
@@ -144,12 +149,12 @@ describe("POST /api/leads/[id]/approve", () => {
 // ── POST /api/leads/[id]/reject ───────────────────────────────────────────────
 
 describe("POST /api/leads/[id]/reject", () => {
-  beforeEach(() => {
-    currentDb = makeDb();
+  beforeEach(async () => {
+    currentDb = await makeDb();
   });
 
   it("sets status to archived", async () => {
-    const id = insertLead(currentDb, { status: "awaiting_approval" });
+    const id = await insertLead(currentDb, { status: "awaiting_approval" });
 
     const { POST } = await import("../leads/[id]/reject/route.js");
     const req = new Request(`http://localhost/api/leads/${id}/reject`, { method: "POST" });
@@ -159,7 +164,7 @@ describe("POST /api/leads/[id]/reject", () => {
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
 
-    const all = currentDb.select().from(leads).all();
+    const all = await currentDb.select().from(leads);
     const lead = all.find((l: any) => l.id === id);
     expect(lead?.status).toBe("archived");
   });
@@ -176,12 +181,12 @@ describe("POST /api/leads/[id]/reject", () => {
 // ── POST /api/leads/[id]/industry-override ────────────────────────────────────
 
 describe("POST /api/leads/[id]/industry-override", () => {
-  beforeEach(() => {
-    currentDb = makeDb();
+  beforeEach(async () => {
+    currentDb = await makeDb();
   });
 
   it("updates industry key and sets confidence to 1.0", async () => {
-    const id = insertLead(currentDb, { industryKey: "automotive" });
+    const id = await insertLead(currentDb, { industryKey: "automotive" });
 
     const { POST } = await import("../leads/[id]/industry-override/route.js");
     const req = new Request(`http://localhost/api/leads/${id}/industry-override`, {
@@ -195,14 +200,14 @@ describe("POST /api/leads/[id]/industry-override", () => {
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
 
-    const all = currentDb.select().from(leads).all();
+    const all = await currentDb.select().from(leads);
     const lead = all.find((l: any) => l.id === id);
     expect(lead?.industryKey).toBe("bakery-restaurant");
     expect(lead?.industryClassificationConfidence).toBe(1.0);
   });
 
   it("returns 400 for invalid industry key", async () => {
-    const id = insertLead(currentDb);
+    const id = await insertLead(currentDb);
 
     const { POST } = await import("../leads/[id]/industry-override/route.js");
     const req = new Request(`http://localhost/api/leads/${id}/industry-override`, {
@@ -231,8 +236,8 @@ describe("POST /api/leads/[id]/industry-override", () => {
 // ── POST /api/pipeline/trigger ────────────────────────────────────────────────
 
 describe("POST /api/pipeline/trigger", () => {
-  beforeEach(() => {
-    currentDb = makeDb();
+  beforeEach(async () => {
+    currentDb = await makeDb();
   });
 
   it("enqueues discovery job for type=discovery with query", async () => {
@@ -249,7 +254,7 @@ describe("POST /api/pipeline/trigger", () => {
     expect(json.ok).toBe(true);
     expect(json.jobId).toBeTruthy();
 
-    const jobs = currentDb.select().from(pipelineJobs).all();
+    const jobs = await currentDb.select().from(pipelineJobs);
     expect(jobs).toHaveLength(1);
     expect(jobs[0].pipelineStep).toBe("discovery");
     expect((jobs[0].payload as any).query).toBe("bakkerij Antwerpen");
@@ -266,13 +271,13 @@ describe("POST /api/pipeline/trigger", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    const jobs = currentDb.select().from(pipelineJobs).all();
+    const jobs = await currentDb.select().from(pipelineJobs);
     expect(jobs[0].pipelineStep).toBe("discovery");
     expect((jobs[0].payload as any).googleMapsUrl).toBe("https://maps.google.com/xyz");
   });
 
   it("enqueues research job for type=research", async () => {
-    const leadId = insertLead(currentDb);
+    const leadId = await insertLead(currentDb);
 
     const { POST } = await import("../pipeline/trigger/route.js");
     const req = new Request("http://localhost/api/pipeline/trigger", {
@@ -284,7 +289,7 @@ describe("POST /api/pipeline/trigger", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    const jobs = currentDb.select().from(pipelineJobs).all();
+    const jobs = await currentDb.select().from(pipelineJobs);
     expect(jobs[0].pipelineStep).toBe("research");
     expect(jobs[0].leadId).toBe(leadId);
   });

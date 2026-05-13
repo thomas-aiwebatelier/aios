@@ -52,11 +52,11 @@ export async function processDeployJob(db: Db, job: WorkerJob): Promise<void> {
   logger.info("[deployer] starting job", { jobId: job.id, leadId, generatedSiteId });
 
   // 2. Load generated_sites row
-  const siteRow = db
+  const siteRow = ((await db
     .select()
     .from(generatedSites)
     .where(eq(generatedSites.id, generatedSiteId))
-    .get();
+    ))[0];
 
   if (!siteRow) {
     throw new Error(`[deployer] generated_sites row not found: ${generatedSiteId}`);
@@ -68,7 +68,7 @@ export async function processDeployJob(db: Db, job: WorkerJob): Promise<void> {
   }
 
   // Load lead for slug
-  const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+  const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
   if (!lead) {
     throw new Error(`[deployer] lead not found: ${leadId}`);
   }
@@ -79,9 +79,9 @@ export async function processDeployJob(db: Db, job: WorkerJob): Promise<void> {
   logger.info("[deployer] context loaded", { slug, distPath });
 
   // 3. Heartbeat every 30s
-  const hbInterval = setInterval(() => {
+  const hbInterval = setInterval(async () => {
     try {
-      heartbeat(db, job.id);
+      await heartbeat(db, job.id);
     } catch (err) {
       logger.warn("[deployer] heartbeat failed", { error: String(err) });
     }
@@ -127,15 +127,14 @@ export async function processDeployJob(db: Db, job: WorkerJob): Promise<void> {
         }
       : undefined;
 
-    db.update(generatedSites)
+    await db.update(generatedSites)
       .set({
         cloudflareProjectName: slug,
         cloudflarePreviewUrl: canonicalUrl,
         cloudflareDeploymentId: deploymentUrl,
         ...(lighthouseScores ? { lighthouseScores } : {}),
       })
-      .where(eq(generatedSites.id, generatedSiteId))
-      .run();
+      .where(eq(generatedSites.id, generatedSiteId));
 
     logger.info("[deployer] updated generated_sites row", {
       generatedSiteId,
@@ -145,15 +144,14 @@ export async function processDeployJob(db: Db, job: WorkerJob): Promise<void> {
     });
 
     // 9. UPDATE lead status → deployed
-    db.update(leads)
+    await db.update(leads)
       .set({ status: "deployed" })
-      .where(eq(leads.id, leadId))
-      .run();
+      .where(eq(leads.id, leadId));
 
     logger.info("[deployer] lead status → deployed", { leadId, slug });
 
     // 10. Complete job
-    completeJob(db, job.id);
+    await completeJob(db, job.id);
     logger.info("[deployer] job complete", { jobId: job.id });
   } finally {
     clearInterval(hbInterval);

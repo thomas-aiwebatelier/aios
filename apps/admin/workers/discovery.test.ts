@@ -11,7 +11,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { createDb, createSchema, leads } from "@atelier/db";
+import {
+  getTestDb,
+  leads
+} from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -90,7 +93,8 @@ function createMockSpawn(output: string) {
 /** Make spawn return a specific JSON output. */
 function mockSpawnOutput(json: string) {
   vi.mocked(spawn).mockImplementationOnce(
-    (_cmd: string, _args: string[]) => createMockSpawn(json) as ReturnType<typeof spawn>,
+    ((_cmd: string, _args: readonly string[]) =>
+      createMockSpawn(json) as unknown as ReturnType<typeof spawn>) as any,
   );
 }
 
@@ -241,11 +245,11 @@ describe("industry classifier", () => {
 });
 
 describe("discovery worker happy path", () => {
-  let db: ReturnType<typeof createDb>;
+  let db: Awaited<ReturnType<typeof getTestDb>>;
 
-  beforeEach(() => {
-    db = createDb(":memory:");
-    createSchema(db);
+  beforeEach(async () => {
+    db = await getTestDb();
+
     // Provide a dummy API key so apiKey() doesn't throw; fetch is mocked anyway
     process.env.GOOGLE_MAPS_API_KEY = "TEST_KEY_MOCKED";
   });
@@ -270,21 +274,21 @@ describe("discovery worker happy path", () => {
       }),
     );
 
-    enqueue(db, { step: "discovery", payload: { query: "bakkerij Antwerpen" } });
+    await enqueue(db, { step: "discovery", payload: { query: "bakkerij Antwerpen" } });
     const inserted = await runDiscoveryWorker(db);
 
     expect(inserted).toBe(3);
 
-    const rows = db.select().from(leads).all();
+    const rows = await db.select().from(leads);
     expect(rows).toHaveLength(3);
 
     // Check slugs contain city segments
-    const antwerpenLead = rows.find((r) => r.city === "Antwerpen");
+    const antwerpenLead = rows.find((r: typeof rows[number]) => r.city === "Antwerpen");
     expect(antwerpenLead).toBeDefined();
     expect(antwerpenLead?.slug).toContain("bakkerij-pieter");
 
     // Check industry classification
-    rows.forEach((r) => {
+    rows.forEach((r: typeof rows[number]) => {
       expect(r.industryKey).toBe("bakery-restaurant");
       expect(r.industryClassificationConfidence).toBe(0.95);
     });
@@ -294,7 +298,7 @@ describe("discovery worker happy path", () => {
 
   it("deduplicates: skips existing placeId, inserts only new ones", async () => {
     // Pre-insert lead with place-1
-    db.insert(leads)
+    await db.insert(leads)
       .values({
         id: nanoid(),
         slug: "existing-antw-xxxx",
@@ -307,7 +311,7 @@ describe("discovery worker happy path", () => {
         industryClassificationConfidence: 0.95,
         language: "nl",
       })
-      .run();
+;
 
     const fakePlaces = [
       { id: "place-1", name: "Bakkerij Existing", types: ["bakery"] },
@@ -323,12 +327,12 @@ describe("discovery worker happy path", () => {
       }),
     );
 
-    enqueue(db, { step: "discovery", payload: { query: "bakkerij Antwerpen" } });
+    await enqueue(db, { step: "discovery", payload: { query: "bakkerij Antwerpen" } });
     const inserted = await runDiscoveryWorker(db);
 
     expect(inserted).toBe(2);
 
-    const rows = db.select().from(leads).all();
+    const rows = await db.select().from(leads);
     expect(rows).toHaveLength(3); // 1 pre-existing + 2 new
 
     vi.unstubAllGlobals();
@@ -354,14 +358,14 @@ describe("discovery worker happy path", () => {
       }),
     );
 
-    enqueue(db, {
+    await enqueue(db, {
       step: "discovery",
       payload: { googleMapsUrl: "https://maps.google.com/?place_id=place-single" },
     });
     const inserted = await runDiscoveryWorker(db);
 
     expect(inserted).toBe(1);
-    const row = db.select().from(leads).where(eq(leads.googleMapsPlaceId, "place-single")).get();
+    const row = ((await db.select().from(leads).where(eq(leads.googleMapsPlaceId, "place-single"))))[0];
     expect(row?.businessName).toBe("Garage Test");
     expect(row?.industryKey).toBe("automotive");
     expect(row?.city).toBe("Leuven");
@@ -375,12 +379,11 @@ describe("discovery worker happy path", () => {
 // Requires: GOOGLE_MAPS_API_KEY in .env, claude CLI installed and authenticated.
 describe.skip("discovery worker — manual integration (real APIs)", () => {
   it("queries real Google Maps and inserts leads", async () => {
-    const { createDb, createSchema } = await import("@atelier/db");
-    const db = createDb(":memory:");
-    createSchema(db);
+    const db = await getTestDb();
+
 
     const { enqueue } = await import("../lib/queue.js");
-    enqueue(db, {
+    await enqueue(db, {
       step: "discovery",
       payload: { query: "bakkerij Antwerpen" },
     });

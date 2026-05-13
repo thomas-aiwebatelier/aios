@@ -21,13 +21,12 @@ export function registerCronJobs(): void {
   }));
 
   // 07:00 daily — research discovered leads
-  tasks.push(cron.schedule("0 7 * * *", () => {
+  tasks.push(cron.schedule("0 7 * * *", async () => {
     const db = getDb();
-    const discovered = db
+    const discovered = await db
       .select({ id: leads.id })
       .from(leads)
-      .where(eq(leads.status, "discovered"))
-      .all();
+      .where(eq(leads.status, "discovered"));
 
     if (discovered.length === 0) {
       logger.info("cron: research tick — no discovered leads to research", {
@@ -37,7 +36,7 @@ export function registerCronJobs(): void {
     }
 
     for (const lead of discovered) {
-      enqueue(db, { leadId: lead.id, step: "research", payload: {} });
+      await enqueue(db, { leadId: lead.id, step: "research", payload: {} });
     }
     logger.info(
       `cron: research tick — enqueued ${discovered.length} research jobs`,
@@ -54,7 +53,6 @@ export function registerCronJobs(): void {
   // 03:00 daily — delete CF projects for declined leads (Task 4.10)
   tasks.push(cron.schedule("0 3 * * *", async () => {
     try {
-      // Dynamic import: keeps better-sqlite3 out of Next.js static analysis
       const { tearDownDeclinedLeads } = await import(
         "../../../scripts/cron/teardown-declined.js"
       );
@@ -67,24 +65,15 @@ export function registerCronJobs(): void {
     }
   }));
 
-  // 02:00 daily — SQLite backup (Task 4.10)
-  tasks.push(cron.schedule("0 2 * * *", async () => {
-    try {
-      // Dynamic import: keeps better-sqlite3 out of Next.js static analysis
-      const { backupDatabase } = await import(
-        "../../../scripts/cron/backup-db.js"
-      );
-      const { backupPath, retained } = await backupDatabase();
-      logger.info(
-        `cron: backup-db tick — ${backupPath} (retained ${retained})`,
-        { ts: new Date().toISOString() },
-      );
-    } catch (err) {
-      logger.error("cron: backup-db failed", { err });
-    }
-  }));
+  // 02:00 daily — DB backup
+  // TODO(Postgres migration): Cloud SQL provides native automated backups;
+  // the legacy scripts/cron/backup-db.ts uses better-sqlite3's .backup() API
+  // which no longer exists. Rewrite using pg_dump (or simply drop the schedule
+  // and rely on Cloud SQL automated backups + PITR). Disabled for now to keep
+  // boot clean during Migration Plan A.
+  // tasks.push(cron.schedule("0 2 * * *", async () => { ... }));
 
-  logger.info("cron: 5 schedules registered");
+  logger.info("cron: 4 schedules registered (backup-db deferred)");
 }
 
 export function stopCronJobs(): void {

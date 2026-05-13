@@ -61,34 +61,34 @@ interface GenerationContext {
   competitor: Record<string, unknown> | null;
 }
 
-function loadContext(db: Db, leadId: string): GenerationContext {
-  const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+async function loadContext(db: Db, leadId: string): Promise<GenerationContext> {
+  const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
   if (!lead) throw new Error(`[generation] lead not found: ${leadId}`);
 
   const brandProfile =
-    db
+    ((await db
       .select()
       .from(brandProfiles)
       .where(eq(brandProfiles.leadId, leadId))
       .limit(1)
-      .get() ?? null;
+      ))[0] ?? null;
 
   const siteInventory =
-    db
+    ((await db
       .select()
       .from(siteInventories)
       .where(eq(siteInventories.leadId, leadId))
       .orderBy(desc(siteInventories.crawledAt))
       .limit(1)
-      .get() ?? null;
+      ))[0] ?? null;
 
   const competitor =
-    db
+    ((await db
       .select()
       .from(competitors)
       .where(eq(competitors.leadId, leadId))
       .limit(1)
-      .get() ?? null;
+      ))[0] ?? null;
 
   return { lead, brandProfile, siteInventory, competitor };
 }
@@ -274,24 +274,24 @@ async function runBuildAndChecks(projectPath: string): Promise<void> {
 
 // ── Row helpers ──────────────────────────────────────────────────────────────
 
-function getNextVersion(db: Db, leadId: string): number {
-  const result = db
+async function getNextVersion(db: Db, leadId: string): Promise<number> {
+  const result = ((await db
     .select({ maxVersion: max(generatedSites.version) })
     .from(generatedSites)
     .where(eq(generatedSites.leadId, leadId))
-    .get();
+    ))[0];
   return (result?.maxVersion ?? 0) + 1;
 }
 
-function insertGeneratedSiteRow(
+async function insertGeneratedSiteRow(
   db: Db,
   ctx: GenerationContext,
   projectPath: string,
   version: number,
   lighthouseScores: Record<string, number> | null,
-): string {
+): Promise<string> {
   const id = nanoid();
-  db.insert(generatedSites)
+  await db.insert(generatedSites)
     .values({
       id,
       leadId: ctx.lead.id,
@@ -299,8 +299,7 @@ function insertGeneratedSiteRow(
       astroProjectPath: projectPath,
       lighthouseScores: lighthouseScores ?? undefined,
       createdVia: "initial_generation",
-    })
-    .run();
+    });
   return id;
 }
 
@@ -310,9 +309,9 @@ export async function processGenerationJob(db: Db, job: GenerationJob): Promise<
   const { leadId } = job.payload as { leadId: string };
 
   // Heartbeat every 30s — generation can take 10-30 min
-  const hbInterval = setInterval(() => {
+  const hbInterval = setInterval(async () => {
     try {
-      heartbeat(db, job.id);
+      await heartbeat(db, job.id);
     } catch (err) {
       logger.warn("[generation] heartbeat failed", { error: String(err) });
     }
@@ -322,7 +321,7 @@ export async function processGenerationJob(db: Db, job: GenerationJob): Promise<
     logger.info("[generation] starting job", { jobId: job.id, leadId });
 
     // 1. Load context
-    const ctx = loadContext(db, leadId);
+    const ctx = await loadContext(db, leadId);
     logger.info("[generation] context loaded", {
       lead: ctx.lead.slug,
       hasBrand: !!ctx.brandProfile,
@@ -336,13 +335,12 @@ export async function processGenerationJob(db: Db, job: GenerationJob): Promise<
     );
 
     // 3. Flip lead to 'generating'
-    db.update(leads)
+    await db.update(leads)
       .set({ status: "generating" })
-      .where(eq(leads.id, ctx.lead.id))
-      .run();
+      .where(eq(leads.id, ctx.lead.id));
 
     // 4. Two-strikes retry
-    const version = getNextVersion(db, leadId);
+    const version = await getNextVersion(db, leadId);
     let attempt = 1;
     let lastFailure: string | null = null;
 
@@ -374,16 +372,15 @@ export async function processGenerationJob(db: Db, job: GenerationJob): Promise<
         });
 
         // Insert generated_sites row
-        const siteId = insertGeneratedSiteRow(db, ctx, projectPath, version, null);
+        const siteId = await insertGeneratedSiteRow(db, ctx, projectPath, version, null);
 
         // Flip lead status
-        db.update(leads)
+        await db.update(leads)
           .set({ status: "generated" })
-          .where(eq(leads.id, ctx.lead.id))
-          .run();
+          .where(eq(leads.id, ctx.lead.id));
 
         // Enqueue deploy job
-        enqueue(db, {
+        await enqueue(db, {
           leadId: ctx.lead.id,
           step: "deploy",
           payload: { leadId: ctx.lead.id, generatedSiteId: siteId },
@@ -407,12 +404,11 @@ export async function processGenerationJob(db: Db, job: GenerationJob): Promise<
 
         if (attempt === 2) {
           // Both attempts failed — record the failure
-          db.update(leads)
+          await db.update(leads)
             .set({ status: "generation_failed" })
-            .where(eq(leads.id, ctx.lead.id))
-            .run();
+            .where(eq(leads.id, ctx.lead.id));
 
-          insertGeneratedSiteRow(db, ctx, projectPath, version, null);
+          await insertGeneratedSiteRow(db, ctx, projectPath, version, null);
 
           logger.error("[generation] both attempts failed — lead marked generation_failed", {
             slug: ctx.lead.slug,

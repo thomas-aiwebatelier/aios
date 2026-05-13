@@ -14,11 +14,10 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import {
-  createDb,
-  createSchema,
+  getTestDb,
   leads,
   generatedSites,
-  pipelineJobs,
+  pipelineJobs
 } from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -66,18 +65,18 @@ import { runPagespeedInsights } from "../lib/psi.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function createInMemoryDb() {
-  const db = createDb(":memory:");
-  createSchema(db);
+async function createInMemoryDb() {
+  const db = await getTestDb();
+
   return db;
 }
 
-type Db = ReturnType<typeof createInMemoryDb>;
+type Db = Awaited<ReturnType<typeof createInMemoryDb>>;
 
-function createTestLead(db: Db, overrides: Partial<Parameters<Db["insert"]>[0]> = {}) {
+async function createTestLead(db: Db, overrides: Partial<Parameters<Db["insert"]>[0]> = {}) {
   const id = nanoid();
   const slug = `test-slug-${id.slice(0, 6)}`;
-  db.insert(leads)
+  await db.insert(leads)
     .values({
       id,
       slug,
@@ -87,17 +86,17 @@ function createTestLead(db: Db, overrides: Partial<Parameters<Db["insert"]>[0]> 
       industryKey: "bakery",
       language: "nl",
     })
-    .run();
+;
   return { id, slug };
 }
 
-function createTestSite(
+async function createTestSite(
   db: Db,
   leadId: string,
   astroProjectPath = "/mock/generated-sites/test-slug",
 ) {
   const id = nanoid();
-  db.insert(generatedSites)
+  await db.insert(generatedSites)
     .values({
       id,
       leadId,
@@ -105,14 +104,14 @@ function createTestSite(
       astroProjectPath,
       createdVia: "initial_generation",
     })
-    .run();
+;
   return id;
 }
 
-function createTestJob(db: Db, leadId: string, generatedSiteId: string) {
+async function createTestJob(db: Db, leadId: string, generatedSiteId: string) {
   const id = nanoid();
   const payload = { leadId, generatedSiteId };
-  db.insert(pipelineJobs)
+  await db.insert(pipelineJobs)
     .values({
       id,
       leadId,
@@ -121,7 +120,7 @@ function createTestJob(db: Db, leadId: string, generatedSiteId: string) {
       payload,
       attemptCount: 1,
     })
-    .run();
+;
   return { id, leadId, payload } as { id: string; leadId: string | null; payload: Record<string, unknown> };
 }
 
@@ -130,8 +129,8 @@ function createTestJob(db: Db, leadId: string, generatedSiteId: string) {
 describe("processDeployJob", () => {
   let db: Db;
 
-  beforeEach(() => {
-    db = createInMemoryDb();
+  beforeEach(async () => {
+    db = await createInMemoryDb();
     vi.clearAllMocks();
     vi.useFakeTimers();
 
@@ -158,9 +157,9 @@ describe("processDeployJob", () => {
   });
 
   it("happy path: project missing → create → deploy → PSI → lead=deployed", async () => {
-    const { id: leadId } = createTestLead(db);
-    const generatedSiteId = createTestSite(db, leadId);
-    const job = createTestJob(db, leadId, generatedSiteId);
+    const { id: leadId } = await createTestLead(db);
+    const generatedSiteId = await createTestSite(db, leadId);
+    const job = await createTestJob(db, leadId, generatedSiteId);
 
     vi.mocked(getPagesProject).mockResolvedValue({ exists: false });
 
@@ -183,7 +182,7 @@ describe("processDeployJob", () => {
     expect(runPagespeedInsights).toHaveBeenCalledWith("https://test-slug.pages.dev");
 
     // generated_sites updated
-    const site = db.select().from(generatedSites).where(eq(generatedSites.id, generatedSiteId)).get();
+    const site = ((await db.select().from(generatedSites).where(eq(generatedSites.id, generatedSiteId))))[0];
     expect(site?.cloudflareProjectName).toMatch(/test-slug/);
     expect(site?.cloudflarePreviewUrl).toBe("https://test-slug.pages.dev");
     expect(site?.cloudflareDeploymentId).toBe("https://abc12345.test-slug.pages.dev");
@@ -195,18 +194,18 @@ describe("processDeployJob", () => {
     });
 
     // Lead flipped to deployed
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("deployed");
 
     // Job marked succeeded
-    const jobRow = db.select().from(pipelineJobs).where(eq(pipelineJobs.id, job.id)).get();
+    const jobRow = ((await db.select().from(pipelineJobs).where(eq(pipelineJobs.id, job.id))))[0];
     expect(jobRow?.status).toBe("succeeded");
   });
 
   it("project already exists → skip create → deploy → PSI → lead=deployed", async () => {
-    const { id: leadId } = createTestLead(db);
-    const generatedSiteId = createTestSite(db, leadId);
-    const job = createTestJob(db, leadId, generatedSiteId);
+    const { id: leadId } = await createTestLead(db);
+    const generatedSiteId = await createTestSite(db, leadId);
+    const job = await createTestJob(db, leadId, generatedSiteId);
 
     vi.mocked(getPagesProject).mockResolvedValue({
       exists: true,
@@ -224,7 +223,7 @@ describe("processDeployJob", () => {
     expect(deployToPages).toHaveBeenCalledOnce();
 
     // Lead deployed
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("deployed");
   });
 
@@ -232,9 +231,9 @@ describe("processDeployJob", () => {
     // Use real timers for this test — the throw happens before any timers fire
     vi.useRealTimers();
 
-    const { id: leadId } = createTestLead(db);
-    const generatedSiteId = createTestSite(db, leadId);
-    const job = createTestJob(db, leadId, generatedSiteId);
+    const { id: leadId } = await createTestLead(db);
+    const generatedSiteId = await createTestSite(db, leadId);
+    const job = await createTestJob(db, leadId, generatedSiteId);
 
     vi.mocked(deployToPages).mockRejectedValue(
       new Error("[cloudflare] wrangler deploy failed: non-zero exit"),
@@ -243,7 +242,7 @@ describe("processDeployJob", () => {
     await expect(processDeployJob(db, job as any)).rejects.toThrow("wrangler deploy failed");
 
     // Lead status unchanged (still generated)
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("generated");
 
     // PSI not called
@@ -251,9 +250,9 @@ describe("processDeployJob", () => {
   });
 
   it("PSI fails → job still succeeds, lighthouseScores=null", async () => {
-    const { id: leadId } = createTestLead(db);
-    const generatedSiteId = createTestSite(db, leadId);
-    const job = createTestJob(db, leadId, generatedSiteId);
+    const { id: leadId } = await createTestLead(db);
+    const generatedSiteId = await createTestSite(db, leadId);
+    const job = await createTestJob(db, leadId, generatedSiteId);
 
     vi.mocked(runPagespeedInsights).mockRejectedValue(
       new Error("[psi] PSI API returned 429: rate limit"),
@@ -264,10 +263,10 @@ describe("processDeployJob", () => {
     await jobPromise;
 
     // Job should complete (PSI is informational)
-    const lead = db.select().from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select().from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("deployed");
 
-    const site = db.select().from(generatedSites).where(eq(generatedSites.id, generatedSiteId)).get();
+    const site = ((await db.select().from(generatedSites).where(eq(generatedSites.id, generatedSiteId))))[0];
     // cloudflare fields populated
     expect(site?.cloudflarePreviewUrl).toBe("https://test-slug.pages.dev");
     // lighthouseScores null (PSI failed, no update applied)
@@ -275,9 +274,9 @@ describe("processDeployJob", () => {
   });
 
   it("invalid payload → throws immediately", async () => {
-    const { id: leadId } = createTestLead(db);
+    const { id: leadId } = await createTestLead(db);
     const jobId = nanoid();
-    db.insert(pipelineJobs)
+    await db.insert(pipelineJobs)
       .values({
         id: jobId,
         leadId,
@@ -286,7 +285,7 @@ describe("processDeployJob", () => {
         payload: { wrong: "data" }, // missing leadId + generatedSiteId
         attemptCount: 1,
       })
-      .run();
+;
 
     const badJob = { id: jobId, leadId, payload: { wrong: "data" } };
 
@@ -308,14 +307,14 @@ describe("processDeployJob", () => {
     // deploy jobs both succeed.
 
     // Job 1
-    const { id: leadId1 } = createTestLead(db);
-    const siteId1 = createTestSite(db, leadId1);
-    const job1 = createTestJob(db, leadId1, siteId1);
+    const { id: leadId1 } = await createTestLead(db);
+    const siteId1 = await createTestSite(db, leadId1);
+    const job1 = await createTestJob(db, leadId1, siteId1);
 
     // Job 2
-    const { id: leadId2 } = createTestLead(db);
-    const siteId2 = createTestSite(db, leadId2);
-    const job2 = createTestJob(db, leadId2, siteId2);
+    const { id: leadId2 } = await createTestLead(db);
+    const siteId2 = await createTestSite(db, leadId2);
+    const job2 = await createTestJob(db, leadId2, siteId2);
 
     vi.mocked(getPagesProject).mockResolvedValue({ exists: false });
 
@@ -331,8 +330,8 @@ describe("processDeployJob", () => {
     expect(createPagesProject).toHaveBeenCalledTimes(2);
 
     // Both leads deployed
-    const l1 = db.select().from(leads).where(eq(leads.id, leadId1)).get();
-    const l2 = db.select().from(leads).where(eq(leads.id, leadId2)).get();
+    const l1 = ((await db.select().from(leads).where(eq(leads.id, leadId1))))[0];
+    const l2 = ((await db.select().from(leads).where(eq(leads.id, leadId2))))[0];
     expect(l1?.status).toBe("deployed");
     expect(l2?.status).toBe("deployed");
   });

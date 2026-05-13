@@ -20,16 +20,17 @@ export async function POST(req: NextRequest) {
   const db = getDb();
 
   if (action === "archive") {
-    db.update(leads)
+    await db.update(leads)
       .set({ status: "archived", updatedAt: new Date() })
-      .where(inArray(leads.id, ids))
-      .run();
+      .where(inArray(leads.id, ids));
     return NextResponse.json({ ok: true, processed: ids.length });
   }
 
   // action === 'research': enqueue research jobs for each lead
-  const jobIds = ids.map((leadId) =>
-    enqueue(db, { leadId, step: "research", payload: { leadId } })
+  const jobIds = await Promise.all(
+    ids.map((leadId) =>
+      enqueue(db, { leadId, step: "research", payload: { leadId } }),
+    ),
   );
 
   return NextResponse.json({ ok: true, processed: ids.length, jobIds });

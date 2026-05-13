@@ -25,11 +25,10 @@ export async function tearDownDeclinedLeads(): Promise<number> {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   // Find all leads with status='declined' AND updated_at < cutoff
-  const stale = db
+  const stale = await db
     .select()
     .from(leads)
-    .where(and(eq(leads.status, "declined"), lt(leads.updatedAt, cutoff)))
-    .all();
+    .where(and(eq(leads.status, "declined"), lt(leads.updatedAt, cutoff)));
 
   logger.info(`[teardown] ${stale.length} declined lead(s) older than 24h`, {
     cutoff: cutoff.toISOString(),
@@ -61,7 +60,7 @@ export async function tearDownDeclinedLeads(): Promise<number> {
     }
 
     // 4. Flip lead status to 'archived' so we don't re-process
-    db.update(leads).set({ status: "archived" }).where(eq(leads.id, lead.id)).run();
+    await db.update(leads).set({ status: "archived" }).where(eq(leads.id, lead.id));
     logger.info(`[teardown] lead archived: ${lead.id} (${lead.businessName})`);
   }
 

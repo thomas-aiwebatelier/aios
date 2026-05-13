@@ -99,7 +99,7 @@ async function runLoop(spec: WorkerSpec): Promise<void> {
 
     // Claim phase
     try {
-      job = claimNext(db, spec.workerName, spec.step);
+      job = await claimNext(db, spec.workerName, spec.step);
     } catch (err) {
       logger.error(`[worker-runner] ${spec.workerName} claimNext failed`, {
         err: String(err),
@@ -124,7 +124,7 @@ async function runLoop(spec: WorkerSpec): Promise<void> {
         { err: msg },
       );
       try {
-        failJob(db, job.id, msg);
+        await failJob(db, job.id, msg);
       } catch (failErr) {
         logger.error(`[worker-runner] failJob itself failed`, {
           err: String(failErr),

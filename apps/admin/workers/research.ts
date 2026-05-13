@@ -44,9 +44,9 @@ export async function processResearchJob(db: Db, job: ResearchJob): Promise<void
   const { leadId } = job.payload as { leadId: string };
 
   // Heartbeat every 30s — research can take 5-15 min total
-  const hbInterval = setInterval(() => {
+  const hbInterval = setInterval(async () => {
     try {
-      heartbeat(db, job.id);
+      await heartbeat(db, job.id);
     } catch (err) {
       logger.warn("[research] heartbeat failed", { error: String(err) });
     }
@@ -59,11 +59,11 @@ export async function processResearchJob(db: Db, job: ResearchJob): Promise<void
     logger.info("[research] starting job", { jobId: job.id, leadId });
 
     // Load lead
-    const lead = db
+    const lead = ((await db
       .select()
       .from(leads)
       .where(eq(leads.id, leadId))
-      .get();
+      ))[0];
 
     if (!lead) {
       throw new Error(`Lead not found: ${leadId}`);
@@ -95,12 +95,11 @@ export async function processResearchJob(db: Db, job: ResearchJob): Promise<void
     );
 
     // ── Update lead status ─────────────────────────────────────────────────────
-    db.update(leads)
+    await db.update(leads)
       .set({ status: "awaiting_approval" })
-      .where(eq(leads.id, leadId))
-      .run();
+      .where(eq(leads.id, leadId));
 
-    completeJob(db, job.id);
+    await completeJob(db, job.id);
     logger.info("[research] job complete", { jobId: job.id, leadId });
   } finally {
     clearInterval(hbInterval);
@@ -114,7 +113,7 @@ export async function processResearchJob(db: Db, job: ResearchJob): Promise<void
  * Returns true if a job was processed, false if queue was empty.
  */
 export async function runResearchWorker(db: Db): Promise<boolean> {
-  const job = claimNext(db, "research-worker", "research");
+  const job = await claimNext(db, "research-worker", "research");
   if (!job) {
     logger.debug("[research] no queued research jobs");
     return false;
@@ -126,7 +125,7 @@ export async function runResearchWorker(db: Db): Promise<boolean> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("[research] job failed", { jobId: job.id, error: message });
-    failJob(db, job.id, message);
+    await failJob(db, job.id, message);
     // Do NOT rethrow — let the caller decide whether to continue the loop
     return false;
   }

@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createDb, createSchema, leads } from "@atelier/db";
+import {
+  getTestDb,
+  leads
+} from "@atelier/db";
 import { eq } from "drizzle-orm";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -72,9 +75,9 @@ function makeLead(overrides: Partial<{
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 describe("tearDownDeclinedLeads", () => {
-  beforeEach(() => {
-    _testDb = createDb(":memory:");
-    createSchema(_testDb);
+  beforeEach(async () => {
+    _testDb = await getTestDb();
+
     vi.clearAllMocks();
   });
 
@@ -84,7 +87,7 @@ describe("tearDownDeclinedLeads", () => {
 
   it("tears down a declined lead older than 24h", async () => {
     const lead = makeLead({ updatedAt: new Date(Date.now() - 25 * 60 * 60 * 1000) });
-    _testDb.insert(leads).values(lead).run();
+    _testDb.insert(leads).values(lead);
 
     const count = await tearDownDeclinedLeads();
 
@@ -99,7 +102,7 @@ describe("tearDownDeclinedLeads", () => {
     vi.mocked(existsSync).mockReturnValue(true);
 
     const lead = makeLead();
-    _testDb.insert(leads).values(lead).run();
+    _testDb.insert(leads).values(lead);
 
     await tearDownDeclinedLeads();
 
@@ -109,7 +112,7 @@ describe("tearDownDeclinedLeads", () => {
 
   it("does NOT tear down a declined lead updated only 1h ago", async () => {
     const lead = makeLead({ updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000) });
-    _testDb.insert(leads).values(lead).run();
+    _testDb.insert(leads).values(lead);
 
     const count = await tearDownDeclinedLeads();
 
@@ -125,7 +128,7 @@ describe("tearDownDeclinedLeads", () => {
       status: "approved",
       updatedAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
     });
-    _testDb.insert(leads).values(lead).run();
+    _testDb.insert(leads).values(lead);
 
     const count = await tearDownDeclinedLeads();
 
@@ -139,7 +142,7 @@ describe("tearDownDeclinedLeads", () => {
     );
 
     const lead = makeLead();
-    _testDb.insert(leads).values(lead).run();
+    _testDb.insert(leads).values(lead);
 
     // Should not throw
     const count = await tearDownDeclinedLeads();
@@ -153,7 +156,7 @@ describe("tearDownDeclinedLeads", () => {
   it("processes multiple stale declined leads", async () => {
     const lead1 = makeLead({ id: "lead-a", slug: "slug-a" });
     const lead2 = makeLead({ id: "lead-b", slug: "slug-b" });
-    _testDb.insert(leads).values([lead1, lead2]).run();
+    _testDb.insert(leads).values([lead1, lead2]);
 
     const count = await tearDownDeclinedLeads();
 

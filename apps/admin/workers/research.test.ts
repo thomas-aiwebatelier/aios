@@ -12,7 +12,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { createDb, createSchema, leads, brandProfiles, siteInventories, competitors, pipelineJobs } from "@atelier/db";
+import {
+  getTestDb,
+  leads,
+  brandProfiles,
+  siteInventories,
+  competitors,
+  pipelineJobs
+} from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -128,19 +135,20 @@ function createMockSpawn(output: string) {
 
 function mockSpawnOutput(json: string) {
   vi.mocked(spawn).mockImplementationOnce(
-    (_cmd: string, _args: string[]) => createMockSpawn(json) as ReturnType<typeof spawn>,
+    ((_cmd: string, _args: readonly string[]) =>
+      createMockSpawn(json) as unknown as ReturnType<typeof spawn>) as any,
   );
 }
 
-function makeDb() {
-  const db = createDb(":memory:");
-  createSchema(db);
+async function makeDb() {
+  const db = await getTestDb();
+
   return db;
 }
 
-function insertTestLead(db: ReturnType<typeof makeDb>, overrides: Partial<typeof leads.$inferInsert> = {}) {
+async function insertTestLead(db: Awaited<ReturnType<typeof makeDb>>, overrides: Partial<typeof leads.$inferInsert> = {}) {
   const id = nanoid();
-  db.insert(leads).values({
+  await db.insert(leads).values({
     id,
     slug: `test-lead-${id.slice(0, 6)}`,
     status: "discovered",
@@ -150,17 +158,17 @@ function insertTestLead(db: ReturnType<typeof makeDb>, overrides: Partial<typeof
     existingWebsiteUrl: "https://example.be",
     language: "nl",
     ...overrides,
-  }).run();
+  });
   return id;
 }
 
 // ── Tests: Branding ───────────────────────────────────────────────────────────
 
 describe("extractBranding", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
 
     // Reset browser singleton between tests
@@ -181,7 +189,7 @@ describe("extractBranding", () => {
 
     // Tone-of-voice spawn
     vi.mocked(spawn).mockImplementation(
-      () => createMockSpawn("Warme en ambachtelijke bakkerij.") as ReturnType<typeof spawn>
+      () => createMockSpawn("Warme en ambachtelijke bakkerij.") as unknown as ReturnType<typeof spawn>
     );
   });
 
@@ -190,7 +198,7 @@ describe("extractBranding", () => {
   });
 
   it("inserts brand_profiles row with logo path when website present", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // Mock logo img found
     const mockLogoEl = {
@@ -203,7 +211,7 @@ describe("extractBranding", () => {
 
     await extractBranding(db, leadId, "https://example.be");
 
-    const profile = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).get();
+    const profile = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId))))[0];
     expect(profile).toBeDefined();
     expect(profile!.leadId).toBe(leadId);
     // Logo path set (mocked download succeeds)
@@ -212,7 +220,7 @@ describe("extractBranding", () => {
   });
 
   it("inserts brand_profiles row with palette when logo downloaded", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     const mockLogoEl = {
       getAttribute: vi.fn().mockResolvedValue("/images/logo.png"),
@@ -221,7 +229,7 @@ describe("extractBranding", () => {
 
     await extractBranding(db, leadId, "https://example.be");
 
-    const profile = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).get();
+    const profile = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId))))[0];
     expect(profile).toBeDefined();
     expect(profile!.primaryColor).toBe("#ff0000");
     expect(profile!.secondaryColor).toBe("#880000");
@@ -231,11 +239,11 @@ describe("extractBranding", () => {
   });
 
   it("inserts brand_profiles row with null logo_path when no website", async () => {
-    const leadId = insertTestLead(db, { existingWebsiteUrl: null });
+    const leadId = await insertTestLead(db, { existingWebsiteUrl: null });
 
     await extractBranding(db, leadId, null);
 
-    const profile = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).get();
+    const profile = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId))))[0];
     expect(profile).toBeDefined();
     expect(profile!.logoPath).toBeNull();
     expect(profile!.extractedPalette).toBeNull();
@@ -243,7 +251,7 @@ describe("extractBranding", () => {
   });
 
   it("stores social links when found on page", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     mockPage.evaluate.mockImplementation((fn: unknown) => {
       // First call: social links (from page.evaluate in extractBranding)
@@ -261,19 +269,19 @@ describe("extractBranding", () => {
 
     await extractBranding(db, leadId, "https://example.be");
 
-    const profile = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).get();
+    const profile = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId))))[0];
     expect(profile).toBeDefined();
     // socialLinks is a JSON column
     expect(profile!.socialLinks).not.toBeNull();
   });
 
   it("upserts: overwrites existing brand profile for same lead", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     await extractBranding(db, leadId, null);
     await extractBranding(db, leadId, null);
 
-    const profiles = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).all();
+    const profiles = await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId));
     expect(profiles).toHaveLength(1); // Only one row after two upserts
   });
 });
@@ -281,16 +289,16 @@ describe("extractBranding", () => {
 // ── Tests: Contact ─────────────────────────────────────────────────────────────
 
 describe("enrichContact", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
     mockPage.goto.mockResolvedValue(undefined);
   });
 
   it("sets email from mailto: link on website", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // First evaluate call: home page hrefs for contact page discovery
     // Second evaluate call: mailto/tel collection
@@ -307,12 +315,12 @@ describe("enrichContact", () => {
 
     await enrichContact(db, leadId, "https://example.be");
 
-    const lead = db.select({ email: leads.email }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ email: leads.email }).from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.email).toBe("info@example.be");
   });
 
   it("prefers business domain email over gmail", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     mockPage.evaluate.mockImplementation((fn: unknown) => {
       const fnStr = fn?.toString() ?? "";
@@ -324,12 +332,12 @@ describe("enrichContact", () => {
 
     await enrichContact(db, leadId, "https://example.be");
 
-    const lead = db.select({ email: leads.email }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ email: leads.email }).from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.email).toBe("info@example.be");
   });
 
   it("Maps phone wins over site phone when both present", async () => {
-    const leadId = insertTestLead(db, { phone: "+32 3 123 45 67" });
+    const leadId = await insertTestLead(db, { phone: "+32 3 123 45 67" });
 
     mockPage.evaluate.mockImplementation((fn: unknown) => {
       const fnStr = fn?.toString() ?? "";
@@ -341,13 +349,13 @@ describe("enrichContact", () => {
 
     await enrichContact(db, leadId, "https://example.be");
 
-    const lead = db.select({ phone: leads.phone }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ phone: leads.phone }).from(leads).where(eq(leads.id, leadId))))[0];
     // Maps phone should remain unchanged
     expect(lead?.phone).toBe("+32 3 123 45 67");
   });
 
   it("sets phone from site when Maps has none", async () => {
-    const leadId = insertTestLead(db, { phone: null });
+    const leadId = await insertTestLead(db, { phone: null });
 
     mockPage.evaluate.mockImplementation((fn: unknown) => {
       const fnStr = fn?.toString() ?? "";
@@ -359,12 +367,12 @@ describe("enrichContact", () => {
 
     await enrichContact(db, leadId, "https://example.be");
 
-    const lead = db.select({ phone: leads.phone }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ phone: leads.phone }).from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.phone).toBe("+3293334455");
   });
 
   it("returns early when no website", async () => {
-    const leadId = insertTestLead(db, { existingWebsiteUrl: null });
+    const leadId = await insertTestLead(db, { existingWebsiteUrl: null });
 
     await enrichContact(db, leadId, null);
 
@@ -376,10 +384,10 @@ describe("enrichContact", () => {
 // ── Tests: Crawl ───────────────────────────────────────────────────────────────
 
 describe("crawlSite", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
 
     // Mock sitemap.xml fetch (returns 3 URLs → triggers sitemap path)
@@ -414,7 +422,7 @@ describe("crawlSite", () => {
         ctas: [{ text: "Bestel nu", intent: "order" }],
         forms: [],
         language: "nl",
-      })) as ReturnType<typeof spawn>
+      })) as unknown as ReturnType<typeof spawn>
     );
 
     mockPage.goto.mockResolvedValue(undefined);
@@ -427,19 +435,19 @@ describe("crawlSite", () => {
   });
 
   it("returns null when no website", async () => {
-    const leadId = insertTestLead(db, { existingWebsiteUrl: null });
+    const leadId = await insertTestLead(db, { existingWebsiteUrl: null });
     const result = await crawlSite(db, leadId, null);
     expect(result).toBeNull();
   });
 
   it("inserts site_inventories row with structured pages", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     const result = await crawlSite(db, leadId, "https://example.be");
     expect(result).not.toBeNull();
     expect(result!.pageCount).toBeGreaterThan(0);
 
-    const inventory = db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId)).get();
+    const inventory = ((await db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId))))[0];
     expect(inventory).toBeDefined();
     expect(Array.isArray(inventory!.pages)).toBe(true);
     expect(inventory!.pages!.length).toBeGreaterThan(0);
@@ -447,17 +455,17 @@ describe("crawlSite", () => {
   });
 
   it("records assets from crawled pages", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     await crawlSite(db, leadId, "https://example.be");
 
-    const inventory = db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId)).get();
+    const inventory = ((await db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId))))[0];
     expect(inventory).toBeDefined();
     expect(Array.isArray(inventory!.assets)).toBe(true);
   });
 
   it("handles bad page gracefully — finalizes with remaining pages", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // Sitemap returns 3 pages (above the 5-page threshold to trigger sitemap path)
     vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) => {
@@ -486,7 +494,7 @@ describe("crawlSite", () => {
     const result = await crawlSite(db, leadId, "https://example.be");
 
     // Should have collected some pages even with one failure
-    const inventory = db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId)).get();
+    const inventory = ((await db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId))))[0];
     expect(inventory).toBeDefined();
     // Not 0 pages
     expect(inventory!.pages!.length).toBeGreaterThan(0);
@@ -498,10 +506,10 @@ describe("crawlSite", () => {
 // ── Tests: Competitor ─────────────────────────────────────────────────────────
 
 describe("researchCompetitor", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
     mockPage.goto.mockResolvedValue(undefined);
     mockPage.content.mockResolvedValue("<html><body>Competitor page</body></html>");
@@ -520,7 +528,7 @@ describe("researchCompetitor", () => {
   });
 
   it("inserts competitors row with name, url, selection_reason, learnings", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // Mock: suggest → 3 candidates, pick → index 1, learnings → sentences
     const suggestResponse = JSON.stringify([
@@ -540,12 +548,12 @@ describe("researchCompetitor", () => {
     let callIdx = 0;
     vi.mocked(spawn).mockImplementation(() => {
       const resp = responses[callIdx++ % responses.length];
-      return createMockSpawn(resp) as ReturnType<typeof spawn>;
+      return createMockSpawn(resp) as unknown as ReturnType<typeof spawn>;
     });
 
     await researchCompetitor(db, leadId, "Test Bakkerij", "Antwerpen", "bakery-restaurant", false);
 
-    const row = db.select().from(competitors).where(eq(competitors.leadId, leadId)).get();
+    const row = ((await db.select().from(competitors).where(eq(competitors.leadId, leadId))))[0];
     expect(row).toBeDefined();
     expect(row!.competitorUrl).toBe("https://bakkerij-b.be");
     expect(row!.competitorName).toBe("Bakkerij B");
@@ -556,16 +564,16 @@ describe("researchCompetitor", () => {
   });
 
   it("inserts fallback row when no valid candidates", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // Claude returns invalid JSON for suggest
     vi.mocked(spawn).mockImplementation(
-      () => createMockSpawn("I cannot identify competitors.") as ReturnType<typeof spawn>
+      () => createMockSpawn("I cannot identify competitors.") as unknown as ReturnType<typeof spawn>
     );
 
     await researchCompetitor(db, leadId, "Test Bakkerij", "Antwerpen", "bakery-restaurant", false);
 
-    const row = db.select().from(competitors).where(eq(competitors.leadId, leadId)).get();
+    const row = ((await db.select().from(competitors).where(eq(competitors.leadId, leadId))))[0];
     expect(row).toBeDefined();
     expect(row!.learnings).toContain("no competitor identified");
   });
@@ -574,10 +582,10 @@ describe("researchCompetitor", () => {
 // ── Tests: Orchestrator ────────────────────────────────────────────────────────
 
 describe("runResearchWorker — orchestrator", () => {
-  let db: ReturnType<typeof makeDb>;
+  let db: Awaited<ReturnType<typeof makeDb>>;
 
-  beforeEach(() => {
-    db = makeDb();
+  beforeEach(async () => {
+    db = await makeDb();
     vi.clearAllMocks();
     mockPage.goto.mockResolvedValue(undefined);
     mockPage.$.mockResolvedValue(null);
@@ -615,7 +623,7 @@ describe("runResearchWorker — orchestrator", () => {
         ctas: [],
         forms: [],
         language: "nl",
-      })) as ReturnType<typeof spawn>
+      })) as unknown as ReturnType<typeof spawn>
     );
   });
 
@@ -624,28 +632,28 @@ describe("runResearchWorker — orchestrator", () => {
   });
 
   it("happy-path: all 4 child rows present, lead.status=awaiting_approval", async () => {
-    const leadId = insertTestLead(db);
-    enqueue(db, { step: "research", leadId, payload: { leadId } });
+    const leadId = await insertTestLead(db);
+    await enqueue(db, { step: "research", leadId, payload: { leadId } });
 
     const result = await runResearchWorker(db);
     expect(result).toBe(true);
 
     // Lead status updated
-    const lead = db.select({ status: leads.status }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ status: leads.status }).from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("awaiting_approval");
 
     // All child rows present
-    const bp = db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId)).get();
+    const bp = ((await db.select().from(brandProfiles).where(eq(brandProfiles.leadId, leadId))))[0];
     expect(bp).toBeDefined();
 
-    const si = db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId)).get();
+    const si = ((await db.select().from(siteInventories).where(eq(siteInventories.leadId, leadId))))[0];
     expect(si).toBeDefined();
 
-    const comp = db.select().from(competitors).where(eq(competitors.leadId, leadId)).get();
+    const comp = ((await db.select().from(competitors).where(eq(competitors.leadId, leadId))))[0];
     expect(comp).toBeDefined();
 
     // Job succeeded
-    const job = db.select().from(pipelineJobs).get();
+    const job = ((await db.select().from(pipelineJobs)))[0];
     expect(job?.status).toBe("succeeded");
   });
 
@@ -655,23 +663,23 @@ describe("runResearchWorker — orchestrator", () => {
   });
 
   it("handles sub-step failure: lead.status stays discovered, job marked failed", async () => {
-    const leadId = insertTestLead(db);
+    const leadId = await insertTestLead(db);
 
     // Enqueue a research job with a payload pointing to a non-existent lead.
     // pipelineJobs.leadId FK is nullable — pass null as the FK but use a bad id in payload.
-    enqueue(db, { step: "research", leadId: null, payload: { leadId: "nonexistent-lead-id" } });
+    await enqueue(db, { step: "research", leadId: null, payload: { leadId: "nonexistent-lead-id" } });
 
     const result = await runResearchWorker(db);
     expect(result).toBe(false);
 
     // Job should be marked failed with an error message
-    const job = db.select().from(pipelineJobs).orderBy(pipelineJobs.createdAt).get();
+    const job = ((await db.select().from(pipelineJobs).orderBy(pipelineJobs.createdAt)))[0];
     expect(job?.status).toBe("failed");
     expect(job?.errorMessage).toBeTruthy();
     expect(job?.errorMessage).toContain("nonexistent-lead-id");
 
     // Original lead stays at discovered
-    const lead = db.select({ status: leads.status }).from(leads).where(eq(leads.id, leadId)).get();
+    const lead = ((await db.select({ status: leads.status }).from(leads).where(eq(leads.id, leadId))))[0];
     expect(lead?.status).toBe("discovered");
   });
 });

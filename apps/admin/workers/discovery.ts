@@ -221,9 +221,9 @@ function rawToPlace(raw: RawPlace): PlaceResult {
  */
 export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<number> {
   // Heartbeat every 30s
-  const hbInterval = setInterval(() => {
+  const hbInterval = setInterval(async () => {
     try {
-      heartbeat(db, job.id);
+      await heartbeat(db, job.id);
     } catch (err) {
       logger.warn("[discovery] heartbeat failed", { error: String(err) });
     }
@@ -254,11 +254,11 @@ export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<nu
       }
 
       // Dedup by googleMapsPlaceId
-      const existing = db
+      const existing = ((await db
         .select({ id: leads.id })
         .from(leads)
         .where(eq(leads.googleMapsPlaceId, place.id))
-        .get();
+        ))[0];
 
       if (existing) {
         logger.debug("[discovery] skipping duplicate", { placeId: place.id });
@@ -295,7 +295,7 @@ export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<nu
       }
 
       // Insert lead
-      db.insert(leads)
+      await db.insert(leads)
         .values({
           id: nanoid(),
           slug,
@@ -313,8 +313,7 @@ export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<nu
           industryKey: classification.industry_key,
           industryClassificationConfidence: classification.confidence,
           language: "nl",
-        })
-        .run();
+        });
 
       logger.info("[discovery] lead inserted", {
         name: place.name,
@@ -326,7 +325,7 @@ export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<nu
       inserted++;
     }
 
-    completeJob(db, job.id);
+    await completeJob(db, job.id);
     logger.info("[discovery] job complete", {
       jobId: job.id,
       inserted,
@@ -345,7 +344,7 @@ export async function processDiscoveryJob(db: Db, job: DiscoveryJob): Promise<nu
  * Returns the number of leads inserted (0 if no job found).
  */
 export async function runDiscoveryWorker(db: Db): Promise<number> {
-  const job = claimNext(db, "discovery-worker", "discovery");
+  const job = await claimNext(db, "discovery-worker", "discovery");
   if (!job) {
     logger.debug("[discovery] no queued discovery jobs");
     return 0;
@@ -356,7 +355,7 @@ export async function runDiscoveryWorker(db: Db): Promise<number> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("[discovery] job failed", { jobId: job.id, error: message });
-    failJob(db, job.id, message);
+    await failJob(db, job.id, message);
     throw err;
   }
 }

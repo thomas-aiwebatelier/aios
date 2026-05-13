@@ -11,7 +11,7 @@ export async function POST(
   const { id } = await params;
   const db = getDb();
 
-  const job = db.select().from(pipelineJobs).where(eq(pipelineJobs.id, id)).get();
+  const job = ((await db.select().from(pipelineJobs).where(eq(pipelineJobs.id, id))))[0];
   if (!job) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
@@ -21,21 +21,20 @@ export async function POST(
   }
 
   // Enqueue a new job with the same step and payload
-  const newId = enqueue(db, {
+  const newId = await enqueue(db, {
     leadId: job.leadId ?? undefined,
     step: job.pipelineStep,
     payload: (job.payload as Record<string, unknown>) ?? {},
   });
 
   // Mark original job as succeeded with a note
-  db.update(pipelineJobs)
+  await db.update(pipelineJobs)
     .set({
       status: "succeeded",
       finishedAt: new Date(),
       errorMessage: `retried as ${newId}`,
     })
-    .where(eq(pipelineJobs.id, id))
-    .run();
+    .where(eq(pipelineJobs.id, id));
 
   return NextResponse.json({ ok: true, newJobId: newId });
 }

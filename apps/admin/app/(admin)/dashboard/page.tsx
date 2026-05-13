@@ -9,7 +9,7 @@ import { FailedJobsPanel } from "./components/FailedJobsPanel";
 async function getStatusCounts() {
   const db = getDb();
 
-  const allLeads = db.select({ status: leads.status }).from(leads).all();
+  const allLeads = await db.select({ status: leads.status }).from(leads);
 
   const discovered = allLeads.filter((l) =>
     ["discovered", "researching"].includes(l.status)
@@ -28,7 +28,7 @@ async function getStatusCounts() {
 async function getRecentJobs() {
   const db = getDb();
 
-  const jobs = db
+  const jobs = await db
     .select({
       id: pipelineJobs.id,
       pipelineStep: pipelineJobs.pipelineStep,
@@ -43,8 +43,7 @@ async function getRecentJobs() {
     .from(pipelineJobs)
     .leftJoin(leads, eq(pipelineJobs.leadId, leads.id))
     .orderBy(desc(pipelineJobs.createdAt))
-    .limit(20)
-    .all();
+    .limit(20);
 
   return jobs.map((j) => ({
     ...j,

@@ -6,7 +6,7 @@ import { eq, desc } from "drizzle-orm";
 export async function GET() {
   const db = getDb();
 
-  const jobs = db
+  const jobs = await db
     .select({
       id: pipelineJobs.id,
       pipelineStep: pipelineJobs.pipelineStep,
@@ -21,8 +21,7 @@ export async function GET() {
     .from(pipelineJobs)
     .leftJoin(leads, eq(pipelineJobs.leadId, leads.id))
     .orderBy(desc(pipelineJobs.createdAt))
-    .limit(20)
-    .all();
+    .limit(20);
 
   const serialized = jobs.map((j) => ({
     ...j,
