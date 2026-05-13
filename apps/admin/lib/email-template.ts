@@ -1,11 +1,13 @@
 /**
  * email-template.ts — Dutch cold-email renderer for AI Web Atelier outreach.
  *
- * Pricing: €499 eenmalig, inclusief één herziening (project memory override).
- * NOTE: The spec template (BUILD-PROMPT.md) shows €799. DO NOT use that figure.
- * The correct price per project memory is €499 with one revision included.
+ * Pricing per project memory v2:
+ *   - €499 eenmalig voor de bouw (incl. één iteratie na de eerste MVP)
+ *   - €9,99/maand OPTIONEEL voor hosting + onderhoud
+ * NOTE: The spec template (BUILD-PROMPT.md) shows €799 + single revision.
+ * DO NOT use that figure. The structure above is the locked pricing.
  *
- * Template spec: §11.6a.
+ * Template spec: §11.6a (updated for two-tier pricing).
  */
 
 import { runClaudeCode } from "./claude-code.js";
@@ -63,7 +65,11 @@ Wat erin zit:
 - Snelle laadtijden (Lighthouse score: ${perf})
 - Jullie branding, jullie tekst, modern uitgevoerd
 
-Mijn voorstel: €499 eenmalig, inclusief één herziening op basis van uw wensen. Daarna online, jullie domeinnaam, klaar voor de klant.
+Mijn prijs is opgebouwd in twee delen, eerlijk en zonder verrassingen:
+
+  €499 eenmalig voor de bouw — inclusief één iteratie nadat jullie de eerste versie bekeken hebben. Daarna is de site af, jullie krijgen de volledige code, eigendom is jullie.
+
+  €9,99 per maand (optioneel) voor hosting + onderhoud — wij houden de site snel en veilig online, één kleine wijziging per maand inbegrepen. Opzegbaar per maand, of jullie hosten zelf.
 
 Laat me weten wat jullie ervan vinden. Geen druk — gewoon antwoorden op deze mail volstaat.
 

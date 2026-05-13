@@ -12,9 +12,9 @@
         <span class="hero__title--accent">gebouwd met AI</span>
       </h1>
       <p class="hero__tagline">
-        Custom AI-gegenereerde websites voor Belgische ondernemers —
-        <strong>€499 eenmalig, inclusief één herziening</strong>
-        op basis van uw wensen
+        Custom websites voor Belgische ondernemers.
+        <strong>€499 voor de bouw</strong> — inclusief één iteratieronde na uw eerste review.
+        Optioneel <strong>€9,99/maand</strong> voor zorgeloos hosting en onderhoud.
       </p>
       <div class="hero__ctas">
         <a href="#contact" class="btn btn--primary">Vraag jouw voorbeeld aan</a>
@@ -23,9 +23,21 @@
     </div>
     <div class="hero__visual" aria-hidden="true">
       <div class="hero__card">
-        <div class="hero__card-badge">€499</div>
+        <div class="hero__card-row">
+          <div class="hero__card-amount">
+            <span class="hero__card-currency">€</span><span class="hero__card-price">499</span>
+          </div>
+          <span class="hero__card-period">eenmalig</span>
+        </div>
+        <div class="hero__card-divider"></div>
+        <div class="hero__card-row hero__card-row--sub">
+          <div class="hero__card-amount hero__card-amount--sub">
+            <span class="hero__card-currency hero__card-currency--sub">€</span><span class="hero__card-price hero__card-price--sub">9,99</span>
+          </div>
+          <span class="hero__card-period">/maand · optioneel</span>
+        </div>
         <div class="hero__card-lines">
-          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span>
         </div>
         <div class="hero__card-footer">Online binnen 7 dagen</div>
       </div>
@@ -178,19 +190,64 @@
     position: relative;
   }
 
-  .hero__card-badge {
+  .hero__card-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .hero__card-row--sub {
+    margin-top: var(--space-2);
+    opacity: 0.85;
+  }
+
+  .hero__card-amount {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-1);
+  }
+
+  .hero__card-currency {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-gold-dark);
+  }
+
+  .hero__card-currency--sub {
+    font-size: var(--text-base);
+  }
+
+  .hero__card-price {
     font-family: var(--font-serif);
     font-size: var(--text-5xl);
     font-weight: 700;
     color: var(--color-gold-dark);
-    margin-bottom: var(--space-8);
     line-height: 1;
+  }
+
+  .hero__card-price--sub {
+    font-size: var(--text-2xl);
+    color: var(--color-ink);
+  }
+
+  .hero__card-period {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+    font-weight: 500;
+  }
+
+  .hero__card-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--space-6) 0;
   }
 
   .hero__card-lines {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    margin-top: var(--space-8);
     margin-bottom: var(--space-8);
   }
 
