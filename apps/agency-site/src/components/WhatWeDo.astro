@@ -1,0 +1,143 @@
+---
+// WhatWeDo — 3 cards explaining the service offer
+const cards = [
+  {
+    number: "01",
+    title: "Onderzoek + design",
+    body: "We starten met een gesprek over uw bedrijf, uw klanten en uw doelen. Daarna analyseren we uw sector en maken we een visuele richting klaar — kleurenpalet, typografie, structuur. U krijgt een preview vóór we iets bouwen.",
+    icon: "🔍",
+  },
+  {
+    number: "02",
+    title: "AI-generatie",
+    body: "Op basis van uw feedback genereert ons AI-systeem de volledige website: teksten, opmaak en code. Wat vroeger weken duurde, is nu klaar op enkele dagen. Het resultaat is uniek, op maat en professioneel afgewerkt.",
+    icon: "⚡",
+  },
+  {
+    number: "03",
+    title: "Lancering + bijsturing",
+    body: "We publiceren uw site op uw eigen domein. Daarna mag u één herzieningsronde aanvragen: aanpassingen aan teksten, kleuren of structuur. We sturen bij tot u tevreden bent. Online, klaar voor klanten.",
+    icon: "🚀",
+  },
+];
+---
+<section class="what" id="wat-we-doen" aria-label="Wat we doen">
+  <div class="container what__inner">
+    <div class="what__header">
+      <span class="section-eyebrow">Wat we doen</span>
+      <h2 class="section-title">Uw professionele website<br />in drie stappen</h2>
+      <p class="section-subtitle">
+        Geen technische kennis nodig. U levert de informatie — wij bouwen de rest.
+      </p>
+    </div>
+    <div class="what__cards">
+      {cards.map((card) => (
+        <article class="card">
+          <div class="card__number">{card.number}</div>
+          <div class="card__icon" aria-hidden="true">{card.icon}</div>
+          <h3 class="card__title">{card.title}</h3>
+          <p class="card__body">{card.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .what {
+    background: var(--color-off-white);
+    padding: var(--space-24) 0;
+  }
+
+  .what__header {
+    text-align: center;
+    max-width: var(--max-width-text);
+    margin: 0 auto var(--space-16);
+  }
+
+  .section-eyebrow {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-bottom: var(--space-4);
+  }
+
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: clamp(var(--text-3xl), 4vw, var(--text-5xl));
+    font-weight: 700;
+    color: var(--color-ink);
+    line-height: 1.15;
+    margin-bottom: var(--space-6);
+  }
+
+  .section-subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-ink-soft);
+    line-height: 1.7;
+  }
+
+  .what__cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+  }
+
+  .card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card__number {
+    font-family: var(--font-serif);
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    color: var(--color-gold-light);
+    line-height: 1;
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-8);
+    user-select: none;
+  }
+
+  .card__icon {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+    line-height: 1;
+  }
+
+  .card__title {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: var(--space-4);
+    line-height: 1.2;
+  }
+
+  .card__body {
+    font-size: var(--text-base);
+    color: var(--color-ink-soft);
+    line-height: 1.75;
+  }
+
+  @media (max-width: 900px) {
+    .what__cards {
+      grid-template-columns: 1fr;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+  }
+</style>

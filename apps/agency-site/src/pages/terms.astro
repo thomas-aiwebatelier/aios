@@ -1,0 +1,132 @@
+---
+// Terms page — Task 4.9 stub
+// Task 4.9 will flesh out with full Belgian-law terms of service.
+import Base from "../layouts/Base.astro";
+import Footer from "../components/Footer.astro";
+---
+<Base
+  title="Gebruiksvoorwaarden — AI Web Atelier"
+  description="Gebruiksvoorwaarden van AI Web Atelier."
+>
+  <main class="legal-page">
+    <div class="container">
+      <div class="legal-page__content">
+        <a href="/" class="legal-page__back">← Terug naar home</a>
+        <h1 class="legal-page__title">Gebruiksvoorwaarden</h1>
+        <p class="legal-page__updated">Laatste update: mei 2026</p>
+
+        <div class="legal-page__body">
+          <p>
+            Door gebruik te maken van <strong>aiwebatelier.com</strong> gaat u akkoord met de onderstaande voorwaarden.
+            AI Web Atelier is een eenmanszaak van Thomas Cortebeeck, gevestigd in Antwerpen, België.
+          </p>
+
+          <h2>1. Diensten</h2>
+          <p>
+            AI Web Atelier biedt de ontwikkeling van websites aan op basis van een forfaitair tarief van €499 eenmalig,
+            inclusief één herzieningsronde. Meerwerk buiten deze herzieningsronde wordt afzonderlijk geoffreerd.
+          </p>
+
+          <h2>2. Betaling</h2>
+          <p>
+            Betaling vindt plaats nadat u de live preview van uw website heeft goedgekeurd.
+            Er is geen betaling vereist vóór uw expliciete goedkeuring.
+          </p>
+
+          <h2>3. Intellectueel eigendom</h2>
+          <p>
+            Na volledige betaling draagt AI Web Atelier alle rechten op de geleverde website over aan de opdrachtgever.
+            Gebruikte stockfoto's en lettertypen vallen onder hun respectievelijke licenties.
+          </p>
+
+          <h2>4. Aansprakelijkheid</h2>
+          <p>
+            AI Web Atelier is niet aansprakelijk voor indirecte schade of gevolgschade. De aansprakelijkheid is
+            in alle gevallen beperkt tot het bedrag dat voor de opdracht in kwestie werd betaald.
+          </p>
+
+          <h2>5. Toepasselijk recht</h2>
+          <p>
+            Het Belgisch recht is van toepassing. Geschillen worden voorgelegd aan de rechtbanken van het arrondissement Antwerpen.
+          </p>
+
+          <h2>6. Contact</h2>
+          <p>
+            Vragen over deze voorwaarden? Stuur een e-mail naar
+            <a href="mailto:thomas@aiwebatelier.com">thomas@aiwebatelier.com</a>.
+          </p>
+
+          <!-- TODO Task 4.9: Expand with full Belgian commercial law terms,
+               copyright posture language, AI-generated content disclosure,
+               and warranty limitations. -->
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .legal-page {
+    background: var(--color-cream);
+    padding: var(--space-16) 0 var(--space-24);
+  }
+
+  .legal-page__content {
+    max-width: var(--max-width-text);
+    margin: 0 auto;
+  }
+
+  .legal-page__back {
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: var(--color-gold-dark);
+    text-decoration: none;
+    margin-bottom: var(--space-8);
+    transition: opacity 0.15s;
+  }
+
+  .legal-page__back:hover {
+    opacity: 0.75;
+  }
+
+  .legal-page__title {
+    font-family: var(--font-serif);
+    font-size: clamp(var(--text-3xl), 4vw, var(--text-5xl));
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: var(--space-2);
+  }
+
+  .legal-page__updated {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+    margin-bottom: var(--space-12);
+  }
+
+  .legal-page__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .legal-page__body h2 {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-top: var(--space-4);
+  }
+
+  .legal-page__body p {
+    font-size: var(--text-base);
+    color: var(--color-ink-soft);
+    line-height: 1.8;
+  }
+
+  .legal-page__body a {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+</style>

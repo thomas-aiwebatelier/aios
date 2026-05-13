@@ -1,0 +1,138 @@
+---
+// Privacy page — Task 4.9 stub
+// Task 4.9 will flesh out with full GDPR-compliant Belgian privacy text.
+import Base from "../layouts/Base.astro";
+import Footer from "../components/Footer.astro";
+---
+<Base
+  title="Privacyverklaring — AI Web Atelier"
+  description="Privacyverklaring van AI Web Atelier conform de AVG/GDPR."
+>
+  <main class="legal-page">
+    <div class="container">
+      <div class="legal-page__content">
+        <a href="/" class="legal-page__back">← Terug naar home</a>
+        <h1 class="legal-page__title">Privacyverklaring</h1>
+        <p class="legal-page__updated">Laatste update: mei 2026</p>
+
+        <div class="legal-page__body">
+          <p>
+            <strong>AI Web Atelier</strong> (eenmanszaak — Thomas Cortebeeck, Antwerpen, België)
+            hecht veel waarde aan de bescherming van uw persoonsgegevens.
+            In deze privacyverklaring leggen wij uit welke gegevens wij verzamelen, waarom, en hoe lang we ze bewaren.
+          </p>
+
+          <h2>1. Verantwoordelijke voor de verwerking</h2>
+          <p>
+            Thomas Cortebeeck<br />
+            Handelend onder de naam AI Web Atelier<br />
+            Antwerpen, België<br />
+            E-mail: <a href="mailto:thomas@aiwebatelier.com">thomas@aiwebatelier.com</a>
+          </p>
+
+          <h2>2. Welke gegevens verzamelen wij?</h2>
+          <p>
+            Via het contactformulier verzamelen wij: naam, e-mailadres en de inhoud van uw bericht.
+            Deze gegevens worden uitsluitend gebruikt om uw aanvraag te beantwoorden.
+          </p>
+
+          <h2>3. Bewaring</h2>
+          <p>
+            Uw gegevens worden bewaard zolang nodig voor de afhandeling van uw aanvraag en niet langer dan 12 maanden na het laatste contact.
+          </p>
+
+          <h2>4. Uw rechten (AVG/GDPR)</h2>
+          <p>
+            U heeft het recht op inzage, correctie en verwijdering van uw persoonsgegevens.
+            Stuur een verzoek naar <a href="mailto:thomas@aiwebatelier.com">thomas@aiwebatelier.com</a>.
+            U kan ook antwoorden met <em>'uitschrijven'</em> op een van onze e-mails.
+          </p>
+
+          <h2>5. Cookies</h2>
+          <p>
+            Deze website maakt geen gebruik van tracking-cookies of analytische cookies van derden.
+            Wij plaatsen enkel functionele cookies die strikt noodzakelijk zijn voor de werking van de site.
+          </p>
+
+          <h2>6. Klachten</h2>
+          <p>
+            U heeft het recht een klacht in te dienen bij de
+            <a href="https://www.gegevensbeschermingsautoriteit.be" target="_blank" rel="noopener noreferrer">
+              Gegevensbeschermingsautoriteit (GBA)
+            </a>.
+          </p>
+
+          <!-- TODO Task 4.9: Expand with full GDPR-compliant Belgian privacy text,
+               legal basis for each processing activity, data processor list,
+               and third-party service disclosures. -->
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .legal-page {
+    background: var(--color-cream);
+    padding: var(--space-16) 0 var(--space-24);
+  }
+
+  .legal-page__content {
+    max-width: var(--max-width-text);
+    margin: 0 auto;
+  }
+
+  .legal-page__back {
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: var(--color-gold-dark);
+    text-decoration: none;
+    margin-bottom: var(--space-8);
+    transition: opacity 0.15s;
+  }
+
+  .legal-page__back:hover {
+    opacity: 0.75;
+  }
+
+  .legal-page__title {
+    font-family: var(--font-serif);
+    font-size: clamp(var(--text-3xl), 4vw, var(--text-5xl));
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: var(--space-2);
+  }
+
+  .legal-page__updated {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+    margin-bottom: var(--space-12);
+  }
+
+  .legal-page__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .legal-page__body h2 {
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-top: var(--space-4);
+  }
+
+  .legal-page__body p {
+    font-size: var(--text-base);
+    color: var(--color-ink-soft);
+    line-height: 1.8;
+  }
+
+  .legal-page__body a {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+</style>

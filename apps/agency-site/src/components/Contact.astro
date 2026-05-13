@@ -1,0 +1,367 @@
+---
+// Contact form — mailto: pattern for spine
+// TODO post-spine: replace with Cloudflare Pages Function → admin /api/inquiries endpoint
+//   once admin moves to cloud per spec §3.4. For spine, mailto: keeps the UX functional
+//   without infrastructure.
+---
+<section class="contact" id="contact" aria-label="Neem contact op">
+  <div class="container">
+    <div class="contact__header">
+      <span class="section-eyebrow">Contact</span>
+      <h2 class="section-title">Vraag jouw voorbeeld aan</h2>
+      <p class="section-subtitle">
+        Vertel ons iets over uw bedrijf. We sturen u binnen 24 uur een gratis voorbeeld terug — geen verplichtingen.
+      </p>
+    </div>
+    <div class="contact__wrap">
+      <form
+        class="contact__form"
+        id="contact-form"
+        novalidate
+        aria-label="Contactformulier"
+      >
+        <div class="form__group">
+          <label class="form__label" for="contact-name">Uw naam</label>
+          <input
+            class="form__input"
+            type="text"
+            id="contact-name"
+            name="name"
+            autocomplete="name"
+            placeholder="Jan Janssen"
+            required
+          />
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="contact-email">E-mailadres</label>
+          <input
+            class="form__input"
+            type="email"
+            id="contact-email"
+            name="email"
+            autocomplete="email"
+            placeholder="jan@uwbedrijf.be"
+            required
+          />
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="contact-message">Vertel ons over uw bedrijf</label>
+          <textarea
+            class="form__input form__textarea"
+            id="contact-message"
+            name="message"
+            rows="5"
+            placeholder="Mijn bedrijf doet... Ik zoek een website voor... Mijn doelgroep is..."
+            required
+          ></textarea>
+        </div>
+        <div class="form__footer">
+          <button class="btn btn--primary form__submit" type="submit" id="submit-btn">
+            <span class="submit__text">Stuur aanvraag</span>
+            <span class="submit__icon" aria-hidden="true">→</span>
+          </button>
+          <p class="form__privacy">
+            Uw gegevens worden uitsluitend gebruikt om uw aanvraag te beantwoorden.
+            Zie onze <a href="/privacy">privacyverklaring</a>.
+          </p>
+        </div>
+      </form>
+      <div class="contact__confirm" id="contact-confirm" hidden aria-live="polite">
+        <div class="confirm__icon" aria-hidden="true">✓</div>
+        <h3 class="confirm__title">Bedankt!</h3>
+        <p class="confirm__body">
+          Uw e-mailprogramma is geopend met een bericht klaar voor verzending.
+          Stuur het op en we antwoorden u binnen 24 uur.
+        </p>
+        <p class="confirm__note">
+          E-mailprogramma niet geopend?
+          <a href="mailto:thomas@aiwebatelier.com" class="confirm__link">Stuur direct een mail</a>
+        </p>
+      </div>
+      <div class="contact__info">
+        <h3 class="contact__info-title">Of schrijf ons rechtstreeks</h3>
+        <a href="mailto:thomas@aiwebatelier.com" class="contact__email">
+          thomas@aiwebatelier.com
+        </a>
+        <p class="contact__location">
+          <strong>AI Web Atelier</strong><br />
+          Antwerpen, België
+        </p>
+        <div class="contact__guarantee">
+          <span class="contact__guarantee-icon" aria-hidden="true">🛡</span>
+          <div>
+            <strong>Geen betaling vooraf</strong>
+            <p>U betaalt pas nadat u de preview heeft goedgekeurd.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const confirm = document.getElementById('contact-confirm') as HTMLElement | null;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = (document.getElementById('contact-name') as HTMLInputElement)?.value.trim();
+    const email = (document.getElementById('contact-email') as HTMLInputElement)?.value.trim();
+    const message = (document.getElementById('contact-message') as HTMLTextAreaElement)?.value.trim();
+
+    if (!name || !email || !message) return;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.submit__text')!.textContent = 'Openen...';
+    }
+
+    const subject = encodeURIComponent('Aanvraag via aiwebatelier.com');
+    const body = encodeURIComponent(
+      `Naam: ${name}\nE-mail: ${email}\n\nBericht:\n${message}`
+    );
+    const mailtoUrl = `mailto:thomas@aiwebatelier.com?subject=${subject}&body=${body}`;
+
+    window.location.href = mailtoUrl;
+
+    // Show confirmation after brief delay (allow mailto to trigger)
+    setTimeout(() => {
+      if (form) form.hidden = true;
+      if (confirm) confirm.hidden = false;
+    }, 600);
+  });
+</script>
+
+<style>
+  .contact {
+    background: var(--color-off-white);
+    padding: var(--space-24) 0;
+  }
+
+  .contact__header {
+    text-align: center;
+    max-width: var(--max-width-text);
+    margin: 0 auto var(--space-16);
+  }
+
+  .contact__wrap {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--space-16);
+    max-width: 960px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* Form */
+  .contact__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-10);
+  }
+
+  .form__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .form__label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .form__input {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--color-ink);
+    background: var(--color-cream);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .form__input:focus {
+    border-color: var(--color-gold);
+  }
+
+  .form__textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form__footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: flex-start;
+  }
+
+  .form__privacy {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+    line-height: 1.5;
+  }
+
+  .form__privacy a {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+    text-decoration: none;
+    border: 2px solid transparent;
+  }
+
+  .btn--primary {
+    background: var(--color-gold);
+    color: var(--color-ink);
+    border-color: var(--color-gold);
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    background: var(--color-gold-dark);
+    border-color: var(--color-gold-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn--primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  /* Confirmation state */
+  .contact__confirm {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-12) var(--space-10);
+    text-align: center;
+  }
+
+  .confirm__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(201, 169, 110, 0.15);
+    color: var(--color-gold-dark);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+  }
+
+  .confirm__title {
+    font-family: var(--font-serif);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: var(--space-4);
+  }
+
+  .confirm__body {
+    font-size: var(--text-base);
+    color: var(--color-ink-soft);
+    line-height: 1.7;
+    margin-bottom: var(--space-4);
+  }
+
+  .confirm__note {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+
+  .confirm__link {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Info column */
+  .contact__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-top: var(--space-4);
+  }
+
+  .contact__info-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .contact__email {
+    font-size: var(--text-lg);
+    color: var(--color-gold-dark);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    word-break: break-all;
+  }
+
+  .contact__location {
+    font-size: var(--text-base);
+    color: var(--color-ink-soft);
+    line-height: 1.6;
+  }
+
+  .contact__guarantee {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+
+  .contact__guarantee-icon {
+    font-size: var(--text-2xl);
+    flex-shrink: 0;
+  }
+
+  .contact__guarantee strong {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-ink);
+    margin-bottom: var(--space-1);
+  }
+
+  .contact__guarantee p {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .contact__wrap {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
