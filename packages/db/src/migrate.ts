@@ -5,9 +5,14 @@
  */
 import { getProdDb, closeProdDb, runMigrations } from "./client.js";
 
-const url = process.env.DATABASE_URL;
+// Prefer DIRECT_URL for DDL: Supabase's transaction pooler (port 6543) and
+// other PgBouncer transaction-mode pools don't reliably handle the
+// session-scoped advisory locks Drizzle uses for migration safety, nor all
+// DDL operations. DIRECT_URL talks to Postgres directly. Local-dev / CI runs
+// without DIRECT_URL fall back to DATABASE_URL.
+const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!url) {
-  console.error("[migrate] DATABASE_URL not set");
+  console.error("[migrate] Neither DIRECT_URL nor DATABASE_URL is set");
   process.exit(1);
 }
 

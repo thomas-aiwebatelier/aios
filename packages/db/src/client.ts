@@ -44,6 +44,12 @@ export function getProdDb(connectionString: string): PostgresJsDatabase<typeof s
       max: 10,
       idle_timeout: 30,
       connect_timeout: 10,
+      // Required for PgBouncer transaction-mode pooling (Supabase pooler on
+      // port 6543, RDS Proxy, etc.). Prepared statements are session-scoped
+      // and don't survive the pool's per-transaction reassignment. Setting
+      // this to false uses simple/extended-query protocol instead — slightly
+      // slower per call but compatible with any pooler tier.
+      prepare: false,
     });
     _prod = { client, db: drizzlePg(client, { schema }) };
   }
