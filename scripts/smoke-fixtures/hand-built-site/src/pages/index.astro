@@ -1,0 +1,42 @@
+---
+const title = "Bakkerij Smoke Test — AI Web Atelier";
+const description = "End-of-Week-1 smoke test page. Exercises queue → CF Pages → PSI → Gmail draft path.";
+---
+<!DOCTYPE html>
+<html lang="nl-BE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href="https://bakkerij-smoke-test-antw-smk1.pages.dev/" />
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; }
+      body { max-width: 60ch; margin-inline: auto; padding: 2rem 1rem; }
+      h1 { font-size: 2rem; margin-top: 0; }
+      .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #fef3c7; color: #78350f; border-radius: 4px; font-size: 0.875rem; font-weight: 600; }
+      footer { margin-top: 3rem; font-size: 0.875rem; opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <span class="badge">SMOKE TEST</span>
+    <h1>Bakkerij Smoke Test</h1>
+    <p>
+      This page is hand-crafted as a fixture for the end-of-Week-1 smoke test
+      (Task 1.9). It validates the plumbing — queue, Cloudflare Pages deploy,
+      PageSpeed Insights scoring, Gmail draft creation — without exercising
+      research or generation.
+    </p>
+    <p>
+      If you're seeing this page on a <code>*.pages.dev</code> URL, the deploy
+      worked. The smoke-test script also verified PSI scoring and drafted a
+      Dutch outreach email in the Workspace inbox.
+    </p>
+    <footer>
+      AI Web Atelier — vakwerk websites, gebouwd met AI<br />
+      <a href="https://aiwebatelier.com">aiwebatelier.com</a>
+    </footer>
+  </body>
+</html>

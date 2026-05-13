@@ -1,0 +1,14 @@
+{
+  "id": "smoke-1",
+  "slug": "bakkerij-smoke-test-antw-smk1",
+  "status": "deployed",
+  "businessName": "Bakkerij Smoke Test",
+  "phone": "03 999 99 99",
+  "email": "thomas@aiwebatelier.com",
+  "address": "Smoke Teststraat 1",
+  "city": "Antwerpen",
+  "postalCode": "2000",
+  "industryKey": "bakery-restaurant",
+  "language": "nl",
+  "_note": "Hand-crafted fake lead for the end-of-Week-1 smoke test (Task 1.9). Tests queue -> deploy -> CF Pages -> PSI -> Gmail draft path without research or generation. Tear down after the run."
+}
