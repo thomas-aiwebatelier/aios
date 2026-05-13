@@ -7,7 +7,7 @@ const dbPkg = path.resolve(__dirname, "../../packages/db");
 
 export default defineConfig({
   test: {
-    include: ["lib/**/*.test.ts", "workers/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "workers/**/*.test.ts", "app/api/__tests__/**/*.test.ts"],
     server: {
       deps: {
         // Process @atelier/db (TypeScript source, not compiled)
