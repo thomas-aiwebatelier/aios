@@ -23,6 +23,12 @@ const nextConfig = {
     "sharp",
     "googleapis",
     "google-auth-library",
+    // Generation pipeline (Task 4.1) — quality-checks transitive deps:
+    "lighthouse",
+    "puppeteer-core",
+    "@puppeteer/browsers",
+    "proxy-agent",
+    "agent-base",
   ],
 
   webpack: (config, { isServer }) => {
@@ -64,6 +70,12 @@ const nextConfig = {
       /^sharp/,
       /^googleapis/,
       /^google-auth-library/,
+      // Generation pipeline (Task 4.1) — quality-checks transitive deps:
+      /^lighthouse/,
+      /^puppeteer-core/,
+      /^@puppeteer\//,
+      /^proxy-agent/,
+      /^agent-base/,
       // node:* protocol scheme — webpack v5 chokes on these without an explicit
       // externals rule. Externalizing as commonjs lets Node's loader handle them
       // at runtime, which is correct for server bundles.

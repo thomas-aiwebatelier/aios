@@ -55,6 +55,7 @@ export async function register() {
   const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
   const { processDiscoveryJob } = await import("./workers/discovery.js");
   const { processResearchJob } = await import("./workers/research.js");
+  const { processGenerationJob } = await import("./workers/generation.js");
 
   startWorker({
     step: "discovery",
@@ -66,6 +67,12 @@ export async function register() {
     step: "research",
     workerName: "research-worker",
     process: processResearchJob,
+  });
+
+  startWorker({
+    step: "generation",
+    workerName: "generation-worker",
+    process: processGenerationJob,
   });
 
   // Graceful shutdown — Next.js dev calls SIGINT on Ctrl+C
