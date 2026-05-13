@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { enqueue, claimNext, completeJob, failJob, reconcileStuckJobs } from "./queue.js";
+import { enqueue, enqueueDelayed, claimNext, completeJob, failJob, reconcileStuckJobs } from "./queue.js";
 import { createDb, createSchema, pipelineJobs } from "@atelier/db";
 import { eq } from "drizzle-orm";
 
@@ -116,5 +116,38 @@ describe("queue", () => {
     // Both now running
     const rows = db.select().from(pipelineJobs).all();
     expect(rows.every((r) => r.status === "running")).toBe(true);
+  });
+
+  // ── Delay / notBefore support (Task 4.6 undo window) ─────────────────────
+
+  it("delayed job: enqueueDelayed with future notBefore is not claimed immediately", () => {
+    const id = enqueueDelayed(db, { step: "outreach", payload: { outreachMessageId: "x" } }, 30_000);
+
+    // Worker should not claim it (created_at is in the future)
+    const job = claimNext(db, "outreach-worker", "outreach");
+    expect(job).toBeNull();
+
+    // The row should exist in queued state
+    const row = db.select().from(pipelineJobs).where(eq(pipelineJobs.id, id)).get();
+    expect(row?.status).toBe("queued");
+  });
+
+  it("delayed job: enqueue with past notBefore is claimed immediately", () => {
+    const pastDate = new Date(Date.now() - 1000); // 1 second ago
+    const id = enqueue(db, {
+      step: "outreach",
+      payload: { outreachMessageId: "y" },
+      notBefore: pastDate,
+    });
+
+    const job = claimNext(db, "outreach-worker", "outreach");
+    expect(job?.id).toBe(id);
+    expect(job?.status).toBe("running");
+  });
+
+  it("enqueueDelayed: normal job with no delay is still claimable", () => {
+    const id = enqueue(db, { step: "test", payload: {} });
+    const job = claimNext(db, "test-worker", "test");
+    expect(job?.id).toBe(id);
   });
 });

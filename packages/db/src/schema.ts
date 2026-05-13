@@ -130,7 +130,7 @@ export const generatedSites = sqliteTable("generated_sites", {
 // ── outreach_messages ─────────────────────────────────────────────────────────
 
 export const outreachDirectionValues = ["outbound", "inbound"] as const;
-export const outreachStatusValues = ["draft", "sent", "bounced", "replied"] as const;
+export const outreachStatusValues = ["draft", "sent", "bounced", "replied", "archived"] as const;
 
 export const outreachMessages = sqliteTable("outreach_messages", {
   id:             text("id").primaryKey(),
@@ -151,6 +151,7 @@ export const pipelineJobStatusValues = [
   "running",
   "succeeded",
   "failed",
+  "cancelled",
 ] as const;
 
 export const pipelineJobs = sqliteTable("pipeline_jobs", {

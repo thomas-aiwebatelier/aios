@@ -1,4 +1,4 @@
-import { eq, and, lt, or, isNull } from "drizzle-orm";
+import { eq, and, lt, lte, or, isNull } from "drizzle-orm";
 import { pipelineJobs } from "@atelier/db";
 import { nanoid } from "nanoid";
 import type { Db } from "@atelier/db";
@@ -7,6 +7,10 @@ export interface EnqueueArgs {
   leadId?: string | null;
   step: string;
   payload: Record<string, unknown>;
+  /** If provided, the job will not be claimed until this time has passed.
+   *  Used by the 30s undo window in Task 4.6: insert with createdAt=now+30s,
+   *  the worker's claimNext filters WHERE created_at <= now(). */
+  notBefore?: Date;
 }
 
 export function enqueue(db: Db, args: EnqueueArgs): string {
@@ -19,16 +23,46 @@ export function enqueue(db: Db, args: EnqueueArgs): string {
       status: "queued",
       payload: args.payload,
       attemptCount: 0,
+      // createdAt acts as "not-before" for delayed jobs (Task 4.6 undo window).
+      // Normal jobs pass undefined → schema default = now().
+      ...(args.notBefore ? { createdAt: args.notBefore } : {}),
     })
     .run();
   return id;
 }
 
+/**
+ * Enqueue a job that should not be claimed until `delayMs` milliseconds from now.
+ *
+ * Used by the 30s undo window in Task 4.6:
+ *   enqueueDelayed(db, { step: 'outreach', payload: { outreachMessageId } }, 30_000)
+ *
+ * claimNext filters `WHERE created_at <= now()`, so the job is invisible
+ * to workers until the delay expires. Cancelling within the window is done
+ * by flipping the job status to 'cancelled' before claimNext picks it up.
+ */
+export function enqueueDelayed(db: Db, args: Omit<EnqueueArgs, "notBefore">, delayMs: number): string {
+  return enqueue(db, { ...args, notBefore: new Date(Date.now() + delayMs) });
+}
+
 export function claimNext(db: Db, _workerName: string, step?: string) {
   return db.transaction((tx) => {
+    const now = new Date();
+
+    // Three conditions must all hold:
+    //   1. status = 'queued'          (not yet running / done / cancelled)
+    //   2. pipeline_step matches      (when step filter is given)
+    //   3. created_at <= now()        (delay window has passed — supports 30s undo)
     const whereClause = step
-      ? and(eq(pipelineJobs.status, "queued"), eq(pipelineJobs.pipelineStep, step))
-      : eq(pipelineJobs.status, "queued");
+      ? and(
+          eq(pipelineJobs.status, "queued"),
+          eq(pipelineJobs.pipelineStep, step),
+          lte(pipelineJobs.createdAt, now),
+        )
+      : and(
+          eq(pipelineJobs.status, "queued"),
+          lte(pipelineJobs.createdAt, now),
+        );
 
     const job = tx
       .select()
@@ -40,7 +74,6 @@ export function claimNext(db: Db, _workerName: string, step?: string) {
 
     if (!job) return null;
 
-    const now = new Date();
     tx.update(pipelineJobs)
       .set({
         status: "running",
