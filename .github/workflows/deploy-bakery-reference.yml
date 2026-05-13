@@ -1,0 +1,68 @@
+# Deploys the bakery reference site (Phase 0 C1) to Cloudflare Pages on every
+# push to main that touches the bakery-example directory. Keeps the live URL
+# (https://bakkerij-example-antw-ref1.pages.dev) in sync with the canonical
+# reference that future per-lead generations study.
+#
+# Required secrets (set via `gh secret set` from PowerShell):
+#   - CLOUDFLARE_API_TOKEN     (Pages: Edit, Account: Read, Zone DNS: Edit)
+#   - CLOUDFLARE_ACCOUNT_ID    (c2a7c1f375f8848e2b4f1bcad74d4e3a)
+#
+# Until both secrets are set, this workflow will fail at the deploy step.
+# The `workflow_dispatch:` trigger lets you re-run manually after setting them.
+name: Deploy Bakery Reference
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/atelier-design-system/reference-sites/bakery-example/**'
+  workflow_dispatch:
+
+concurrency:
+  # Serialize bakery deploys — Cloudflare Pages doesn't tolerate parallel
+  # deploys to the same project well.
+  group: deploy-bakery-reference
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install + build bakery (standalone, --ignore-workspace per spec §5)
+        working-directory: skills/atelier-design-system/reference-sites/bakery-example
+        run: |
+          pnpm install --ignore-workspace --frozen-lockfile
+          pnpm exec astro build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # --branch=main aligns with the production branch so the canonical
+          # *.pages.dev URL (without subdomain prefix) serves the latest.
+          # See infra/cloudflare/deploy-runbook.md for the rationale.
+          command: pages deploy ./skills/atelier-design-system/reference-sites/bakery-example/dist --project-name=bakkerij-example-antw-ref1 --branch=main
+
+      - name: Verify live URL responds 200
+        run: |
+          sleep 15  # propagation
+          status=$(curl -s -o /dev/null -w "%{http_code}" https://bakkerij-example-antw-ref1.pages.dev)
+          if [ "$status" != "200" ]; then
+            echo "::error::Live URL returned HTTP $status (expected 200)"
+            exit 1
+          fi
+          echo "✅ https://bakkerij-example-antw-ref1.pages.dev responds 200"

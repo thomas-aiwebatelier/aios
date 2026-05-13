@@ -1,0 +1,75 @@
+# CI — runs on every push to main and every PR.
+# Fast tests + admin build. The slower design-system quality-checks job runs
+# in a separate workflow (ci-design-system.yml) to keep failure isolation clean.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel duplicate runs of the same ref. The most recent push is the truth.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Test @atelier/db
+        run: pnpm --filter @atelier/db test
+
+      - name: Test @atelier/shared
+        run: pnpm --filter @atelier/shared test
+
+      - name: Test admin
+        run: pnpm --filter admin test
+
+  build-admin:
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build admin
+        run: pnpm --filter admin build
+        env:
+          # Build-time placeholders. The Next.js build doesn't execute auth
+          # callbacks; these just need to be defined so the Auth.js v5 module
+          # doesn't bail at config-load. Real values come from .env on local
+          # and are never deployed (admin is local-first per spec §3.1).
+          ADMIN_EMAIL: ci-placeholder@example.com
+          ADMIN_PASSWORD_HASH: '$2a$10$ci.placeholder.hash.not.real.for.build.only.x.x.x.x.x'
+          AUTH_SECRET: ci_placeholder_64char_hex_secret_0000000000000000000000000000000000
+          DATABASE_PATH: ./data/atelier.db
+          SITE_STATUS: preview

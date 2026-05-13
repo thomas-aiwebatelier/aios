@@ -1,0 +1,45 @@
+# Design system quality-checks tests — separate workflow because they're
+# slower (boot astro preview + Playwright Chromium, ~60-90s per fixture).
+# Runs only when design-system files change so unrelated PRs don't pay the cost.
+name: CI Design System
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/atelier-design-system/**'
+      - '.github/workflows/ci-design-system.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/atelier-design-system/**'
+      - '.github/workflows/ci-design-system.yml'
+
+concurrency:
+  group: ci-design-system-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium + OS deps
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run quality-checks fixture tests
+        run: pnpm --filter @atelier/design-system test
