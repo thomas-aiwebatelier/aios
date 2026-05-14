@@ -5,11 +5,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standalone output: required for efficient Cloud Run / Firebase App Hosting
-  // builds — bundles only the files actually needed at runtime, reducing image
-  // size and cold-start time. Safe in dev too (Next.js only emits the
-  // standalone folder during `next build`).
-  output: "standalone",
+  // NOTE: `output: "standalone"` is INTENTIONALLY OFF for pnpm-monorepo
+  // deploys. Standalone mode emits `.next/standalone/apps/admin/server.js`
+  // (preserves workspace pathing), but Firebase App Hosting's buildpack looks
+  // for `server.js` at the rootDir level — mismatch → "Missing script start
+  // or file server.js" at Cloud Run startup. Falling back to `next start` via
+  // the package.json `start` script works cleanly with workspace deps.
 
   // Externalize Node.js-only packages so webpack doesn't try to bundle them.
   // @atelier/* workspace packages are also kept external — they are TypeScript source
