@@ -10,7 +10,7 @@
  *   4. Emits a structured `worker_run` log line for Cloud Logging.
  *
  * Response shape:
- *   204 No Content { claimed: 0 }                  — queue empty
+ *   204 No Content (empty body)                   — queue empty
  *   200 OK        { claimed: 1, jobId, leadId,
  *                   step, durationMs }             — job processed
  *   401 Unauthorized                              — bad/missing auth
@@ -104,7 +104,10 @@ export function createWorkerHandler(step: string, processor: WorkerProcessor) {
     if (!job) {
       const durationMs = Date.now() - startedAt;
       logger.info("worker_run", { event: "worker_run", step, workerId, claimed: 0, durationMs });
-      return NextResponse.json({ claimed: 0 }, { status: 204 });
+      // HTTP 204 forbids a response body, so we use new Response(null, ...)
+      // rather than NextResponse.json — the latter throws because it always
+      // serialises the payload.
+      return new NextResponse(null, { status: 204 });
     }
 
     try {
