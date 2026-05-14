@@ -8,6 +8,8 @@
     "agency:dev": "pnpm --filter agency-site dev",
     "db:generate": "pnpm --filter @atelier/db generate",
     "db:migrate": "pnpm --filter @atelier/db migrate",
+    "build:admin": "pnpm --filter @atelier/db migrate && pnpm --filter admin build",
+    "start:admin": "pnpm --filter admin start",
     "smoke": "pnpm tsx scripts/smoke-test.ts"
   },
   "dependencies": {

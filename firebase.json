@@ -1,0 +1,17 @@
+{
+  "apphosting": {
+    "backendId": "admin",
+    "rootDir": "apps/admin",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "data/",
+      "**/test-results/**",
+      "**/playwright-report/**",
+      "apps/agency-site/**",
+      "apps/local-worker/**"
+    ]
+  }
+}

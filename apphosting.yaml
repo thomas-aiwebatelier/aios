@@ -1,0 +1,102 @@
+# Firebase App Hosting configuration for the admin app.
+#
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# Runtime: Cloud Run (managed by Firebase App Hosting).
+# Build: pnpm monorepo — `rootDir: apps/admin` in firebase.json scopes the
+# deploy to the admin workspace member. Workspace dependencies (@atelier/db,
+# @atelier/shared) resolve via pnpm at the repo root during the buildpack
+# install step.
+
+runConfig:
+  cpu: 1
+  memoryMiB: 1024
+  maxInstances: 3
+  minInstances: 0
+  concurrency: 80
+  timeoutSeconds: 300
+
+env:
+  # ── Non-secret env vars (plain values) ────────────────────────────────────
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: ADMIN_EMAIL
+    value: thomas@aiwebatelier.com
+    availability:
+      - RUNTIME
+
+  - variable: CLOUDFLARE_ACCOUNT_ID
+    value: c2a7c1f375f8848e2b4f1bcad74d4e3a
+    availability:
+      - RUNTIME
+
+  - variable: SITE_STATUS
+    value: production
+    availability:
+      - RUNTIME
+
+  # ── Secret env vars (Cloud Secret Manager references) ─────────────────────
+  - variable: AUTH_SECRET
+    secret: admin-auth-secret
+    availability:
+      - RUNTIME
+
+  - variable: ADMIN_PASSWORD_HASH
+    secret: admin-password-hash
+    availability:
+      - RUNTIME
+
+  - variable: DATABASE_URL
+    secret: supabase-database-url
+    availability:
+      - RUNTIME
+
+  # DIRECT_URL needs BUILD too — runMigrations() runs at instrumentation boot,
+  # and the build step also touches drizzle metadata.
+  - variable: DIRECT_URL
+    secret: supabase-direct-url
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: GOOGLE_MAPS_API_KEY
+    secret: google-maps-api-key
+    availability:
+      - RUNTIME
+
+  - variable: GMAIL_OAUTH_CLIENT_ID
+    secret: gmail-oauth-client-id
+    availability:
+      - RUNTIME
+
+  - variable: GMAIL_OAUTH_CLIENT_SECRET
+    secret: gmail-oauth-client-secret
+    availability:
+      - RUNTIME
+
+  - variable: GMAIL_OAUTH_REFRESH_TOKEN
+    secret: gmail-oauth-refresh-token
+    availability:
+      - RUNTIME
+
+  - variable: CLOUDFLARE_API_TOKEN
+    secret: cloudflare-api-token
+    availability:
+      - RUNTIME
+
+  - variable: PSI_API_KEY
+    secret: psi-api-key
+    availability:
+      - RUNTIME
+
+  # Added by Plan B (workers HTTP endpoints) — Cloud Scheduler authenticates
+  # against /api/workers/* using this shared Bearer secret. Local-worker
+  # (Plan C) also reads it to authenticate when pulling work.
+  - variable: WORKER_AUTH_SECRET
+    secret: worker-auth-secret
+    availability:
+      - RUNTIME

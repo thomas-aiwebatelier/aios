@@ -1,0 +1,35 @@
+node_modules
+.git
+.gitignore
+
+# Build artifacts
+**/.next/
+**/dist/
+**/.astro/
+**/build/
+**/out/
+
+# Local data + test outputs
+data/
+**/test-results/
+**/playwright-report/
+**/coverage/
+
+# Other apps not deployed via this backend
+apps/agency-site/
+apps/local-worker/
+
+# Logs
+*.log
+firebase-debug.log
+firebase-debug.*.log
+
+# Local env (App Hosting reads from Secret Manager + apphosting.yaml)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+.DS_Store

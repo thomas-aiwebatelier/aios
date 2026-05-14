@@ -5,6 +5,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone output: required for efficient Cloud Run / Firebase App Hosting
+  // builds — bundles only the files actually needed at runtime, reducing image
+  // size and cold-start time. Safe in dev too (Next.js only emits the
+  // standalone folder during `next build`).
+  output: "standalone",
+
   // Externalize Node.js-only packages so webpack doesn't try to bundle them.
   // @atelier/* workspace packages are also kept external — they are TypeScript source
   // loaded at runtime via the tsx ESM loader (NODE_OPTIONS=--import tsx/esm).
