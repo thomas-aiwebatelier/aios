@@ -1,6 +1,6 @@
 {
   "apphosting": {
-    "backendId": "admin",
+    "backendId": "aiwebatelier",
     "rootDir": "apps/admin",
     "ignore": [
       "node_modules",
