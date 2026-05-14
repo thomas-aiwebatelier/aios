@@ -5,12 +5,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // NOTE: `output: "standalone"` is INTENTIONALLY OFF for pnpm-monorepo
-  // deploys. Standalone mode emits `.next/standalone/apps/admin/server.js`
-  // (preserves workspace pathing), but Firebase App Hosting's buildpack looks
-  // for `server.js` at the rootDir level — mismatch → "Missing script start
-  // or file server.js" at Cloud Run startup. Falling back to `next start` via
-  // the package.json `start` script works cleanly with workspace deps.
+  // Firebase App Hosting buildpack requires either standalone server.js or a
+  // start script in the runtime container's package.json. Non-standalone mode
+  // didn't preserve the start script after the buildpack trimmed devDeps, so
+  // we use standalone with outputFileTracingRoot pinned to the pnpm workspace
+  // root — this makes Next.js include workspace packages in standalone's
+  // node_modules and emit server.js at the right path for the buildpack.
+  output: "standalone",
+  outputFileTracingRoot: path.join(__dirname, "../.."),
 
   // Externalize Node.js-only packages so webpack doesn't try to bundle them.
   // @atelier/* workspace packages are also kept external — they are TypeScript source
