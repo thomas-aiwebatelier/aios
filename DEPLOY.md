@@ -288,6 +288,79 @@ firebase apphosting:logs:tail admin --project=aiwebatelier-spine
 
 ---
 
+## 13. GitHub Actions deploy workflow (alternative to Firebase auto-deploy)
+
+The repo ships with `.github/workflows/deploy-admin.yml` which triggers a
+Firebase App Hosting rollout on every push to `main` that touches admin code,
+shared packages, or deploy config. This gives you visible build logs in the
+GitHub Actions UI, manual-dispatch capability, and one canonical deploy path.
+
+**Setup (one-time):**
+
+1. **Disable Firebase auto-deploy** so the workflow is the single trigger:
+   Firebase Console → App Hosting → Backends → admin → Settings →
+   "Auto-rollout on push" → toggle **OFF**
+
+2. **Create a deploy service account:**
+
+   ```powershell
+   gcloud iam service-accounts create github-deploy `
+     --display-name="GitHub Actions Deploy" `
+     --project=aiwebatelier-spine
+   ```
+
+3. **Grant deploy roles:**
+
+   ```powershell
+   $sa = "github-deploy@aiwebatelier-spine.iam.gserviceaccount.com"
+
+   gcloud projects add-iam-policy-binding aiwebatelier-spine `
+     --member="serviceAccount:$sa" `
+     --role="roles/firebaseapphosting.adminViewer"
+
+   gcloud projects add-iam-policy-binding aiwebatelier-spine `
+     --member="serviceAccount:$sa" `
+     --role="roles/firebaseapphosting.rolloutsAdmin"
+
+   gcloud projects add-iam-policy-binding aiwebatelier-spine `
+     --member="serviceAccount:$sa" `
+     --role="roles/run.viewer"
+   ```
+
+4. **Download a JSON key:**
+
+   ```powershell
+   gcloud iam service-accounts keys create github-deploy.json `
+     --iam-account=$sa `
+     --project=aiwebatelier-spine
+   ```
+
+   ⚠️ This file is a secret. Don't commit it.
+
+5. **Add the key to GitHub Secrets:**
+
+   GitHub → repo `aiwebatelier` → Settings → Secrets and variables → Actions →
+   New repository secret:
+   - Name: `GCP_SA_KEY`
+   - Value: paste the entire contents of `github-deploy.json` (the full JSON)
+
+   Delete `github-deploy.json` from your laptop afterwards.
+
+6. **Test the workflow:**
+
+   GitHub → Actions tab → "Deploy admin to Firebase App Hosting" → "Run workflow"
+   → branch `main` → Run. Watch the live logs. Should finish in 3–5 min for the
+   trigger; Firebase's Cloud Build itself takes another 5–10 min to build and
+   deploy the new revision.
+
+**Triggered automatically on:**
+- Push to `main` touching `apps/admin/**`, `packages/db/**`, `packages/shared/**`,
+  `apphosting.yaml`, `firebase.json`, `.firebaserc`, `pnpm-lock.yaml`,
+  `package.json`, or the workflow file itself.
+- Manual dispatch from the Actions UI.
+
+---
+
 ## Rollback
 
 To roll back to a previous rollout:

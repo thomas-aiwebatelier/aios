@@ -1,0 +1,98 @@
+name: Deploy admin to Firebase App Hosting
+
+# Triggers a Firebase App Hosting rollout for the admin backend whenever the
+# admin app, shared packages, or deploy config change on main. Also supports
+# manual dispatch from the Actions UI for forced redeploys.
+#
+# The actual build runs inside Firebase's Cloud Build pipeline (it pulls the
+# code from the connected GitHub repo, builds in europe-west1, deploys to
+# Cloud Run). This workflow's job is ONLY to trigger that rollout via the
+# Firebase CLI.
+#
+# Prerequisites (one-time, see DEPLOY.md §13):
+#   - Firebase has been added to GCP project aiwebatelier-spine
+#   - App Hosting backend "admin" exists (rootDir: apps/admin)
+#   - GitHub repo is connected to the App Hosting backend
+#   - Auto-deploy is DISABLED in Firebase Console (Backends → admin → Settings)
+#     so this workflow is the single source of deploy trigger
+#   - GitHub secret GCP_SA_KEY contains a service account JSON key with roles:
+#     - roles/firebaseapphosting.adminViewer (to read backends)
+#     - roles/firebaseapphosting.rolloutsAdmin (to create rollouts)
+#     - roles/run.viewer (read Cloud Run revisions)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/admin/**'
+      - 'packages/db/**'
+      - 'packages/shared/**'
+      - 'apphosting.yaml'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - '.github/workflows/deploy-admin.yml'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deploy'
+        required: false
+        default: 'Manual rollout'
+
+# Cancel in-flight deploys when a newer push lands — only the latest commit
+# should reach production.
+concurrency:
+  group: deploy-admin-${{ github.ref }}
+  cancel-in-progress: false  # let the current rollout finish; queue the next
+
+jobs:
+  deploy:
+    name: Trigger App Hosting rollout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write   # reserved for future Workload Identity Federation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: aiwebatelier-spine
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Verify Firebase auth
+        run: |
+          firebase --version
+          firebase projects:list --json | head -50
+
+      - name: Trigger App Hosting rollout
+        run: |
+          echo "Triggering rollout for backend 'admin' on branch main..."
+          firebase apphosting:rollouts:create admin \
+            --git-branch=main \
+            --project=aiwebatelier-spine \
+            --force
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Deploy result" >> $GITHUB_STEP_SUMMARY
+          echo "Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit:  \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Reason:  ${{ github.event.inputs.reason || 'auto on push' }}" >> $GITHUB_STEP_SUMMARY
+          echo "Status:  ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Once Firebase finishes the build, the new revision is live at:" >> $GITHUB_STEP_SUMMARY
+          echo "https://admin.aiwebatelier.com (once DNS is set up)" >> $GITHUB_STEP_SUMMARY
