@@ -9,7 +9,7 @@
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
-      <UserId>Thomas</UserId>
+      <UserId>ThomasCortebeeck</UserId>
     </LogonTrigger>
     <BootTrigger>
       <Enabled>true</Enabled>
@@ -18,7 +18,7 @@
   </Triggers>
   <Principals>
     <Principal id="Author">
-      <UserId>Thomas</UserId>
+      <UserId>ThomasCortebeeck</UserId>
       <LogonType>InteractiveToken</LogonType>
       <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
