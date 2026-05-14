@@ -15,10 +15,15 @@ name: Deploy admin to Firebase App Hosting
 #   - GitHub repo is connected to the App Hosting backend
 #   - Auto-deploy is DISABLED in Firebase Console (Backends → admin → Settings)
 #     so this workflow is the single source of deploy trigger
-#   - GitHub secret GCP_SA_KEY contains a service account JSON key with roles:
-#     - roles/firebaseapphosting.adminViewer (to read backends)
-#     - roles/firebaseapphosting.rolloutsAdmin (to create rollouts)
-#     - roles/run.viewer (read Cloud Run revisions)
+#   - Workload Identity Federation set up on aiwebatelier-spine (pool +
+#     provider) with github-deploy@aiwebatelier-spine.iam SA bound to allow
+#     impersonation from the GitHub OIDC token of this repo.
+#   - GitHub repo secrets:
+#       GCP_WIF_PROVIDER: projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+#       GCP_SA_EMAIL:     github-deploy@aiwebatelier-spine.iam.gserviceaccount.com
+#   - The github-deploy SA has roles:
+#     - roles/firebaseapphosting.admin (create rollouts, read backends)
+#     - roles/run.viewer (introspect Cloud Run revisions)
 
 on:
   push:
@@ -59,10 +64,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
