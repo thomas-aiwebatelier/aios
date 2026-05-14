@@ -18,6 +18,7 @@ export {
   outreachMessages,
   pipelineJobs,
   inboundInquiries,
+  workerHeartbeats,
   // Enum value arrays
   leadStatusValues,
   generatedSiteCreatedViaValues,
@@ -34,4 +35,5 @@ export {
   type InboundInquiryStatus,
   type InventoryPage,
   type InventoryAsset,
+  type WorkerHostInfo,
 } from "./schema.js";

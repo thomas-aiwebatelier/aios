@@ -200,6 +200,34 @@ export const pipelineJobs = pgTable("pipeline_jobs", {
   createdAt:       timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 });
 
+// ── worker_heartbeats ─────────────────────────────────────────────────────────
+//
+// Liveness tracking for long-running worker processes (Migration Plan C — the
+// local-worker daemon on Thomas's machine). The local-worker upserts its row
+// every 30s; the admin UI surfaces `last_seen_at` so we know whether the
+// laptop is currently polling. PRIMARY KEY = worker_name so the worker can
+// safely upsert without coordinating IDs.
+
+export interface WorkerHostInfo {
+  nodeVersion: string;
+  hostname: string;
+  platform: string;
+  arch: string;
+  /** package.json version of the worker app. */
+  appVersion?: string;
+  /** Absolute path of the resolved `claude` CLI, if discoverable. */
+  claudePath?: string;
+  /** Absolute path of the resolved `wrangler` CLI, if discoverable. */
+  wranglerPath?: string;
+}
+
+export const workerHeartbeats = pgTable("worker_heartbeats", {
+  workerName:      text("worker_name").primaryKey(),
+  lastSeenAt:      timestamp("last_seen_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  hostInfo:        jsonb("host_info").$type<WorkerHostInfo>(),
+  claimedJobs24h:  integer("claimed_jobs_24h").notNull().default(0),
+});
+
 // ── inbound_inquiries ─────────────────────────────────────────────────────────
 
 export const inboundInquiryStatusValues = [
