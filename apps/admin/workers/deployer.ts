@@ -1,4 +1,20 @@
 /**
+ * RELOCATED: This worker now runs in apps/local-worker (Migration Plan C).
+ * The file is kept here for reference and is no longer invoked by admin —
+ * Plan B's commit 48d5998 removed the in-process pull-loop from
+ * instrumentation.ts; the corresponding HTTP endpoint was intentionally
+ * NOT added because deploy is co-located with generation on the laptop.
+ *
+ * See: apps/local-worker/src/deploy.ts
+ *
+ * Reason: generation requires the operator's Claude Code Max-plan auth
+ * (file-based tokens at %USERPROFILE%\.claude\), which can't run in the
+ * Cloud Run environment. Deploy is co-located with generation so the
+ * Astro project files don't need to be shipped over the network to a
+ * separate runtime.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *
  * deployer.ts — Deploy worker for Task 4.3.
  *
  * Claims jobs with step="deploy" (enqueued by generation.ts after a
