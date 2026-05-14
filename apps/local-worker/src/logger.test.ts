@@ -6,13 +6,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { logger } from "./logger.js";
 
 describe("logger", () => {
-  let writeSpy: ReturnType<typeof vi.spyOn>;
+  // `any` here to dodge a vitest typing quirk: vi.spyOn() infers an overloaded
+  // signature for process.stdout.write and tsc rejects the resulting
+  // MockInstance type even though it works at runtime. The shape we actually
+  // use (mock.calls[i][0] → string) is type-asserted at the call sites below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let writeSpy: any;
   let originalLevel: string | undefined;
 
   beforeEach(() => {
     writeSpy = vi
       .spyOn(process.stdout, "write")
-      .mockImplementation(() => true);
+      .mockImplementation((() => true) as never);
     originalLevel = process.env.LOG_LEVEL;
   });
 
@@ -58,7 +63,7 @@ describe("logger", () => {
     // Only warn + error written
     expect(writeSpy).toHaveBeenCalledTimes(2);
     const events = writeSpy.mock.calls.map(
-      (c) => JSON.parse(String(c[0]).trim()).event,
+      (c: unknown[]) => JSON.parse(String(c[0]).trim()).event,
     );
     expect(events).toEqual(["w", "e"]);
   });
