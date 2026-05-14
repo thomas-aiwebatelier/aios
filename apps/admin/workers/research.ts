@@ -33,12 +33,13 @@ export interface ResearchJob {
 }
 
 /**
- * processResearchJob — runner-shaped processor for the worker-runner pull-loop.
+ * processResearchJob — processor invoked by POST /api/workers/research
+ * (Migration Plan B: HTTP endpoint over Cloud Scheduler, no in-process loop).
  *
  * Takes an already-claimed job, runs all 4 research sub-steps, calls
- * completeJob on success. Throws on failure (runner converts to failJob).
- * closeBrowserPool is NOT called here — the runner calls it at shutdown
- * via stopAllWorkers so the pool stays warm across multiple jobs.
+ * completeJob on success. Throws on failure (handler converts to failJob).
+ * closeBrowserPool is NOT called here — Cloud Run handles process lifetime;
+ * locally the pool is closed via instrumentation shutdown.
  */
 export async function processResearchJob(db: Db, job: ResearchJob): Promise<void> {
   const { leadId } = job.payload as { leadId: string };

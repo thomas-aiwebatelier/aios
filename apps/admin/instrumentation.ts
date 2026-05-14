@@ -1,3 +1,27 @@
+/**
+ * instrumentation.ts — Next.js boot hook.
+ *
+ * Runs once per process at startup, after the runtime is up but before the
+ * first request is served.
+ *
+ * Migration Plan B (commit "refactor(admin): remove in-process worker pull-loops"):
+ *   The four cloud-side workers (discovery, research, outreach, reply-poll) no
+ *   longer run as in-process pull-loops. They are HTTP endpoints under
+ *   /api/workers/<step> driven by Cloud Scheduler — see apps/admin/CLOUD-SCHEDULER.md
+ *   for the schedule + provisioning commands.
+ *
+ *   The generation and deploy workers are NOT started here either. They run in
+ *   apps/local-worker (Plan C) on the operator's machine because they need
+ *   Playwright (Chrome) and the Claude SDK shell, which are too heavy / too
+ *   stateful for Cloud Run.
+ *
+ *   What remains in this file:
+ *     - runMigrations() at boot (Drizzle, idempotent)
+ *     - reconcileStuckJobs() at boot + hourly safety net
+ *     - registerCronJobs() for the few schedules that still live in-process
+ *     - Graceful shutdown (SIGINT/SIGTERM → closeDb + closeBrowserPool)
+ */
+
 let _registered = false;
 
 export async function register() {
@@ -11,6 +35,7 @@ export async function register() {
   const { registerCronJobs } = await import("./lib/cron");
   const { logger } = await import("./lib/logger");
   const { getDb, closeDb } = await import("./lib/db");
+  const { closeBrowserPool } = await import("./lib/playwright-pool");
 
   // Singleton handle, same one API routes/workers use.
   const db = getDb();
@@ -37,7 +62,8 @@ export async function register() {
     logger.warn(`admin instrumentation: reconciled ${reconciled} stuck jobs on boot`);
   }
 
-  // Register cron schedules
+  // Register cron schedules (most cloud schedules moved to Cloud Scheduler;
+  // see lib/cron.ts for what remains and why)
   registerCronJobs();
 
   // Hourly reconcile safety net
@@ -47,53 +73,15 @@ export async function register() {
     });
   }, 60 * 60 * 1000);
 
-  logger.info("admin instrumentation: queue + cron + reconciler ready");
-
-  // ── Worker pull-loops ──────────────────────────────────────────────────────
-  const { startWorker, stopAllWorkers } = await import("./lib/worker-runner.js");
-  const { processDiscoveryJob } = await import("./workers/discovery.js");
-  const { processResearchJob } = await import("./workers/research.js");
-  const { processGenerationJob } = await import("./workers/generation.js");
-  const { processDeployJob } = await import("./workers/deployer.js");
-  const { processOutreachJob } = await import("./workers/outreach.js");
-
-  startWorker({
-    step: "discovery",
-    workerName: "discovery-worker",
-    process: processDiscoveryJob,
-  });
-
-  startWorker({
-    step: "research",
-    workerName: "research-worker",
-    process: processResearchJob,
-  });
-
-  startWorker({
-    step: "generation",
-    workerName: "generation-worker",
-    process: processGenerationJob,
-  });
-
-  startWorker({
-    step: "deploy",
-    workerName: "deploy-worker",
-    process: processDeployJob,
-  });
-
-  startWorker({
-    step: "outreach",
-    workerName: "outreach-worker",
-    process: processOutreachJob,
-  });
+  logger.info("admin instrumentation: ready (workers run via /api/workers/* + local-worker)");
 
   // Graceful shutdown — Next.js dev calls SIGINT on Ctrl+C
   const shutdown = async (signal: string) => {
-    logger.info(`instrumentation: ${signal} — stopping workers`);
+    logger.info(`instrumentation: ${signal} — shutting down`);
     try {
-      await stopAllWorkers();
+      await closeBrowserPool();
     } catch (err) {
-      logger.error("instrumentation: stopAllWorkers failed", { err: String(err) });
+      logger.error("instrumentation: closeBrowserPool failed", { err: String(err) });
     }
     try {
       await closeDb();

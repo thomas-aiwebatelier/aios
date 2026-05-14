@@ -212,10 +212,11 @@ function rawToPlace(raw: RawPlace): PlaceResult {
 // ── Worker ────────────────────────────────────────────────────────────────────
 
 /**
- * processDiscoveryJob — runner-shaped processor for the worker-runner pull-loop.
+ * processDiscoveryJob — processor invoked by POST /api/workers/discovery
+ * (Migration Plan B: HTTP endpoint over Cloud Scheduler, no in-process loop).
  *
  * Takes an already-claimed job, runs the full discovery logic, calls
- * completeJob on success. Throws on failure (runner converts to failJob).
+ * completeJob on success. Throws on failure (handler converts to failJob).
  *
  * Returns the number of leads inserted (useful for legacy callers).
  */

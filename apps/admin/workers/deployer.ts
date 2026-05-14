@@ -26,7 +26,7 @@ import { heartbeat, completeJob } from "../lib/queue.js";
 import { logger } from "../lib/logger.js";
 import { getPagesProject, createPagesProject, deployToPages } from "../lib/cloudflare.js";
 import { runPagespeedInsights } from "../lib/psi.js";
-import type { WorkerJob } from "../lib/worker-runner.js";
+import type { WorkerJob } from "../lib/worker-endpoint.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

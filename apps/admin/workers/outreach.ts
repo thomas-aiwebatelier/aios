@@ -19,7 +19,7 @@ import type { Db } from "@atelier/db";
 import { heartbeat, completeJob, failJob } from "../lib/queue.js";
 import { sendEmail } from "../lib/gmail.js";
 import { logger } from "../lib/logger.js";
-import type { WorkerJob } from "../lib/worker-runner.js";
+import type { WorkerJob } from "../lib/worker-endpoint.js";
 
 // ── Main processor ─────────────────────────────────────────────────────────────
 
