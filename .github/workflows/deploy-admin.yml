@@ -85,11 +85,14 @@ jobs:
 
       - name: Trigger App Hosting rollout
         run: |
-          echo "Triggering rollout for backend 'aiwebatelier' (region europe-west4) on branch main..."
+          echo "Triggering rollout for backend 'aiwebatelier' on branch main..."
+          # NOTE: --location is omitted intentionally. The installed firebase-tools
+          # version on the GitHub Actions runner rejects --location for rollouts:create
+          # even though older versions accept it. The default "-" auto-resolves the
+          # backend's location (works because backend ID is unique in the project).
           firebase apphosting:rollouts:create aiwebatelier \
             --git-branch=main \
             --project=aiwebatelier-spine \
-            --location=europe-west4 \
             --force
 
       - name: Summary
