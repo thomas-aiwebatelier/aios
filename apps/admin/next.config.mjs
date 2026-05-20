@@ -5,14 +5,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Firebase App Hosting buildpack requires either standalone server.js or a
-  // start script in the runtime container's package.json. Non-standalone mode
-  // didn't preserve the start script after the buildpack trimmed devDeps, so
-  // we use standalone with outputFileTracingRoot pinned to the pnpm workspace
-  // root — this makes Next.js include workspace packages in standalone's
-  // node_modules and emit server.js at the right path for the buildpack.
+  // Firebase App Hosting's @apphosting/adapter-nextjs reads
+  // `.next/standalone/.next/routes-manifest.json` post-build. With
+  // outputFileTracingRoot=workspace-root, Next.js nests the output under
+  // `.next/standalone/apps/admin/.next/...` (preserving the pnpm workspace
+  // path) — adapter can't find the manifest. Letting Next.js use the
+  // default tracing root (app directory) so output is flat at
+  // `.next/standalone/.next/routes-manifest.json` where the adapter expects.
+  // Workspace deps come via deps in admin's package.json — they're
+  // resolved at install time, not via standalone tracing.
   output: "standalone",
-  outputFileTracingRoot: path.join(__dirname, "../.."),
 
   // Externalize Node.js-only packages so webpack doesn't try to bundle them.
   // @atelier/* workspace packages are also kept external — they are TypeScript source
