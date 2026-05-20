@@ -1,17 +1,29 @@
 #!/usr/bin/env node
 /**
- * Post-build workaround for Firebase App Hosting's @apphosting/adapter-nextjs:
- * the adapter reads `.next/standalone/.next/routes-manifest.json` (and other
- * build-output files) at deploy-time, but in pnpm monorepos Next.js's
- * standalone mode may nest the output as `.next/standalone/apps/admin/.next/...`
- * (preserving the workspace path) or skip copying some files.
+ * Post-build workaround for Firebase App Hosting + pnpm monorepo:
  *
- * This script mirrors `.next/*` (except `standalone/` itself) into
- * `.next/standalone/.next/` so the adapter's flat-path expectation holds.
+ * Next.js standalone mode in a pnpm workspace nests output like:
+ *   .next/standalone/apps/admin/server.js
+ *   .next/standalone/apps/admin/.next/routes-manifest.json
+ *   .next/standalone/apps/admin/node_modules/...
+ *   .next/standalone/node_modules/...           ← workspace-hoisted deps
  *
- * Run after `next build` from apps/admin/. Idempotent.
+ * Firebase's adapter-nextjs + Cloud Run expects FLAT paths:
+ *   .next/standalone/server.js
+ *   .next/standalone/.next/routes-manifest.json
+ *   .next/standalone/node_modules/...
+ *
+ * This script:
+ *   1. Lifts everything from .next/standalone/apps/admin/* into .next/standalone/
+ *      (merging node_modules, replacing other files)
+ *   2. Mirrors .next/* (routes-manifest, static, etc.) into .next/standalone/.next/
+ *      as a safety net for cases where Next.js didn't copy them
+ *   3. Sanity-checks that both server.js and routes-manifest.json exist at
+ *      the expected flat paths.
+ *
+ * Idempotent. Run after `next build`.
  */
-import { existsSync, mkdirSync, readdirSync, statSync, cpSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, cpSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,49 +32,59 @@ const adminRoot = join(__dirname, "..");
 const nextDir = join(adminRoot, ".next");
 const standaloneDir = join(nextDir, "standalone");
 const standaloneNextDir = join(standaloneDir, ".next");
+const nestedAppDir = join(standaloneDir, "apps", "admin");
 
 if (!existsSync(nextDir)) {
   console.error("[post-build] No .next/ dir — did `next build` run?");
   process.exit(1);
 }
-
 if (!existsSync(standaloneDir)) {
   console.error("[post-build] No .next/standalone/ dir — is output:standalone set?");
   process.exit(1);
 }
 
-// Ensure standaloneNextDir exists, then mirror everything from .next/ except
-// the standalone/ subdir (no recursion) and cache/ (build cache, not needed).
 mkdirSync(standaloneNextDir, { recursive: true });
 
+// ── Step 1: lift nested .next/standalone/apps/admin/* into .next/standalone/ ──
+if (existsSync(nestedAppDir) && statSync(nestedAppDir).isDirectory()) {
+  console.log("[post-build] Lifting nested .next/standalone/apps/admin/* → .next/standalone/");
+  let liftedCount = 0;
+  for (const entry of readdirSync(nestedAppDir)) {
+    const src = join(nestedAppDir, entry);
+    const dest = join(standaloneDir, entry);
+    // For node_modules, MERGE (don't replace) so workspace-hoisted deps aren't lost
+    cpSync(src, dest, { recursive: true, force: true });
+    liftedCount++;
+  }
+  console.log(`[post-build]   Lifted ${liftedCount} entries from nested apps/admin/`);
+
+  // Clean up the now-redundant nested apps/ dir
+  rmSync(join(standaloneDir, "apps"), { recursive: true, force: true });
+  console.log("[post-build]   Removed empty .next/standalone/apps/");
+}
+
+// ── Step 2: mirror .next/* (except standalone/, cache/) into .next/standalone/.next/ ──
 const skip = new Set(["standalone", "cache"]);
-let copied = 0;
+let mirroredCount = 0;
 for (const entry of readdirSync(nextDir)) {
   if (skip.has(entry)) continue;
   const src = join(nextDir, entry);
   const dest = join(standaloneNextDir, entry);
   cpSync(src, dest, { recursive: true, force: true });
-  copied++;
+  mirroredCount++;
 }
+console.log(`[post-build] Mirrored ${mirroredCount} entries from .next/ → .next/standalone/.next/`);
 
-console.log(`[post-build] Mirrored ${copied} entries from .next/ → .next/standalone/.next/`);
-
-// Also check for the workspace-nested case: if Next.js nested standalone at
-// .next/standalone/apps/admin/, lift its .next/ contents into the flat path.
-const nestedNext = join(standaloneDir, "apps", "admin", ".next");
-if (existsSync(nestedNext) && statSync(nestedNext).isDirectory()) {
-  console.log("[post-build] Detected nested standalone at .next/standalone/apps/admin/ — lifting");
-  for (const entry of readdirSync(nestedNext)) {
-    const src = join(nestedNext, entry);
-    const dest = join(standaloneNextDir, entry);
-    cpSync(src, dest, { recursive: true, force: true });
-  }
-}
-
-// Final sanity check
+// ── Step 3: sanity checks ──
+const serverJs = join(standaloneDir, "server.js");
 const manifest = join(standaloneNextDir, "routes-manifest.json");
-if (!existsSync(manifest)) {
-  console.error(`[post-build] FAIL: ${manifest} still missing after mirror.`);
+const missing = [];
+if (!existsSync(serverJs)) missing.push(serverJs);
+if (!existsSync(manifest)) missing.push(manifest);
+
+if (missing.length > 0) {
+  console.error("[post-build] FAIL: missing files after mirror:");
+  for (const m of missing) console.error(`  ${m}`);
   process.exit(1);
 }
-console.log(`[post-build] OK: ${manifest} exists.`);
+console.log(`[post-build] OK: server.js + routes-manifest.json present at flat paths.`);
