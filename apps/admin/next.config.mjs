@@ -10,24 +10,13 @@ const nextConfig = {
   // mode needed.
   output: "standalone",
 
-  // Force tsx + workspace packages into the standalone bundle. Next.js
-  // tracing only includes packages that are imported directly from app
-  // source. tsx is loaded at runtime via NODE_OPTIONS=--import tsx/esm
-  // (not imported in code), and workspace package .ts source is in
-  // serverExternalPackages so webpack skips them. Without these tracing
-  // hints, Cloud Run hits ERR_MODULE_NOT_FOUND for tsx and @atelier/*.
+  // Force workspace packages' compiled dist/ into the standalone bundle.
+  // Without this, Next.js tracing may not see workspace symlinks correctly.
   outputFileTracingIncludes: {
     "/": [
-      "../../node_modules/tsx/**/*",
-      "../../node_modules/.pnpm/tsx@*/**/*",
-      "../../node_modules/esbuild/**/*",
-      "../../node_modules/.pnpm/esbuild@*/**/*",
-      "../../node_modules/get-tsconfig/**/*",
-      "../../node_modules/.pnpm/get-tsconfig@*/**/*",
-      "../../node_modules/resolve-pkg-maps/**/*",
-      "../../node_modules/.pnpm/resolve-pkg-maps@*/**/*",
-      "../../packages/db/**/*",
-      "../../packages/shared/**/*",
+      "../../packages/db/dist/**/*",
+      "../../packages/db/drizzle/**/*",
+      "../../packages/shared/dist/**/*",
     ],
   },
 

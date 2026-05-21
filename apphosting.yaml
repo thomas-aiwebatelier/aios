@@ -24,14 +24,6 @@ env:
       - BUILD
       - RUNTIME
 
-  # Cloud Run runs `node server.js` directly, bypassing our package.json
-  # start script's --import tsx/esm flag. NODE_OPTIONS injects the tsx loader
-  # globally so any node invocation in the container can import .ts files
-  # from workspace packages (@atelier/db, @atelier/shared) at runtime.
-  - variable: NODE_OPTIONS
-    value: --import tsx/esm
-    availability:
-      - RUNTIME
 
   - variable: ADMIN_EMAIL
     value: thomas@aiwebatelier.com
