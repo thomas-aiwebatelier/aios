@@ -6,15 +6,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Firebase App Hosting's @apphosting/adapter-nextjs reads
-  // `.next/standalone/.next/routes-manifest.json` post-build. With
-  // outputFileTracingRoot=workspace-root, Next.js nests the output under
-  // `.next/standalone/apps/admin/.next/...` (preserving the pnpm workspace
-  // path) — adapter can't find the manifest. Letting Next.js use the
-  // default tracing root (app directory) so output is flat at
-  // `.next/standalone/.next/routes-manifest.json` where the adapter expects.
-  // Workspace deps come via deps in admin's package.json — they're
-  // resolved at install time, not via standalone tracing.
+  // `.next/standalone/.next/routes-manifest.json` post-build. Standalone
+  // mode needed.
   output: "standalone",
+
+  // Force tsx + workspace packages into the standalone bundle. Next.js
+  // tracing only includes packages that are imported directly from app
+  // source. tsx is loaded at runtime via NODE_OPTIONS=--import tsx/esm
+  // (not imported in code), and workspace package .ts source is in
+  // serverExternalPackages so webpack skips them. Without these tracing
+  // hints, Cloud Run hits ERR_MODULE_NOT_FOUND for tsx and @atelier/*.
+  outputFileTracingIncludes: {
+    "/": [
+      "../../node_modules/tsx/**/*",
+      "../../node_modules/.pnpm/tsx@*/**/*",
+      "../../node_modules/esbuild/**/*",
+      "../../node_modules/.pnpm/esbuild@*/**/*",
+      "../../node_modules/get-tsconfig/**/*",
+      "../../node_modules/.pnpm/get-tsconfig@*/**/*",
+      "../../node_modules/resolve-pkg-maps/**/*",
+      "../../node_modules/.pnpm/resolve-pkg-maps@*/**/*",
+      "../../packages/db/**/*",
+      "../../packages/shared/**/*",
+    ],
+  },
 
   // Externalize Node.js-only packages so webpack doesn't try to bundle them.
   // @atelier/* workspace packages are also kept external — they are TypeScript source
