@@ -28,6 +28,25 @@ import {
 
 // ── leads ────────────────────────────────────────────────────────────────────
 
+export const salesStageValues = [
+  "new", "contacted", "follow_up", "in_gesprek", "won", "lost",
+] as const;
+export type SalesStage = (typeof salesStageValues)[number];
+
+export const sequenceAngleValues = ["reveal", "social_proof", "breakup"] as const;
+export type SequenceAngle = (typeof sequenceAngleValues)[number];
+
+export const sequenceStepStatusValues = [
+  "pending", "drafted", "sent", "skipped", "cancelled",
+] as const;
+export type SequenceStepStatus = (typeof sequenceStepStatusValues)[number];
+
+export const activityTypeValues = [
+  "email_sent", "email_replied", "stage_change", "note",
+  "sequence_enrolled", "step_skipped", "call_logged",
+] as const;
+export type ActivityType = (typeof activityTypeValues)[number];
+
 export const leadStatusValues = [
   "discovered",
   "researching",
@@ -71,6 +90,14 @@ export const leads = pgTable("leads", {
   approvedAt:                       timestamp("approved_at", { withTimezone: true, mode: "date" }),
   sentAt:                           timestamp("sent_at", { withTimezone: true, mode: "date" }),
   respondedAt:                      timestamp("responded_at", { withTimezone: true, mode: "date" }),
+  contactName:                      text("contact_name"),
+  contactRole:                      text("contact_role"),
+  contactEmail:                     text("contact_email"),
+  mobilePhone:                      text("mobile_phone"),
+  whatsapp:                         text("whatsapp"),
+  salesStage:                       text("sales_stage").$type<SalesStage>(),
+  nextActionAt:                     timestamp("next_action_at", { withTimezone: true, mode: "date" }),
+  nextActionNote:                   text("next_action_note"),
 });
 
 // ── brand_profiles ───────────────────────────────────────────────────────────
@@ -287,5 +314,33 @@ export const emailTemplates = pgTable("email_templates", {
   subject:   text("subject").notNull(),
   body:      text("body").notNull(),
   isActive:  boolean("is_active").notNull().default(true),
+  angle:     text("angle").$type<SequenceAngle>(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+});
+
+// ── sequence_steps ─────────────────────────────────────────────────────────────
+export const sequenceSteps = pgTable("sequence_steps", {
+  id:                text("id").primaryKey(),
+  leadId:            text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  stepNumber:        integer("step_number").notNull(),
+  angle:             text("angle").$type<SequenceAngle>().notNull(),
+  status:            text("status").$type<SequenceStepStatus>().notNull().default("pending"),
+  scheduledAt:       timestamp("scheduled_at", { withTimezone: true, mode: "date" }),
+  subject:           text("subject"),
+  body:              text("body"),
+  outreachMessageId: text("outreach_message_id").references(() => outreachMessages.id, { onDelete: "set null" }),
+  sentAt:            timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  createdAt:         timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:         timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+});
+
+// ── lead_activities ────────────────────────────────────────────────────────────
+export const leadActivities = pgTable("lead_activities", {
+  id:        text("id").primaryKey(),
+  leadId:    text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  type:      text("type").$type<ActivityType>().notNull(),
+  body:      text("body"),
+  metadata:  jsonb("metadata").$type<Record<string, unknown>>(),
+  author:    text("author").notNull().default("thomas"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 });
