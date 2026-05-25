@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { leads, outreachMessages } from "@atelier/db";
+import { leads, outreachMessages, sequenceSteps } from "@atelier/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { enqueueDelayed } from "@/lib/queue";
@@ -62,6 +62,15 @@ export async function POST(
       body: body.body as string,
       status: "draft",
     });
+
+  // Link to a sequence step if provided. The worker marks the step sent on
+  // actual delivery (not here — the 30s undo may still cancel it).
+  const stepId = typeof body.stepId === "string" ? body.stepId : null;
+  if (stepId) {
+    await db.update(sequenceSteps)
+      .set({ subject: body.subject as string, body: body.body as string, outreachMessageId })
+      .where(eq(sequenceSteps.id, stepId));
+  }
 
   // 3. Flip lead status to email_drafted
   await db.update(leads)
