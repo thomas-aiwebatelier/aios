@@ -27,6 +27,7 @@ import { leads } from "@atelier/db";
 import type { Db } from "@atelier/db";
 import { claimNext, heartbeat, completeJob, failJob } from "./lib/queue.js";
 import { extractBranding } from "./research-branding.js";
+import { fetchBrandPhotos } from "./research-photos.js";
 import { enrichContact } from "./research-contact.js";
 import { crawlSite } from "./research-crawl.js";
 import { researchCompetitor } from "./research-competitor.js";
@@ -79,9 +80,25 @@ export async function processResearchJob(db: Db, job: ResearchJob): Promise<void
 
     const websiteUrl = lead.existingWebsiteUrl ?? null;
 
+    // ── Step 0: Brand photos from Google Maps (real imagery + palette) ────────
+    // Runs before branding so the branding step can fall back to the Maps-photo
+    // palette and use the Maps websiteUri (often an IG/FB URL) as a logo source.
+    // Best-effort: fetchBrandPhotos never throws, returning empty arrays on
+    // failure. We persist the photo resource names on the lead for traceability.
+    logger.info("[research] step 0/4: brand photos (maps)", { leadId });
+    const photoResult = await fetchBrandPhotos(db, {
+      id: lead.id,
+      googleMapsPlaceId: lead.googleMapsPlaceId ?? null,
+    });
+    if (photoResult.photoRefs.length > 0) {
+      await db.update(leads)
+        .set({ googlePhotoRefs: photoResult.photoRefs })
+        .where(eq(leads.id, leadId));
+    }
+
     // ── Step 1: Branding (Task 3.2) ──────────────────────────────────────────
     logger.info("[research] step 1/4: branding", { leadId });
-    await extractBranding(db, leadId, websiteUrl);
+    await extractBranding(db, leadId, websiteUrl, photoResult);
 
     // ── Step 2: Contact enrichment (Task 3.3) ─────────────────────────────────
     logger.info("[research] step 2/4: contact", { leadId });

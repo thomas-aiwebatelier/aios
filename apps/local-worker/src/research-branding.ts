@@ -21,11 +21,12 @@ import { mkdirSync, existsSync, writeFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { brandProfiles } from "@atelier/db";
-import type { Db } from "@atelier/db";
+import type { Db, LogoSource } from "@atelier/db";
 import { getBrowser } from "./lib/playwright-pool.js";
 import { runClaudeCode } from "./lib/claude-code.js";
 import { extractPageText } from "./lib/site-crawler.js";
 import { logger } from "./logger.js";
+import type { BrandPhotosResult } from "./research-photos.js";
 
 // Repo root: prefer the env var index.ts sets, fall back to walking up two
 // levels from cwd (cwd is typically apps/local-worker).
@@ -117,12 +118,72 @@ async function downloadLogo(
   }
 }
 
+// ── Social og:image (logo fallback) ─────────────────────────────────────────
+
+/**
+ * Best-effort fetch of an Instagram / Facebook profile's og:image meta tag —
+ * which is the profile picture, i.e. the brand logo for most small businesses
+ * with no website. IG/FB frequently block bots, so this is wrapped in a short
+ * timeout + try/catch and degrades silently. We do NOT log in or run a heavy
+ * scraper — just one HTML GET with a browser-ish UA, then a regex for og:image.
+ */
+async function fetchSocialOgImage(profileUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(profileUrl, {
+      signal: AbortSignal.timeout(10_000),
+      headers: {
+        // A desktop UA improves the odds IG/FB return the public og:image
+        // markup rather than an app-install redirect.
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept-Language": "nl,en;q=0.8",
+      },
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    // <meta property="og:image" content="https://...">  (attr order varies)
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    return m?.[1] ?? null;
+  } catch (err) {
+    logger.warn("[research-branding] social og:image fetch failed", {
+      profileUrl,
+      error: String(err),
+    });
+    return null;
+  }
+}
+
+/** Which social platform a URL belongs to, if any. */
+function socialPlatform(url: string): "instagram" | "facebook" | null {
+  if (/instagram\.com/i.test(url)) return "instagram";
+  if (/facebook\.com|fb\.com/i.test(url)) return "facebook";
+  return null;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
+/**
+ * extractBranding — website-first brand extraction, now augmented with
+ * Google Maps photos + social logo fallback for no-website leads.
+ *
+ * `photoResult` carries the Maps-photo palette + the Maps websiteUri (which is
+ * often an instagram/facebook URL for no-website leads). When the website
+ * yields no usable logo/palette, we fall back to these. Passing it is optional
+ * so the legacy 3-arg call site keeps compiling.
+ *
+ * Logo resolution order (spec §4):
+ *   1. website logo (scraped img/favicon)            -> logoSource 'website'
+ *   2. instagram/facebook profile og:image           -> 'instagram' | 'facebook'
+ *   3. none                                           -> 'wordmark' (text logo)
+ */
 export async function extractBranding(
   db: Db,
   leadId: string,
   websiteUrl: string | null,
+  photoResult?: BrandPhotosResult,
 ): Promise<void> {
   logger.info("[research-branding] starting", { leadId, websiteUrl });
 
@@ -130,18 +191,55 @@ export async function extractBranding(
   const assetDir = path.join(repoRoot(), "data", "assets", leadId);
   if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true });
 
+  const photos = photoResult ?? null;
+
+  // Candidate social URLs for the logo fallback: the Maps websiteUri (if it
+  // points at IG/FB) plus any social links scraped below.
+  const socialLogoCandidates: { platform: "instagram" | "facebook"; url: string }[] = [];
+  if (photos?.mapsWebsiteUri) {
+    const plat = socialPlatform(photos.mapsWebsiteUri);
+    if (plat) socialLogoCandidates.push({ platform: plat, url: photos.mapsWebsiteUri });
+  }
+
   // ── No website path ──────────────────────────────────────────────────────
   if (!websiteUrl) {
-    logger.info("[research-branding] no website — inserting minimal brand profile", { leadId });
+    logger.info("[research-branding] no website — using Maps photos + social fallback", { leadId });
+
+    // Try IG/FB og:image for a logo.
+    let logoPath: string | null = null;
+    let logoSource: LogoSource = "wordmark";
+    for (const cand of socialLogoCandidates) {
+      const ogUrl = await fetchSocialOgImage(cand.url);
+      if (ogUrl) {
+        logoPath = await downloadLogo(ogUrl, assetDir);
+        if (logoPath) {
+          logoSource = cand.platform;
+          break;
+        }
+      }
+    }
+
     await upsertBrandProfile(db, leadId, {
-      logoPath: null,
-      extractedPalette: null,
-      primaryColor: null,
-      secondaryColor: null,
-      accentColor: null,
+      logoPath: logoPath
+        ? path.relative(repoRoot(), logoPath).replace(/\\/g, "/")
+        : null,
+      logoSource,
+      extractedPalette: photos?.palette?.length ? photos.palette : null,
+      primaryColor: photos?.primaryColor ?? null,
+      secondaryColor: photos?.secondaryColor ?? null,
+      accentColor: photos?.accentColor ?? null,
       fontsDetected: null,
       toneOfVoiceSummary: "no website to analyze",
-      socialLinks: null,
+      socialLinks: photos?.mapsWebsiteUri ? buildSocialLinks(photos.mapsWebsiteUri) : null,
+      photoPaths: photos?.photoPaths?.length ? photos.photoPaths : null,
+    });
+
+    logger.info("[research-branding] done (no website)", {
+      leadId,
+      logoSource,
+      hasLogo: !!logoPath,
+      photos: photos?.photoPaths?.length ?? 0,
+      hasPalette: !!photos?.palette?.length,
     });
     return;
   }
@@ -152,6 +250,7 @@ export async function extractBranding(
   const page = await ctx.newPage();
 
   let logoPath: string | null = null;
+  let logoSource: LogoSource = "none";
   let palette: Awaited<ReturnType<typeof extractPalette>> = {
     hex: null, primary: null, secondary: null, accent: null,
   };
@@ -191,6 +290,7 @@ export async function extractBranding(
     if (logoUrl) {
       logoPath = await downloadLogo(logoUrl, assetDir);
       if (logoPath) {
+        logoSource = "website";
         palette = await extractPalette(logoPath);
       }
     }
@@ -260,33 +360,75 @@ export async function extractBranding(
     await ctx.close();
   }
 
+  // ── Logo fallback: IG/FB og:image when the website had no usable logo ──────
+  if (!logoPath) {
+    // Build candidate list: scraped social links + the Maps websiteUri (if IG/FB).
+    if (socialLinks) {
+      for (const [key, url] of Object.entries(socialLinks)) {
+        if ((key === "instagram" || key === "facebook") &&
+            !socialLogoCandidates.some((c) => c.url === url)) {
+          socialLogoCandidates.push({ platform: key, url });
+        }
+      }
+    }
+    for (const cand of socialLogoCandidates) {
+      const ogUrl = await fetchSocialOgImage(cand.url);
+      if (ogUrl) {
+        logoPath = await downloadLogo(ogUrl, assetDir);
+        if (logoPath) {
+          logoSource = cand.platform;
+          break;
+        }
+      }
+    }
+  }
+  // Final fallback: no image at all → wordmark (generation renders text logo).
+  if (!logoPath) logoSource = "wordmark";
+
+  // ── Palette fallback: use the Maps-photo palette when the website logo gave
+  //    us nothing (no logo, or a logo with no extractable colors). ───────────
+  const websitePaletteWeak = !palette.hex || palette.hex.length === 0;
+  const useMapsPalette = websitePaletteWeak && !!photos?.palette?.length;
+
   await upsertBrandProfile(db, leadId, {
     logoPath: logoPath
       ? path.relative(repoRoot(), logoPath).replace(/\\/g, "/")
       : null,
-    extractedPalette: palette.hex,
-    primaryColor: palette.primary,
-    secondaryColor: palette.secondary,
-    accentColor: palette.accent,
+    logoSource,
+    extractedPalette: useMapsPalette ? photos!.palette : palette.hex,
+    primaryColor: useMapsPalette ? photos!.primaryColor : palette.primary,
+    secondaryColor: useMapsPalette ? photos!.secondaryColor : palette.secondary,
+    accentColor: useMapsPalette ? photos!.accentColor : palette.accent,
     fontsDetected: fonts,
     toneOfVoiceSummary: toneOfVoice,
     socialLinks,
+    photoPaths: photos?.photoPaths?.length ? photos.photoPaths : null,
   });
 
   logger.info("[research-branding] done", {
     leadId,
+    logoSource,
     hasLogo: !!logoPath,
-    hasPalette: !!palette.hex,
+    hasPalette: useMapsPalette ? true : !!palette.hex,
+    paletteSource: useMapsPalette ? "maps-photos" : "website",
     hasFonts: !!fonts,
     hasTone: !!toneOfVoice,
     hasSocial: !!socialLinks,
+    photos: photos?.photoPaths?.length ?? 0,
   });
+}
+
+/** Map a single social URL to a { platform: url } record for socialLinks. */
+function buildSocialLinks(url: string): Record<string, string> | null {
+  const plat = socialPlatform(url);
+  return plat ? { [plat]: url } : null;
 }
 
 // ── Upsert helper ─────────────────────────────────────────────────────────────
 
 interface BrandData {
   logoPath: string | null;
+  logoSource: LogoSource;
   extractedPalette: string[] | null;
   primaryColor: string | null;
   secondaryColor: string | null;
@@ -294,6 +436,7 @@ interface BrandData {
   fontsDetected: { heading: string; body: string } | null;
   toneOfVoiceSummary: string | null;
   socialLinks: Record<string, string> | null;
+  photoPaths: string[] | null;
 }
 
 async function upsertBrandProfile(db: Db, leadId: string, data: BrandData): Promise<void> {
@@ -305,6 +448,7 @@ async function upsertBrandProfile(db: Db, leadId: string, data: BrandData): Prom
       id: nanoid(),
       leadId,
       logoPath: data.logoPath,
+      logoSource: data.logoSource,
       extractedPalette: data.extractedPalette,
       primaryColor: data.primaryColor,
       secondaryColor: data.secondaryColor,
@@ -312,5 +456,6 @@ async function upsertBrandProfile(db: Db, leadId: string, data: BrandData): Prom
       fontsDetected: data.fontsDetected,
       toneOfVoiceSummary: data.toneOfVoiceSummary,
       socialLinks: data.socialLinks,
+      photoPaths: data.photoPaths,
     });
 }
