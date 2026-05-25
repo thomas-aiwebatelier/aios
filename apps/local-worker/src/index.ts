@@ -89,9 +89,11 @@ const wranglerPath = resolveCli("wrangler");
 
 const WORKER_NAME = process.env.WORKER_NAME ?? "local-worker";
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS ?? 5_000);
-// Order is priority order for claimNext: research is upstream of generate,
+// Order is priority order for claimNext: research is upstream of generation,
 // which is upstream of deploy. claimNext tries each step in turn, first match wins.
-const STEPS = ["research", "generate", "deploy"];
+// NOTE: step names must match what the enqueue side uses. The admin approve
+// endpoint enqueues "generation" (not "generate") — keep these in sync.
+const STEPS = ["research", "generation", "deploy"];
 
 logger.info("boot", {
   worker: WORKER_NAME,
@@ -189,7 +191,7 @@ startPollLoop(db, {
   intervalMs: POLL_INTERVAL_MS,
   processors: {
     research: processResearchJob,
-    generate: processGenerationJob,
+    generation: processGenerationJob,
     deploy: processDeployJob,
   },
 }).catch((err) => {

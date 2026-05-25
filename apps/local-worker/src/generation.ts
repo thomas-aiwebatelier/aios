@@ -377,7 +377,8 @@ export async function processGenerationJob(
       });
 
       await runClaudeCode(bundle, {
-        args: ["--dangerously-skip-permissions", "--cwd", projectPath],
+        args: ["--dangerously-skip-permissions"],
+        cwd: projectPath,
         timeoutMs: 30 * 60 * 1000,
       });
 
