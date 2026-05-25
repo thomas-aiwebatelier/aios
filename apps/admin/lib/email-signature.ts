@@ -42,6 +42,8 @@ export function renderSignatureHtml(opts: { withPhoto: boolean }): string {
 </table>`;
 }
 
+const FOOTER_TEXT = `Je ontvangt deze mail omdat ik je zaak online tegenkwam. Geen interesse? Antwoord met "stop" en je hoort niets meer van me.`;
+
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -49,12 +51,13 @@ const escapeHtml = (s: string) =>
 export function composeEmailParts(plainBody: string, opts: { withPhoto: boolean }): {
   textBody: string; htmlBody: string;
 } {
-  const textBody = `${plainBody}\n\n${SIGNATURE_TEXT}`;
+  const textBody = `${plainBody}\n\n${SIGNATURE_TEXT}\n\n—\n${FOOTER_TEXT}`;
   const htmlEscaped = escapeHtml(plainBody)
     .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#0e7490;">$1</a>')
     .replace(/\n/g, "<br>\n");
   const htmlBody =
     `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1c1917;font-size:14px;line-height:1.5;">` +
-    `${htmlEscaped}${renderSignatureHtml({ withPhoto: opts.withPhoto })}</div>`;
+    `${htmlEscaped}${renderSignatureHtml({ withPhoto: opts.withPhoto })}` +
+    `<div style="margin-top:14px;color:#a8a29e;font-size:12px;">${FOOTER_TEXT}</div></div>`;
   return { textBody, htmlBody };
 }

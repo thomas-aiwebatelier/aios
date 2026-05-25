@@ -24,8 +24,8 @@
  */
 
 import { getDb } from "./db.js";
-import { emailTemplates } from "@atelier/db";
-import { eq } from "drizzle-orm";
+import { emailTemplates, type SequenceAngle } from "@atelier/db";
+import { eq, and } from "drizzle-orm";
 import { logger } from "./logger.js";
 
 // ── Input types ────────────────────────────────────────────────────────────────
@@ -67,11 +67,12 @@ export const TEMPLATE_PLACEHOLDERS: ReadonlyArray<{ token: string; description: 
   { token: "{{performance}}", description: "Lighthouse performance-score van de voorbeeldsite" },
 ];
 
-// ── Built-in default template ──────────────────────────────────────────────────
+// ── Per-angle default templates ────────────────────────────────────────────────
 
-export const DEFAULT_SUBJECT_TEMPLATE = `Een nieuwe website voor {{businessName}} — kijk eens`;
-
-export const DEFAULT_BODY_TEMPLATE = `{{greeting}},
+export const DEFAULT_TEMPLATES: Record<SequenceAngle, { subject: string; body: string }> = {
+  reveal: {
+    subject: `Een nieuwe website voor {{businessName}} — kijk eens`,
+    body: `{{greeting}},
 
 Ik kwam {{businessName}} tegen tijdens mijn zoektocht naar lokale ondernemers in {{city}}.
 
@@ -96,13 +97,44 @@ Mijn prijs is opgebouwd in twee delen, eerlijk en zonder verrassingen:
 Laat me weten wat jullie ervan vinden. Geen druk — gewoon antwoorden op deze mail volstaat.
 
 Vriendelijke groet,
-Thomas
+Thomas`,
+  },
+  social_proof: {
+    subject: `Even kort over de website voor {{businessName}}`,
+    body: `{{greeting}},
 
-—
-AI Web Atelier — vakwerk websites, gebouwd met AI
-https://aiwebatelier.com
+Een korte opvolging op mijn vorige mail over een nieuwe website voor {{businessName}}.
 
-Wenst u geen ongevraagde mails meer te ontvangen? Antwoord met "uitschrijven" en wij verwijderen uw gegevens binnen 24 uur.`;
+Het voorstel staat hier nog steeds klaar: {{previewUrl}}
+
+Andere lokale ondernemers in en rond {{city}} kozen voor dezelfde aanpak — een snelle, moderne site zonder grote investering vooraf, en zonder technisch gedoe.
+
+Als het jullie iets lijkt, antwoord gerust op deze mail — dan bekijken we het samen, vrijblijvend.
+
+Vriendelijke groet,
+Thomas`,
+  },
+  breakup: {
+    subject: `Laatste mailtje over de website voor {{businessName}}`,
+    body: `{{greeting}},
+
+Ik wil niet blijven aandringen, dus dit is mijn laatste berichtje hierover.
+
+Het voorstel dat ik voor {{businessName}} bouwde, blijft nog even online: {{previewUrl}}
+
+Misschien is het nu even geen prioriteit, en dat is helemaal oké. Zal ik jullie dossier voorlopig sluiten, of willen jullie er toch nog even naar kijken? Eén regeltje terug volstaat.
+
+Hoe dan ook: veel succes met {{businessName}}.
+
+Vriendelijke groet,
+Thomas`,
+  },
+};
+
+// ── Backward-compat aliases ────────────────────────────────────────────────────
+
+export const DEFAULT_SUBJECT_TEMPLATE = DEFAULT_TEMPLATES.reveal.subject;
+export const DEFAULT_BODY_TEMPLATE = DEFAULT_TEMPLATES.reveal.body;
 
 // ── Industry → Dutch label ──────────────────────────────────────────────────────
 
@@ -183,14 +215,20 @@ export function buildTemplateVars(input: RenderInput, observation: string): Reco
 // ── Active template loading (DB → built-in default) ──────────────────────────────
 
 /**
- * Load the active email template from the DB. Falls back to the built-in
- * default on any error or if no row exists. Never throws.
+ * Load the active email template for the given angle from the DB. Falls back to
+ * the built-in default on any error or if no row exists. Never throws.
  */
-export async function loadActiveEmailTemplate(): Promise<{ subject: string; body: string }> {
+export async function loadActiveEmailTemplate(
+  angle: SequenceAngle = "reveal",
+): Promise<{ subject: string; body: string }> {
   try {
     const db = getDb();
     const row = (
-      await db.select().from(emailTemplates).where(eq(emailTemplates.isActive, true)).limit(1)
+      await db
+        .select()
+        .from(emailTemplates)
+        .where(and(eq(emailTemplates.isActive, true), eq(emailTemplates.angle, angle)))
+        .limit(1)
     )[0];
     if (row?.subject && row?.body) {
       return { subject: row.subject, body: row.body };
@@ -200,7 +238,7 @@ export async function loadActiveEmailTemplate(): Promise<{ subject: string; body
       error: String(err),
     });
   }
-  return { subject: DEFAULT_SUBJECT_TEMPLATE, body: DEFAULT_BODY_TEMPLATE };
+  return DEFAULT_TEMPLATES[angle];
 }
 
 // ── Main renderer ─────────────────────────────────────────────────────────────
@@ -210,9 +248,12 @@ export async function loadActiveEmailTemplate(): Promise<{ subject: string; body
  * template. Designed to never throw — the composer page depends on it always
  * returning a usable draft.
  */
-export async function renderOutreachEmail(input: RenderInput): Promise<OutreachEmail> {
+export async function renderOutreachEmail(
+  input: RenderInput,
+  angle: SequenceAngle = "reveal",
+): Promise<OutreachEmail> {
   const observation = buildObservation(input);
-  const { subject, body } = await loadActiveEmailTemplate();
+  const { subject, body } = await loadActiveEmailTemplate(angle);
   const vars = buildTemplateVars(input, observation);
   return {
     subject: interpolate(subject, vars),

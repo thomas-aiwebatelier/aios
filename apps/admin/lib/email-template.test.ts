@@ -3,6 +3,7 @@ import {
   buildObservation,
   interpolate,
   buildTemplateVars,
+  renderOutreachEmail,
   type RenderInput,
 } from "./email-template.js";
 
@@ -118,5 +119,17 @@ describe("buildTemplateVars", () => {
       "OBS",
     );
     expect(vars.performance).toBe("—");
+  });
+});
+
+describe("per-angle templates", () => {
+  it("breakup subject differs and signals closing", async () => {
+    const out = await renderOutreachEmail(makeInput(), "breakup");
+    expect(out.subject).toContain("Laatste");
+  });
+  it("social_proof differs from reveal", async () => {
+    const reveal = await renderOutreachEmail(makeInput(), "reveal");
+    const sp = await renderOutreachEmail(makeInput(), "social_proof");
+    expect(sp.body).not.toBe(reveal.body);
   });
 });

@@ -24,5 +24,7 @@ describe("signature", () => {
     expect(htmlBody).toContain("<br");
     expect(htmlBody).toContain('href="https://x.be"');
     expect(htmlBody).toContain(`cid:${SIGNATURE_PHOTO.cid}`);
+    expect(textBody).toContain("Geen interesse?");
+    expect(htmlBody).toContain("Geen interesse?");
   });
 });
