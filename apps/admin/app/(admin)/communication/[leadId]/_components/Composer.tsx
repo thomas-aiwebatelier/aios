@@ -80,7 +80,7 @@ export function Composer({ leadId, to, initialSubject, initialBody, stepId }: Co
       setError(err instanceof Error ? err.message : String(err));
       setPhase("editing");
     }
-  }, [leadId, subject, body]);
+  }, [leadId, subject, body, stepId]);
 
   const handleSkip = useCallback(async () => {
     if (!stepId) return;
