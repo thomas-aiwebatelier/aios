@@ -75,6 +75,21 @@ for (const entry of readdirSync(nextDir)) {
 }
 console.log(`[post-build] Mirrored ${mirroredCount} entries from .next/ → .next/standalone/.next/`);
 
+// ── Step 2b: copy skills/industry-style-guides into the standalone root ──
+// The discovery worker reads industry style guides at runtime via
+// findSkillsDir(), which probes process.cwd()/skills/... The repo tree isn't
+// present in the Cloud Run container, so bundle the dir into standalone where
+// the cwd-walk will find it.
+const skillsSrc = join(adminRoot, "..", "..", "skills", "industry-style-guides");
+if (existsSync(skillsSrc)) {
+  const skillsDest = join(standaloneDir, "skills", "industry-style-guides");
+  mkdirSync(join(standaloneDir, "skills"), { recursive: true });
+  cpSync(skillsSrc, skillsDest, { recursive: true, force: true });
+  console.log(`[post-build] Copied skills/industry-style-guides → .next/standalone/skills/`);
+} else {
+  console.warn(`[post-build] WARN: ${skillsSrc} not found — discovery industry classify will use fallback keys`);
+}
+
 // ── Step 3: sanity checks ──
 const serverJs = join(standaloneDir, "server.js");
 const manifest = join(standaloneNextDir, "routes-manifest.json");

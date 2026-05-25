@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import path from "node:path";
+import { findSkillsDir } from "./skills-dir.js";
 
 let cached: string[] | null = null;
 
@@ -11,11 +11,10 @@ let cached: string[] | null = null;
 export function getValidIndustryKeys(): string[] {
   if (cached) return cached;
 
-  // Walk up from apps/admin to repo root and find skills/industry-style-guides
-  const repoRoot = path.resolve(process.cwd(), "../..");
-  const guidesDir = path.join(repoRoot, "skills", "industry-style-guides");
+  const guidesDir = findSkillsDir();
 
   try {
+    if (!guidesDir) throw new Error("skills dir not found");
     const files = fs.readdirSync(guidesDir);
     cached = files
       .filter((f) => f.endsWith(".md") && f !== "SKILL.md")

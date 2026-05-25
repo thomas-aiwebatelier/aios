@@ -14,15 +14,30 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { logger } from "./logger.js";
 import { runClaudeCode } from "./claude-code.js";
+import { findSkillsDir } from "./skills-dir.js";
 
 // ── Path resolution ──────────────────────────────────────────────────────────
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SKILL_DIR = path.resolve(__dirname, "../../../skills/industry-style-guides");
-const SKILL_MD = path.join(SKILL_DIR, "SKILL.md");
+const SKILL_DIR = findSkillsDir();
+const SKILL_MD = SKILL_DIR ? path.join(SKILL_DIR, "SKILL.md") : null;
+
+// Hardcoded fallback canonical keys — mirrors the *.md filenames. Used only if
+// the skills dir can't be located at runtime (defensive; should not happen
+// once post-build bundles skills/ into the standalone output).
+const FALLBACK_KEYS = [
+  "automotive",
+  "bakery-restaurant",
+  "beauty-personal-care",
+  "creative-services",
+  "fitness-sport",
+  "health-wellness",
+  "professional-services",
+  "real-estate-property",
+  "retail-boutique",
+  "trades-construction",
+];
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,6 +76,18 @@ function normalizeName(s: string): string {
  */
 function loadSkillData(): SkillData {
   if (_cache) return _cache;
+
+  // Defensive: if skills dir wasn't found, return fallback keys + empty maps.
+  // Classification then relies on claude free-form (step 3) + default (step 4).
+  if (!SKILL_DIR || !SKILL_MD) {
+    logger.error("[industry-classify] skills dir not found at runtime — using fallback keys");
+    _cache = {
+      canonicalKeys: new Set(FALLBACK_KEYS),
+      typesMap: new Map(),
+      keywordsMap: [],
+    };
+    return _cache;
+  }
 
   // 1. Read canonical keys from filenames (excluding SKILL.md itself)
   const mdFiles = readdirSync(SKILL_DIR)
@@ -155,7 +182,10 @@ function loadSkillData(): SkillData {
 
 function isCanonical(key: string): boolean {
   const { canonicalKeys } = loadSkillData();
-  const valid = canonicalKeys.has(key) && existsSync(path.join(SKILL_DIR, `${key}.md`));
+  // When SKILL_DIR is missing we can't stat the .md file; fall back to the
+  // in-memory key set (which is the fallback list in that case).
+  const fileOk = SKILL_DIR ? existsSync(path.join(SKILL_DIR, `${key}.md`)) : true;
+  const valid = canonicalKeys.has(key) && fileOk;
   if (!valid) {
     logger.warn("[industry-classify] non-canonical key rejected", { key });
   }
