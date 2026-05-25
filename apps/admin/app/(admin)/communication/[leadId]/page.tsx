@@ -87,23 +87,41 @@ export default async function ComposerPage({ params, searchParams }: PageProps) 
     );
   }
 
-  // 5. Render email template (calls Claude for personalized_observation)
-  const { subject, body } = await renderOutreachEmail({
-    lead: {
-      businessName: lead.businessName,
-      firstName: null, // leads table has no firstName field; using null
-      city: lead.city,
-      industryKey: lead.industryKey,
-      existingWebsiteUrl: lead.existingWebsiteUrl ?? null,
-    },
-    brandProfile: brandProfile
-      ? { toneOfVoiceSummary: brandProfile.toneOfVoiceSummary }
-      : null,
-    generatedSite: {
-      cloudflarePreviewUrl: generatedSite.cloudflarePreviewUrl,
-      lighthouseScores: generatedSite.lighthouseScores as Record<string, number> | null,
-    },
-  });
+  // 5. Render email template. The observation is built deterministically from
+  //    research-phase data (no LLM/CLI call), and the subject/body come from the
+  //    admin-editable template (email_templates → Settings) with a built-in
+  //    default fallback. renderOutreachEmail is designed not to throw, but we
+  //    still guard here so a template/DB hiccup can never 500 the composer.
+  let subject = "";
+  let body = "";
+  try {
+    const rendered = await renderOutreachEmail({
+      lead: {
+        businessName: lead.businessName,
+        firstName: null, // leads table has no firstName field; using null
+        city: lead.city,
+        industryKey: lead.industryKey,
+        existingWebsiteUrl: lead.existingWebsiteUrl ?? null,
+        websiteStalenessScore: lead.websiteStalenessScore ?? null,
+      },
+      brandProfile: brandProfile
+        ? {
+            toneOfVoiceSummary: brandProfile.toneOfVoiceSummary,
+            socialLinks: brandProfile.socialLinks ?? null,
+          }
+        : null,
+      generatedSite: {
+        cloudflarePreviewUrl: generatedSite.cloudflarePreviewUrl,
+        lighthouseScores: generatedSite.lighthouseScores as Record<string, number> | null,
+      },
+    });
+    subject = rendered.subject;
+    body = rendered.body;
+  } catch {
+    // Last-resort fallback: an empty editable draft beats a 500.
+    subject = `Een nieuwe website voor ${lead.businessName} — kijk eens`;
+    body = `Beste ondernemer,\n\nIk heb alvast een voorstel voor jullie gebouwd: ${generatedSite.cloudflarePreviewUrl}\n\nVriendelijke groet,\nThomas`;
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">

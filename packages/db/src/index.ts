@@ -19,6 +19,7 @@ export {
   pipelineJobs,
   inboundInquiries,
   workerHeartbeats,
+  emailTemplates,
   // Enum value arrays
   leadStatusValues,
   generatedSiteCreatedViaValues,

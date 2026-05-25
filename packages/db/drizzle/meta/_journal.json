@@ -29,6 +29,13 @@
       "when": 1779719172287,
       "tag": "0003_typical_anthem",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779728257165,
+      "tag": "0004_purple_salo",
+      "breakpoints": true
     }
   ]
 }

@@ -23,6 +23,7 @@ import {
   doublePrecision,
   jsonb,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ── leads ────────────────────────────────────────────────────────────────────
@@ -267,4 +268,24 @@ export const inboundInquiries = pgTable("inbound_inquiries", {
   message:   text("message"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   status:    text("status").$type<InboundInquiryStatus>().notNull().default("new"),
+});
+
+// ── email_templates ───────────────────────────────────────────────────────────
+//
+// Admin-editable outreach email templates. Each row stores a subject + body with
+// {{placeholder}} tokens that apps/admin/lib/email-template.ts interpolates with
+// per-lead data gathered during the research phase (business name, city,
+// industry, the computed "observation" line, the generated-site preview URL +
+// Lighthouse score). One row is active at a time (isActive=true). If no row
+// exists the renderer falls back to the built-in DEFAULT template, so the
+// composer keeps working before any template has been saved. The single active
+// row uses a fixed id ("default") so the Settings editor can upsert it.
+
+export const emailTemplates = pgTable("email_templates", {
+  id:        text("id").primaryKey(),
+  name:      text("name").notNull().default("default"),
+  subject:   text("subject").notNull(),
+  body:      text("body").notNull(),
+  isActive:  boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
 });
