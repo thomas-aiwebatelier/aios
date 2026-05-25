@@ -36,6 +36,8 @@ import {
 import { startPollLoop, stopPollLoop } from "./poll-loop.js";
 import { processGenerationJob } from "./generation.js";
 import { processDeployJob } from "./deploy.js";
+import { processResearchJob } from "./research.js";
+import { closeBrowserPool } from "./lib/playwright-pool.js";
 
 // ── Locate repo root + load .env ──────────────────────────────────────────────
 
@@ -87,7 +89,9 @@ const wranglerPath = resolveCli("wrangler");
 
 const WORKER_NAME = process.env.WORKER_NAME ?? "local-worker";
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS ?? 5_000);
-const STEPS = ["generate", "deploy"];
+// Order is priority order for claimNext: research is upstream of generate,
+// which is upstream of deploy. claimNext tries each step in turn, first match wins.
+const STEPS = ["research", "generate", "deploy"];
 
 logger.info("boot", {
   worker: WORKER_NAME,
@@ -152,7 +156,15 @@ async function shutdown(signal: string): Promise<void> {
     logger.warn("shutdown_final_heartbeat_failed", { error: String(err) });
   }
 
-  // 4. Drain the pool. 5s timeout matches closeProdDb's default.
+  // 4. Close the shared Playwright browser (research keeps it open across
+  //    jobs). No-op if research never ran / no browser was launched.
+  try {
+    await closeBrowserPool();
+  } catch (err) {
+    logger.warn("shutdown_close_browser_failed", { error: String(err) });
+  }
+
+  // 5. Drain the pool. 5s timeout matches closeProdDb's default.
   try {
     await closeDb();
   } catch (err) {
@@ -176,6 +188,7 @@ startPollLoop(db, {
   workerName: WORKER_NAME,
   intervalMs: POLL_INTERVAL_MS,
   processors: {
+    research: processResearchJob,
     generate: processGenerationJob,
     deploy: processDeployJob,
   },
