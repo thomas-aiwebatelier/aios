@@ -1,11 +1,11 @@
 # local-worker
 
-Local Windows daemon for the AI Web Atelier pipeline. Runs the **generation**
-and **deploy** workers on Thomas's machine so the `claude` CLI (Max-plan auth
-at `%USERPROFILE%\.claude\`) and `wrangler` can be invoked as subprocesses
-without paying per-token in Cloud Run.
+Local Windows daemon for the AI Web Atelier pipeline. Runs the **research**,
+**generation**, and **deploy** workers on Thomas's machine so the `claude` CLI
+(Max-plan auth at `%USERPROFILE%\.claude\`), `wrangler`, and Playwright can be
+invoked as subprocesses without paying per-token in Cloud Run.
 
-The rest of the workers (discovery, research, outreach, reply-poll) now run as
+The rest of the workers (discovery, outreach, reply-poll) now run as
 HTTP-driven endpoints on Firebase App Hosting; both halves share the same
 Supabase Postgres `pipeline_jobs` queue and reconcile via
 `worker_heartbeats.last_seen_at`.
@@ -19,6 +19,10 @@ Supabase Postgres `pipeline_jobs` queue and reconcile via
   which is why the scheduled task runs as the user, not as `SYSTEM`.
 - **`wrangler` CLI** — `npm install -g wrangler` then `wrangler login` once.
   Test with `wrangler --version`. Used by the deploy worker.
+- **Playwright Chromium** — the research worker scrapes lead/competitor sites
+  with Playwright. After `pnpm install`, run `npx playwright install chromium`
+  once (downloads the browser binary). Without it, research jobs fail at the
+  first page navigation.
 - **`pwsh` (PowerShell 7+)** — the Task Scheduler XML invokes `pwsh.exe`.
   Install via `winget install Microsoft.PowerShell` if missing.
 - **`.env`** populated at the repo root. The daemon walks up from
