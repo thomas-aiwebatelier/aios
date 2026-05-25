@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * TemplateEditor.tsx — client editor for the outreach email template.
+ * TemplateEditor.tsx — client editor for all three outreach email templates.
  *
- * Edits the subject + body (with {{placeholder}} tokens), previews against
- * sample data, and saves via PUT /api/settings/email-template. "Herstel
- * standaard" loads the built-in default into the fields (not yet saved until
- * the operator clicks Opslaan).
+ * Tab per angle (reveal / social_proof / breakup). Edits subject + body with
+ * {{placeholder}} tokens, previews against sample data, saves via
+ * PUT /api/settings/email-template with { angle, subject, body }.
+ * Switching tabs preserves unsaved edits per tab. "Herstel standaard" loads
+ * the built-in default for the active tab.
  */
 
 import { useState, useMemo } from "react";
@@ -16,11 +17,17 @@ interface Placeholder {
   description: string;
 }
 
-interface Props {
-  initialSubject: string;
-  initialBody: string;
+interface TemplateTab {
+  angle: string;
+  label: string;
+  subject: string;
+  body: string;
   defaultSubject: string;
   defaultBody: string;
+}
+
+interface Props {
+  templates: TemplateTab[];
   placeholders: Placeholder[];
 }
 
@@ -45,21 +52,43 @@ function interpolate(template: string, vars: Record<string, string>): string {
   );
 }
 
-export function TemplateEditor({
-  initialSubject,
-  initialBody,
-  defaultSubject,
-  defaultBody,
-  placeholders,
-}: Props) {
-  const [subject, setSubject] = useState(initialSubject);
-  const [body, setBody] = useState(initialBody);
+export function TemplateEditor({ templates, placeholders }: Props) {
+  const [activeAngle, setActiveAngle] = useState(templates[0]?.angle ?? "reveal");
+
+  // Per-tab editable state, initialised from props
+  const [tabState, setTabState] = useState<Record<string, { subject: string; body: string }>>(
+    () =>
+      Object.fromEntries(
+        templates.map((t) => [t.angle, { subject: t.subject, body: t.body }]),
+      ),
+  );
+
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  const previewSubject = useMemo(() => interpolate(subject, SAMPLE_VARS), [subject]);
-  const previewBody = useMemo(() => interpolate(body, SAMPLE_VARS), [body]);
+  const activeTab = templates.find((t) => t.angle === activeAngle) ?? templates[0];
+  const current = tabState[activeAngle] ?? { subject: "", body: "" };
+
+  const previewSubject = useMemo(() => interpolate(current.subject, SAMPLE_VARS), [current.subject]);
+  const previewBody = useMemo(() => interpolate(current.body, SAMPLE_VARS), [current.body]);
+
+  function setSubject(value: string) {
+    setTabState((prev) => ({ ...prev, [activeAngle]: { ...prev[activeAngle], subject: value } }));
+    setStatus("idle");
+  }
+
+  function setBody(value: string) {
+    setTabState((prev) => ({ ...prev, [activeAngle]: { ...prev[activeAngle], body: value } }));
+    setStatus("idle");
+  }
+
+  function handleTabSwitch(angle: string) {
+    setActiveAngle(angle);
+    setStatus("idle");
+    setError(null);
+    setShowPreview(false);
+  }
 
   async function handleSave() {
     setStatus("saving");
@@ -68,11 +97,11 @@ export function TemplateEditor({
       const res = await fetch("/api/settings/email-template", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body }),
+        body: JSON.stringify({ angle: activeAngle, subject: current.subject, body: current.body }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `HTTP ${res.status}`);
+        throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
       }
       setStatus("saved");
     } catch (err) {
@@ -82,14 +111,36 @@ export function TemplateEditor({
   }
 
   function handleReset() {
-    setSubject(defaultSubject);
-    setBody(defaultBody);
+    if (!activeTab) return;
+    setTabState((prev) => ({
+      ...prev,
+      [activeAngle]: { subject: activeTab.defaultSubject, body: activeTab.defaultBody },
+    }));
     setStatus("idle");
     setError(null);
   }
 
   return (
     <div className="space-y-4">
+      {/* Tab switcher */}
+      <div className="flex gap-1 border-b border-stone-200">
+        {templates.map((t) => (
+          <button
+            key={t.angle}
+            type="button"
+            onClick={() => handleTabSwitch(t.angle)}
+            className={
+              "px-4 py-2 text-sm font-medium rounded-t-md transition-colors " +
+              (t.angle === activeAngle
+                ? "bg-white border border-b-white border-stone-200 text-stone-900 -mb-px"
+                : "text-stone-500 hover:text-stone-700 hover:bg-stone-50")
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* Placeholder legend */}
       <div className="rounded-md border border-stone-200 bg-stone-50 p-4">
         <p className="text-xs font-medium text-stone-500 mb-2">
@@ -126,11 +177,8 @@ export function TemplateEditor({
         </label>
         <input
           type="text"
-          value={subject}
-          onChange={(e) => {
-            setSubject(e.target.value);
-            setStatus("idle");
-          }}
+          value={current.subject}
+          onChange={(e) => setSubject(e.target.value)}
           className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400"
         />
       </div>
@@ -155,11 +203,8 @@ export function TemplateEditor({
           </div>
         ) : (
           <textarea
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              setStatus("idle");
-            }}
+            value={current.body}
+            onChange={(e) => setBody(e.target.value)}
             rows={22}
             className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
           />
@@ -171,7 +216,7 @@ export function TemplateEditor({
         <button
           type="button"
           onClick={handleSave}
-          disabled={status === "saving" || !subject.trim() || !body.trim()}
+          disabled={status === "saving" || !current.subject.trim() || !current.body.trim()}
           className="inline-flex items-center rounded-md bg-stone-900 px-5 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === "saving" ? "Opslaan…" : "Opslaan"}
