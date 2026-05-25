@@ -22,7 +22,7 @@
  * try/catch — this processor only throws on final-attempt failure.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { eq, desc, max } from "drizzle-orm";
@@ -107,6 +107,77 @@ function repoRoot(): string {
   return path.resolve(process.cwd(), "..", "..");
 }
 
+// ── Brand-asset copy ─────────────────────────────────────────────────────────
+
+interface BrandAssets {
+  /** Public web paths of copied photos, e.g. "/brand/maps-1.jpg". */
+  photoWebPaths: string[];
+  /** Public web path of the copied logo, e.g. "/brand/logo.png" (null = none). */
+  logoWebPath: string | null;
+  /** Logo source from the brand profile: website|instagram|facebook|wordmark|none. */
+  logoSource: string | null;
+}
+
+/**
+ * Copy the captured brand photos + logo (recorded on the brand_profile as
+ * repo-relative paths under data/assets/) into the generated Astro project's
+ * public/brand/ folder so the generated site can reference them as /brand/...
+ * URLs. Runs per attempt because resetProjectDir wipes the project dir first.
+ *
+ * Returns the public web paths to feed into the prompt. Missing source files
+ * are skipped silently (research may have produced fewer assets than expected).
+ */
+function copyBrandAssets(
+  brandProfile: Record<string, unknown> | null,
+  projectPath: string,
+): BrandAssets {
+  const empty: BrandAssets = { photoWebPaths: [], logoWebPath: null, logoSource: null };
+  if (!brandProfile) return empty;
+
+  const root = repoRoot();
+  const brandDir = path.join(projectPath, "public", "brand");
+
+  const photoPaths = Array.isArray(brandProfile.photoPaths)
+    ? (brandProfile.photoPaths as string[])
+    : [];
+  const logoPath = typeof brandProfile.logoPath === "string" ? brandProfile.logoPath : null;
+  const logoSource =
+    typeof brandProfile.logoSource === "string" ? brandProfile.logoSource : null;
+
+  if (photoPaths.length === 0 && !logoPath) return { ...empty, logoSource };
+
+  mkdirSync(brandDir, { recursive: true });
+
+  const photoWebPaths: string[] = [];
+  for (const rel of photoPaths) {
+    const src = path.join(root, rel);
+    if (!existsSync(src)) continue;
+    const base = path.basename(rel);
+    try {
+      copyFileSync(src, path.join(brandDir, base));
+      photoWebPaths.push(`/brand/${base}`);
+    } catch (err) {
+      logger.warn("brand_photo_copy_failed", { src, error: String(err) });
+    }
+  }
+
+  let logoWebPath: string | null = null;
+  if (logoPath) {
+    const src = path.join(root, logoPath);
+    if (existsSync(src)) {
+      const base = path.basename(logoPath);
+      try {
+        copyFileSync(src, path.join(brandDir, base));
+        logoWebPath = `/brand/${base}`;
+      } catch (err) {
+        logger.warn("brand_logo_copy_failed", { src, error: String(err) });
+      }
+    }
+  }
+
+  return { photoWebPaths, logoWebPath, logoSource };
+}
+
 // ── Prompt builder ─────────────────────────────────────────────────────────────
 
 function readSkillFile(relPath: string): string {
@@ -125,6 +196,7 @@ function industryReadable(key: string): string {
 function buildPromptBundle(
   ctx: GenerationContext,
   industryGuideContent: string,
+  brandAssets: BrandAssets,
   failureFeedback?: string,
 ): string {
   const { lead, brandProfile, siteInventory, competitor } = ctx;
@@ -175,6 +247,29 @@ function buildPromptBundle(
     "```json",
     JSON.stringify(competitor, null, 2),
     "```",
+    "",
+    "---",
+    "",
+    "## Brand Assets (REAL imagery — prefer these over stock)",
+    "",
+    ...(brandAssets.photoWebPaths.length > 0
+      ? [
+          "Real photos of this business were captured (Google Maps / social). They are already in the project's public/brand/ folder. Reference them directly by these absolute paths (e.g. `<img src=\"/brand/maps-1.jpg\" alt=\"...\">` or as CSS background-image). Use them for the hero, gallery, and section imagery. Do NOT use Unsplash or generic stock photos when these real photos are available:",
+          ...brandAssets.photoWebPaths.map((p) => `- ${p}`),
+        ]
+      : [
+          "No real photos were captured for this business. Avoid generic stock photos — use tasteful CSS gradient/texture treatments in the brand colors plus the industry style guide's imagery guidance.",
+        ]),
+    "",
+    ...(brandAssets.logoWebPath
+      ? [
+          `A real logo is available at \`${brandAssets.logoWebPath}\` (source: ${brandAssets.logoSource}). Use it in the header/nav and footer.`,
+        ]
+      : [
+          `No logo image is available (source: ${brandAssets.logoSource ?? "none"}). Render the business name "${lead.businessName}" as a STYLED TEXT WORDMARK in the brand's primary color and heading font — make it look intentional and polished, not like plain text. Use it in the header/nav and footer.`,
+        ]),
+    "",
+    "Use the brand colors from the Brand Profile above (primaryColor / secondaryColor / accentColor) as the site's palette.",
     "",
     "---",
     "",
@@ -366,9 +461,21 @@ export async function processGenerationJob(
       });
 
       const projectPath = resetProjectDir(ctx.lead.slug);
+
+      // Copy captured Maps/social photos + logo into the project's
+      // public/brand/ so the generated site can reference them. Runs per
+      // attempt because resetProjectDir wipes the dir.
+      const brandAssets = copyBrandAssets(ctx.brandProfile, projectPath);
+      logger.info("brand_assets_copied", {
+        photos: brandAssets.photoWebPaths.length,
+        logo: brandAssets.logoWebPath,
+        logoSource: brandAssets.logoSource,
+      });
+
       const bundle = buildPromptBundle(
         ctx,
         industryGuideContent,
+        brandAssets,
         lastFailure ?? undefined,
       );
 
