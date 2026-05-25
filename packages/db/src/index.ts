@@ -26,8 +26,10 @@ export {
   outreachStatusValues,
   pipelineJobStatusValues,
   inboundInquiryStatusValues,
+  logoSourceValues,
   // Types
   type LeadStatus,
+  type LogoSource,
   type GeneratedSiteCreatedVia,
   type OutreachDirection,
   type OutreachStatus,

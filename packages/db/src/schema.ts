@@ -57,6 +57,10 @@ export const leads = pgTable("leads", {
   googleMapsPlaceId:                text("google_maps_place_id").unique(),
   googleMapsUrl:                    text("google_maps_url"),
   existingWebsiteUrl:               text("existing_website_url"),
+  // Google Places API v1 photo resource names (e.g. "places/XXX/photos/YYY")
+  // captured during research for no-website leads. Used to (re)download the
+  // actual storefront/product imagery via the Places photo-media endpoint.
+  googlePhotoRefs:                  jsonb("google_photo_refs").$type<string[]>(),
   websiteStalenessScore:            integer("website_staleness_score"),
   industryKey:                      text("industry_key").notNull(),
   industryClassificationConfidence: doublePrecision("industry_classification_confidence"),
@@ -81,7 +85,25 @@ export const brandProfiles = pgTable("brand_profiles", {
   fontsDetected:      jsonb("fonts_detected").$type<{ heading: string; body: string }>(),
   toneOfVoiceSummary: text("tone_of_voice_summary"),
   socialLinks:        jsonb("social_links").$type<Record<string, string>>(),
+  // Downloaded local image file paths (repo-relative, forward-slash) of real
+  // brand photos — Google Maps Place Photos plus any best-effort Instagram /
+  // Facebook images. Generation copies these into the Astro project and uses
+  // them as hero/section imagery instead of stock photos.
+  photoPaths:         jsonb("photo_paths").$type<string[]>(),
+  // Where the resolved logo came from: 'website' (scraped <img>/favicon),
+  // 'instagram' / 'facebook' (profile og:image), 'wordmark' (no image — render
+  // a styled text logo), or 'none'. Drives generation's logo handling.
+  logoSource:         text("logo_source").$type<LogoSource>(),
 });
+
+export const logoSourceValues = [
+  "website",
+  "instagram",
+  "facebook",
+  "wordmark",
+  "none",
+] as const;
+export type LogoSource = (typeof logoSourceValues)[number];
 
 // ── site_inventories ─────────────────────────────────────────────────────────
 
