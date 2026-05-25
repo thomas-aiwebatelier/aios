@@ -33,6 +33,8 @@ import { outreachMessages, leads } from "@atelier/db";
 import type { Db } from "@atelier/db";
 import { getThread, SENDER_ADDRESS } from "../lib/gmail.js";
 import { logger } from "../lib/logger.js";
+import { cancelRemainingSteps } from "../lib/sequence.js";
+import { logActivity } from "../lib/activity.js";
 
 const POLL_WINDOW_DAYS = 30;
 
@@ -120,10 +122,20 @@ export async function processReplyPollJob(db: Db): Promise<ReplyPollSummary> {
       .update(leads)
       .set({
         status: "accepted",
+        salesStage: "in_gesprek" as "in_gesprek",
         respondedAt: replyReceivedAt,
         updatedAt: new Date(),
       })
       .where(eq(leads.id, row.leadId));
+
+    await cancelRemainingSteps(db, row.leadId);
+    await logActivity(db, {
+      leadId: row.leadId,
+      type: "email_replied",
+      body: inbound.body ? inbound.body.slice(0, 500) : undefined,
+      author: "system",
+      metadata: { from: inbound.from },
+    });
 
     logger.info("[reply-poll] reply detected", {
       outreachMessageId: row.id,
