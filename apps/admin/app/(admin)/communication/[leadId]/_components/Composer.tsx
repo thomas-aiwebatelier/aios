@@ -20,13 +20,14 @@ interface ComposerProps {
   to: string;
   initialSubject: string;
   initialBody: string;
+  stepId?: string | null;
 }
 
 type Phase = "editing" | "countdown" | "sending";
 
 const UNDO_SECONDS = 30;
 
-export function Composer({ leadId, to, initialSubject, initialBody }: ComposerProps) {
+export function Composer({ leadId, to, initialSubject, initialBody, stepId }: ComposerProps) {
   const router = useRouter();
 
   const [subject, setSubject] = useState(initialSubject);
@@ -62,7 +63,7 @@ export function Composer({ leadId, to, initialSubject, initialBody }: ComposerPr
       const res = await fetch(`/api/leads/${leadId}/outreach/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body }),
+        body: JSON.stringify({ subject, body, stepId }),
       });
 
       if (!res.ok) {
@@ -79,7 +80,21 @@ export function Composer({ leadId, to, initialSubject, initialBody }: ComposerPr
       setError(err instanceof Error ? err.message : String(err));
       setPhase("editing");
     }
-  }, [leadId, subject, body]);
+  }, [leadId, subject, body, stepId]);
+
+  const handleSkip = useCallback(async () => {
+    if (!stepId) return;
+    try {
+      await fetch(`/api/leads/${leadId}/sequence/skip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stepId }),
+      });
+    } catch {
+      // best-effort
+    }
+    router.refresh();
+  }, [leadId, stepId, router]);
 
   const handleCancel = useCallback(async () => {
     if (!outreachMessageId) return;
@@ -192,7 +207,7 @@ export function Composer({ leadId, to, initialSubject, initialBody }: ComposerPr
       </div>
 
       {/* Send button */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={handleSend}
           disabled={phase === "sending" || !to || !subject || !body}
@@ -200,6 +215,15 @@ export function Composer({ leadId, to, initialSubject, initialBody }: ComposerPr
         >
           {phase === "sending" ? "Queuing…" : "Send email"}
         </button>
+        {stepId && (
+          <button
+            onClick={handleSkip}
+            disabled={phase === "sending"}
+            className="inline-flex items-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Stap overslaan
+          </button>
+        )}
         <p className="text-xs text-stone-400">
           After clicking Send you have 30 seconds to cancel.
         </p>

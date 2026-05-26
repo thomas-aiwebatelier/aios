@@ -15,17 +15,23 @@ export interface RunClaudeCodeOptions {
   args?: string[];
   /** Timeout in ms. Default: 30 minutes. */
   timeoutMs?: number;
+  /**
+   * Working directory for the claude subprocess. The current claude CLI has
+   * NO `--cwd` flag (it was removed); set the working directory here and it's
+   * passed to spawn's options instead.
+   */
+  cwd?: string;
 }
 
 export function runClaudeCode(
   prompt: string,
   options: RunClaudeCodeOptions = {},
 ): Promise<string> {
-  const { args = [], timeoutMs = 30 * 60 * 1000 } = options;
+  const { args = [], timeoutMs = 30 * 60 * 1000, cwd } = options;
 
   return new Promise((resolve, reject) => {
     const cliArgs = ["--print", "--output-format", "text", ...args];
-    logger.debug("claude_spawn", { args: cliArgs });
+    logger.debug("claude_spawn", { args: cliArgs, cwd });
 
     // shell:true on Windows lets PATH resolution find `claude.cmd` shim
     // installed by `npm i -g @anthropic-ai/claude-code`. On POSIX shell:false
@@ -35,6 +41,7 @@ export function runClaudeCode(
     const child = spawn("claude", cliArgs, {
       stdio: ["pipe", "pipe", "pipe"],
       shell: process.platform === "win32",
+      ...(cwd ? { cwd } : {}),
     });
 
     let stdout = "";

@@ -19,6 +19,9 @@ export {
   pipelineJobs,
   inboundInquiries,
   workerHeartbeats,
+  emailTemplates,
+  sequenceSteps,
+  leadActivities,
   // Enum value arrays
   leadStatusValues,
   generatedSiteCreatedViaValues,
@@ -26,8 +29,14 @@ export {
   outreachStatusValues,
   pipelineJobStatusValues,
   inboundInquiryStatusValues,
+  logoSourceValues,
+  salesStageValues,
+  sequenceAngleValues,
+  sequenceStepStatusValues,
+  activityTypeValues,
   // Types
   type LeadStatus,
+  type LogoSource,
   type GeneratedSiteCreatedVia,
   type OutreachDirection,
   type OutreachStatus,
@@ -36,4 +45,8 @@ export {
   type InventoryPage,
   type InventoryAsset,
   type WorkerHostInfo,
+  type SalesStage,
+  type SequenceAngle,
+  type SequenceStepStatus,
+  type ActivityType,
 } from "./schema.js";

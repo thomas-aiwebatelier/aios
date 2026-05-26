@@ -14,15 +14,15 @@
  * or succeeded), this is a no-op for the job row. The outreach_messages row
  * is archived regardless so the UI reflects the cancellation.
  *
- * NOTE: SQLite JSON payload matching — the payload column is stored as JSON text.
- * We use a LIKE pattern to find the job because SQLite's ->> operator availability
- * depends on the compile-time JSON1 extension version. LIKE is safe and portable.
+ * NOTE: payload is a Postgres jsonb column. We match the queued job by casting
+ * payload to text and using LIKE on the serialized JSON, which avoids depending
+ * on jsonb path-operator availability. (LIKE cannot be applied to jsonb directly.)
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { leads, outreachMessages, pipelineJobs } from "@atelier/db";
-import { eq, and, like } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function POST(
   req: NextRequest,
@@ -52,9 +52,10 @@ export async function POST(
       ),
     );
 
-  // 2. Cancel the queued pipeline job — match by payload LIKE pattern
-  // The payload is stored as JSON, e.g. {"outreachMessageId":"abc123"}
-  // We escape the ID and use LIKE to avoid JSON operator compatibility issues.
+  // 2. Cancel the queued pipeline job — match by payload pattern.
+  // payload is a Postgres jsonb column, e.g. {"outreachMessageId":"abc123"}.
+  // LIKE does not apply to jsonb directly (operator does not exist: jsonb ~~ text),
+  // so cast the column to text first. nanoid ids are URL-safe, so no LIKE-escaping needed.
   const payloadPattern = `%"outreachMessageId":"${outreachMessageId}"%`;
   await db.update(pipelineJobs)
     .set({ status: "cancelled" })
@@ -62,7 +63,7 @@ export async function POST(
       and(
         eq(pipelineJobs.pipelineStep, "outreach"),
         eq(pipelineJobs.status, "queued"),
-        like(pipelineJobs.payload as any, payloadPattern),
+        sql`${pipelineJobs.payload}::text LIKE ${payloadPattern}`,
       ),
     );
 

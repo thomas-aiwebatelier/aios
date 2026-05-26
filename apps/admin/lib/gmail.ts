@@ -15,8 +15,10 @@
  *   deleteDraft  — users.drafts.delete (cancel-before-30s safety net stub)
  */
 
+import { readFile } from "node:fs/promises";
 import { google } from "googleapis";
 import { logger } from "./logger.js";
+import { SIGNATURE_PHOTO, composeEmailParts } from "./email-signature.js";
 
 // ── Gmail client singleton ─────────────────────────────────────────────────────
 
@@ -47,41 +49,57 @@ function getGmailClient(): GmailClient {
   return _client;
 }
 
-// ── RFC2822 builder ────────────────────────────────────────────────────────────
+// ── RFC2822 multipart builder ──────────────────────────────────────────────────
 
 /**
- * Build a raw RFC2822 message and base64url-encode it for the Gmail API.
- * Subject is UTF-8 encoded per RFC2047 Q-encoding so accents survive.
+ * Build a raw RFC2822 multipart message and base64url-encode it for the Gmail API.
+ * Subject is UTF-8 encoded per RFC2047 B-encoding so accents survive.
+ * Without inlineImage: produces multipart/alternative (text + html).
+ * With inlineImage: wraps in multipart/related with the image as an inline part.
  */
-function buildRaw(opts: {
+export interface BuildRawArgs {
   to: string;
   subject: string;
-  body: string;
-  threadId?: string;
+  textBody: string;
+  htmlBody: string;
   inReplyTo?: string;
-}): string {
-  const subjectEncoded = `=?UTF-8?B?${Buffer.from(opts.subject, "utf8").toString("base64")}?=`;
+  inlineImage?: { cid: string; mime: string; base64: string };
+}
 
-  const headers: string[] = [
+export function buildRaw(args: BuildRawArgs): string {
+  const subjectEncoded = `=?UTF-8?B?${Buffer.from(args.subject, "utf8").toString("base64")}?=`;
+  const altBoundary = "alt_" + Math.random().toString(36).slice(2);
+  const relBoundary = "rel_" + Math.random().toString(36).slice(2);
+
+  const altBlock =
+`--${altBoundary}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${args.textBody}\r\n\r\n` +
+`--${altBoundary}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${args.htmlBody}\r\n\r\n` +
+`--${altBoundary}--`;
+
+  const topHeaders = [
     `From: AI Web Atelier <thomas@aiwebatelier.com>`,
-    `To: ${opts.to}`,
+    `To: ${args.to}`,
     `Subject: ${subjectEncoded}`,
-    `Content-Type: text/plain; charset=utf-8`,
     `MIME-Version: 1.0`,
   ];
+  if (args.inReplyTo) { topHeaders.push(`In-Reply-To: ${args.inReplyTo}`, `References: ${args.inReplyTo}`); }
 
-  if (opts.inReplyTo) {
-    headers.push(`In-Reply-To: ${opts.inReplyTo}`);
-    headers.push(`References: ${opts.inReplyTo}`);
+  let body: string;
+  if (args.inlineImage) {
+    topHeaders.push(`Content-Type: multipart/related; boundary="${relBoundary}"`);
+    body =
+`--${relBoundary}\r\nContent-Type: multipart/alternative; boundary="${altBoundary}"\r\n\r\n${altBlock}\r\n\r\n` +
+`--${relBoundary}\r\nContent-Type: ${args.inlineImage.mime}\r\nContent-Transfer-Encoding: base64\r\n` +
+`Content-ID: <${args.inlineImage.cid}>\r\nContent-Disposition: inline\r\n\r\n${args.inlineImage.base64}\r\n\r\n` +
+`--${relBoundary}--`;
+  } else {
+    topHeaders.push(`Content-Type: multipart/alternative; boundary="${altBoundary}"`);
+    body = altBlock;
   }
 
-  const rfc = headers.join("\r\n") + "\r\n\r\n" + opts.body;
-
-  return Buffer.from(rfc, "utf8")
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  const rfc = topHeaders.join("\r\n") + "\r\n\r\n" + body;
+  return Buffer.from(rfc, "utf8").toString("base64")
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -107,7 +125,15 @@ export interface SendEmailResult {
  */
 export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
   const gmail = getGmailClient();
-  const raw = buildRaw({ to: args.to, subject: args.subject, body: args.body });
+
+  let inlineImage: BuildRawArgs["inlineImage"] | undefined;
+  try {
+    const buf = await readFile(SIGNATURE_PHOTO.path);
+    inlineImage = { cid: SIGNATURE_PHOTO.cid, mime: SIGNATURE_PHOTO.mime, base64: buf.toString("base64") };
+  } catch { inlineImage = undefined; }
+
+  const { textBody, htmlBody } = composeEmailParts(args.body, { withPhoto: !!inlineImage });
+  const raw = buildRaw({ to: args.to, subject: args.subject, textBody, htmlBody, inlineImage });
 
   logger.info("[gmail] sending email", { to: args.to, subject: args.subject });
 
@@ -147,7 +173,8 @@ export interface CreateDraftResult {
  */
 export async function createDraft(args: CreateDraftArgs): Promise<CreateDraftResult> {
   const gmail = getGmailClient();
-  const raw = buildRaw({ to: args.to, subject: args.subject, body: args.body });
+  const { textBody, htmlBody } = composeEmailParts(args.body, { withPhoto: false });
+  const raw = buildRaw({ to: args.to, subject: args.subject, textBody, htmlBody });
 
   const res = await gmail.users.drafts.create({
     userId: "me",

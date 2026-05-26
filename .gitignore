@@ -15,6 +15,7 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 .turbo/
+.superpowers/
 test-wal-*.db
 test-wal-*.db-wal
 test-wal-*.db-shm

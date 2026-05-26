@@ -23,9 +23,29 @@ import {
   doublePrecision,
   jsonb,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ── leads ────────────────────────────────────────────────────────────────────
+
+export const salesStageValues = [
+  "new", "contacted", "follow_up", "in_gesprek", "won", "lost",
+] as const;
+export type SalesStage = (typeof salesStageValues)[number];
+
+export const sequenceAngleValues = ["reveal", "social_proof", "breakup"] as const;
+export type SequenceAngle = (typeof sequenceAngleValues)[number];
+
+export const sequenceStepStatusValues = [
+  "pending", "drafted", "sent", "skipped", "cancelled",
+] as const;
+export type SequenceStepStatus = (typeof sequenceStepStatusValues)[number];
+
+export const activityTypeValues = [
+  "email_sent", "email_replied", "stage_change", "note",
+  "sequence_enrolled", "step_skipped", "call_logged",
+] as const;
+export type ActivityType = (typeof activityTypeValues)[number];
 
 export const leadStatusValues = [
   "discovered",
@@ -57,6 +77,10 @@ export const leads = pgTable("leads", {
   googleMapsPlaceId:                text("google_maps_place_id").unique(),
   googleMapsUrl:                    text("google_maps_url"),
   existingWebsiteUrl:               text("existing_website_url"),
+  // Google Places API v1 photo resource names (e.g. "places/XXX/photos/YYY")
+  // captured during research for no-website leads. Used to (re)download the
+  // actual storefront/product imagery via the Places photo-media endpoint.
+  googlePhotoRefs:                  jsonb("google_photo_refs").$type<string[]>(),
   websiteStalenessScore:            integer("website_staleness_score"),
   industryKey:                      text("industry_key").notNull(),
   industryClassificationConfidence: doublePrecision("industry_classification_confidence"),
@@ -66,6 +90,14 @@ export const leads = pgTable("leads", {
   approvedAt:                       timestamp("approved_at", { withTimezone: true, mode: "date" }),
   sentAt:                           timestamp("sent_at", { withTimezone: true, mode: "date" }),
   respondedAt:                      timestamp("responded_at", { withTimezone: true, mode: "date" }),
+  contactName:                      text("contact_name"),
+  contactRole:                      text("contact_role"),
+  contactEmail:                     text("contact_email"),
+  mobilePhone:                      text("mobile_phone"),
+  whatsapp:                         text("whatsapp"),
+  salesStage:                       text("sales_stage").$type<SalesStage>(),
+  nextActionAt:                     timestamp("next_action_at", { withTimezone: true, mode: "date" }),
+  nextActionNote:                   text("next_action_note"),
 });
 
 // ── brand_profiles ───────────────────────────────────────────────────────────
@@ -81,7 +113,25 @@ export const brandProfiles = pgTable("brand_profiles", {
   fontsDetected:      jsonb("fonts_detected").$type<{ heading: string; body: string }>(),
   toneOfVoiceSummary: text("tone_of_voice_summary"),
   socialLinks:        jsonb("social_links").$type<Record<string, string>>(),
+  // Downloaded local image file paths (repo-relative, forward-slash) of real
+  // brand photos — Google Maps Place Photos plus any best-effort Instagram /
+  // Facebook images. Generation copies these into the Astro project and uses
+  // them as hero/section imagery instead of stock photos.
+  photoPaths:         jsonb("photo_paths").$type<string[]>(),
+  // Where the resolved logo came from: 'website' (scraped <img>/favicon),
+  // 'instagram' / 'facebook' (profile og:image), 'wordmark' (no image — render
+  // a styled text logo), or 'none'. Drives generation's logo handling.
+  logoSource:         text("logo_source").$type<LogoSource>(),
 });
+
+export const logoSourceValues = [
+  "website",
+  "instagram",
+  "facebook",
+  "wordmark",
+  "none",
+] as const;
+export type LogoSource = (typeof logoSourceValues)[number];
 
 // ── site_inventories ─────────────────────────────────────────────────────────
 
@@ -245,4 +295,52 @@ export const inboundInquiries = pgTable("inbound_inquiries", {
   message:   text("message"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   status:    text("status").$type<InboundInquiryStatus>().notNull().default("new"),
+});
+
+// ── email_templates ───────────────────────────────────────────────────────────
+//
+// Admin-editable outreach email templates. Each row stores a subject + body with
+// {{placeholder}} tokens that apps/admin/lib/email-template.ts interpolates with
+// per-lead data gathered during the research phase (business name, city,
+// industry, the computed "observation" line, the generated-site preview URL +
+// Lighthouse score). One row is active at a time (isActive=true). If no row
+// exists the renderer falls back to the built-in DEFAULT template, so the
+// composer keeps working before any template has been saved. The single active
+// row uses a fixed id ("default") so the Settings editor can upsert it.
+
+export const emailTemplates = pgTable("email_templates", {
+  id:        text("id").primaryKey(),
+  name:      text("name").notNull().default("default"),
+  subject:   text("subject").notNull(),
+  body:      text("body").notNull(),
+  isActive:  boolean("is_active").notNull().default(true),
+  angle:     text("angle").$type<SequenceAngle>(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+});
+
+// ── sequence_steps ─────────────────────────────────────────────────────────────
+export const sequenceSteps = pgTable("sequence_steps", {
+  id:                text("id").primaryKey(),
+  leadId:            text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  stepNumber:        integer("step_number").notNull(),
+  angle:             text("angle").$type<SequenceAngle>().notNull(),
+  status:            text("status").$type<SequenceStepStatus>().notNull().default("pending"),
+  scheduledAt:       timestamp("scheduled_at", { withTimezone: true, mode: "date" }),
+  subject:           text("subject"),
+  body:              text("body"),
+  outreachMessageId: text("outreach_message_id").references(() => outreachMessages.id, { onDelete: "set null" }),
+  sentAt:            timestamp("sent_at", { withTimezone: true, mode: "date" }),
+  createdAt:         timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:         timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+});
+
+// ── lead_activities ────────────────────────────────────────────────────────────
+export const leadActivities = pgTable("lead_activities", {
+  id:        text("id").primaryKey(),
+  leadId:    text("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  type:      text("type").$type<ActivityType>().notNull(),
+  body:      text("body"),
+  metadata:  jsonb("metadata").$type<Record<string, unknown>>(),
+  author:    text("author").notNull().default("thomas"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 });

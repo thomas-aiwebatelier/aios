@@ -19,6 +19,20 @@ const OUTREACH_STATUSES = [
   "declined",
 ] as const;
 
+const STAGE_LABELS: Record<string, string> = {
+  new: "Nieuw", contacted: "Gecontacteerd", follow_up: "Opvolging",
+  in_gesprek: "In gesprek", won: "Gewonnen", lost: "Verloren",
+};
+
+function StagePill({ stage }: { stage: string | null }) {
+  if (!stage) return <span>—</span>;
+  return (
+    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-stone-100 text-stone-700">
+      {STAGE_LABELS[stage] ?? stage}
+    </span>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     deployed: "bg-blue-100 text-blue-800",
@@ -57,6 +71,9 @@ export default async function CommunicationPage({
       city: leads.city,
       status: leads.status,
       updatedAt: leads.updatedAt,
+      contactName: leads.contactName,
+      salesStage: leads.salesStage,
+      nextActionAt: leads.nextActionAt,
     })
     .from(leads)
     .where(inArray(leads.status, [...OUTREACH_STATUSES]))
@@ -127,7 +144,10 @@ export default async function CommunicationPage({
                   <tr className="border-b border-stone-200 text-left text-stone-500">
                     <th className="pb-2 font-medium pr-4">Business</th>
                     <th className="pb-2 font-medium pr-4">City</th>
+                    <th className="pb-2 font-medium pr-4">Contact</th>
+                    <th className="pb-2 font-medium pr-4">Fase</th>
                     <th className="pb-2 font-medium pr-4">Status</th>
+                    <th className="pb-2 font-medium pr-4">Volgende actie</th>
                     <th className="pb-2 font-medium">Action</th>
                   </tr>
                 </thead>
@@ -139,8 +159,23 @@ export default async function CommunicationPage({
                         <div className="text-xs text-stone-400 font-mono">{lead.slug}</div>
                       </td>
                       <td className="py-2 pr-4 text-stone-600">{lead.city}</td>
+                      <td className="py-2 pr-4 text-stone-600">{lead.contactName ?? "—"}</td>
+                      <td className="py-2 pr-4">
+                        <StagePill stage={lead.salesStage} />
+                      </td>
                       <td className="py-2 pr-4">
                         <StatusBadge status={lead.status} />
+                      </td>
+                      <td className="py-2 pr-4">
+                        {lead.nextActionAt ? (() => {
+                          const date = new Date(lead.nextActionAt);
+                          const isDue = date <= new Date();
+                          return (
+                            <span className={isDue ? "text-red-600 font-medium" : "text-stone-600"}>
+                              {date.toLocaleDateString("nl-BE")}
+                            </span>
+                          );
+                        })() : "—"}
                       </td>
                       <td className="py-2">
                         {lead.status === "deployed" || lead.status === "email_drafted" ? (

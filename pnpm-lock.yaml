@@ -170,6 +170,12 @@ importers:
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
+      node-vibrant:
+        specifier: ^4.0.4
+        version: 4.0.4
+      playwright:
+        specifier: ^1.59.1
+        version: 1.59.1
       postgres:
         specifier: ^3.4.5
         version: 3.4.9

@@ -1,0 +1,1 @@
+Place `thomas.jpg` (a square headshot) in this directory — it is read at send time and embedded inline as the email signature photo (`cid:thomasphoto`). Until the file exists, the signature renders text-only (no crash).

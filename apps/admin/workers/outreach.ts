@@ -14,11 +14,13 @@
  */
 
 import { eq } from "drizzle-orm";
-import { outreachMessages, leads } from "@atelier/db";
+import { outreachMessages, leads, sequenceSteps } from "@atelier/db";
 import type { Db } from "@atelier/db";
 import { heartbeat, completeJob, failJob } from "../lib/queue.js";
 import { sendEmail } from "../lib/gmail.js";
 import { logger } from "../lib/logger.js";
+import { scheduleNextStep } from "../lib/sequence.js";
+import { logActivity } from "../lib/activity.js";
 import type { WorkerJob } from "../lib/worker-endpoint.js";
 
 // ── Main processor ─────────────────────────────────────────────────────────────
@@ -123,6 +125,31 @@ export async function processOutreachJob(db: Db, job: WorkerJob): Promise<void> 
       .where(eq(leads.id, lead.id));
 
     logger.info("[outreach] lead status → email_sent", { leadId: lead.id });
+
+    // 7b. If this message belongs to a sequence step, advance the sequence.
+    const step = ((await db
+      .select()
+      .from(sequenceSteps)
+      .where(eq(sequenceSteps.outreachMessageId, outreachMessageId))
+      ))[0];
+    if (step) {
+      await db.update(sequenceSteps)
+        .set({ status: "sent", sentAt: now })
+        .where(eq(sequenceSteps.id, step.id));
+      await scheduleNextStep(db, lead.id, step.stepNumber);
+      await logActivity(db, {
+        leadId: lead.id,
+        type: "email_sent",
+        metadata: { stepId: step.id, stepNumber: step.stepNumber, outreachMessageId },
+        author: "system",
+      });
+      // Advance sales stage without downgrading a further-along lead.
+      const nextStage = step.stepNumber === 1 ? "contacted" : "follow_up";
+      if (!lead.salesStage || lead.salesStage === "new" || lead.salesStage === "contacted") {
+        await db.update(leads).set({ salesStage: nextStage as "contacted" | "follow_up", updatedAt: now }).where(eq(leads.id, lead.id));
+      }
+      logger.info("[outreach] sequence step advanced", { stepId: step.id, nextStage });
+    }
 
     // 8. Complete job
     await completeJob(db, job.id);

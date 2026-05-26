@@ -34,7 +34,14 @@ export function ensureProjectDir(slug: string): string {
 
 export function cleanProjectDir(slug: string): void {
   const p = getProjectPath(slug);
-  if (existsSync(p)) rmSync(p, { recursive: true, force: true });
+  // maxRetries + retryDelay: on Windows, recursive delete of a prior build
+  // (node_modules, .astro) frequently hits transient EPERM/EBUSY from
+  // antivirus scans, OneDrive sync, or lingering esbuild handles. `force`
+  // alone only ignores missing-path errors — these options make Node retry
+  // the unlink/rmdir on those specific Windows lock errors.
+  if (existsSync(p)) {
+    rmSync(p, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  }
 }
 
 /** Wipe-then-create. Used at the start of each generation attempt. */

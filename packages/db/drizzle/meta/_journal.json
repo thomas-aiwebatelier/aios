@@ -22,6 +22,27 @@
       "when": 1778728624607,
       "tag": "0002_reflective_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779719172287,
+      "tag": "0003_typical_anthem",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779728257165,
+      "tag": "0004_purple_salo",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779731536110,
+      "tag": "0005_known_the_watchers",
+      "breakpoints": true
     }
   ]
 }

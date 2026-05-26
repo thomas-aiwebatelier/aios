@@ -33,6 +33,12 @@ jobs:
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
 
+      # @atelier/db and @atelier/shared expose only their compiled dist entry
+      # (package.json "exports" -> ./dist). admin's vitest resolves them by
+      # package entry, so the dist must exist before admin tests run.
+      - name: Build workspace deps
+        run: pnpm --filter @atelier/db build && pnpm --filter @atelier/shared build
+
       - name: Test @atelier/db
         run: pnpm --filter @atelier/db test
 
