@@ -14,11 +14,8 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export async function GET({ site, locals }: APIContext) {
-  const runtimeEnv = (locals as any)?.runtime?.env as
-    | Record<string, unknown>
-    | undefined;
-  const db = getDb(runtimeEnv);
+export async function GET({ site }: APIContext) {
+  const db = getDb(process.env);
 
   const posts = await db
     .select({

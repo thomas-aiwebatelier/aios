@@ -10,10 +10,7 @@ import { marked } from "marked";
 const { slug } = Astro.params;
 if (!slug) return new Response(null, { status: 404 });
 
-const runtimeEnv = (Astro.locals as any)?.runtime?.env as
-  | Record<string, unknown>
-  | undefined;
-const db = getDb(runtimeEnv);
+const db = getDb(process.env);
 
 const [post] = await db
   .select()

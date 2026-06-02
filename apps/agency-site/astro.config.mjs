@@ -1,12 +1,10 @@
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
-import cloudflare from "@astrojs/cloudflare";
+import node from "@astrojs/node";
 
 export default defineConfig({
   site: "https://aiwebatelier.com",
   output: "static",
-  adapter: cloudflare({
-    platformProxy: { enabled: true },
-  }),
+  adapter: node({ mode: "standalone" }),
   integrations: [sitemap()],
 });
