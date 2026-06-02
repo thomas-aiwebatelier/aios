@@ -21,7 +21,13 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import * as schema from "./schema.js";
 
-const drizzleDir = fileURLToPath(new URL("../drizzle", import.meta.url));
+// Lazily resolved so workerd / Cloudflare consumers — which only need the
+// schema exports — never evaluate `new URL(..., import.meta.url)` at module
+// load time (workerd's import.meta.url is not a valid base for relative URLs
+// and throws "Invalid URL string" when this lives at the top level).
+function getDrizzleDir(): string {
+  return fileURLToPath(new URL("../drizzle", import.meta.url));
+}
 
 export type Db = PostgresJsDatabase<typeof schema> | PgliteDatabase<typeof schema>;
 
@@ -70,7 +76,7 @@ export async function closeProdDb(): Promise<void> {
  */
 export async function runMigrations(
   db: PostgresJsDatabase<typeof schema>,
-  migrationsFolder: string = drizzleDir,
+  migrationsFolder: string = getDrizzleDir(),
 ): Promise<void> {
   await migratePg(db, { migrationsFolder });
 }
@@ -87,6 +93,7 @@ export async function getTestDb(): Promise<PgliteDatabase<typeof schema>> {
   const db = drizzlePglite(pg, { schema });
 
   // Apply migration SQL directly (pglite supports executing migrator output).
+  const drizzleDir = getDrizzleDir();
   const sqlFiles = readdirSync(drizzleDir)
     .filter((f) => f.endsWith(".sql"))
     .sort();
