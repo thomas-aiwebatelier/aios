@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/build-workspace-deps.mjs && astro build",
+    "build": "node scripts/build-workspace-deps.mjs && astro build && node scripts/write-bundle-yaml.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "start": "node ./dist/server/entry.mjs"
