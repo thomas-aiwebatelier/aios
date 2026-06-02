@@ -6,10 +6,7 @@ import { getDb } from "../../lib/db";
 import { blogPosts } from "@atelier/db";
 import { eq, desc } from "drizzle-orm";
 
-const runtimeEnv = (Astro.locals as any)?.runtime?.env as
-  | Record<string, unknown>
-  | undefined;
-const db = getDb(runtimeEnv);
+const db = getDb(process.env);
 
 const posts = await db
   .select({
