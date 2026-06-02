@@ -1,0 +1,29 @@
+# Firebase App Hosting runtime config for the agency-site Astro app.
+# Applies to both agency-site-prod and agency-site-dev backends.
+#
+# Buildpack autodetects Astro from package.json. The repo root has pnpm-workspace.yaml,
+# so pnpm install/build runs from that root and respects the workspace deps.
+
+runConfig:
+  # Cost-conscious defaults for a marketing/blog site. Bump minInstances to 1
+  # if cold-start latency ever bites — adds ~$5/mo per backend.
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # Supabase connection. Secret is created via:
+  #   firebase apphosting:secrets:set DATABASE_URL --project=aiwebatelier-spine
+  # then bound to each backend with apphosting:secrets:grantaccess.
+  - variable: DATABASE_URL
+    secret: DATABASE_URL
+    availability:
+      - RUNTIME
+
+  # Pin Node version explicitly (Firebase buildpack default may shift).
+  - variable: NODE_VERSION
+    value: "20"
+    availability:
+      - BUILD
