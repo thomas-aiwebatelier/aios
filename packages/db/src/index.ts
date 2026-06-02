@@ -22,8 +22,10 @@ export {
   emailTemplates,
   sequenceSteps,
   leadActivities,
+  blogPosts,
   // Enum value arrays
   leadStatusValues,
+  blogPostStatusValues,
   generatedSiteCreatedViaValues,
   outreachDirectionValues,
   outreachStatusValues,
@@ -49,4 +51,8 @@ export {
   type SequenceAngle,
   type SequenceStepStatus,
   type ActivityType,
+  type BlogPostStatus,
+  type BlogDiagram,
+  type BlogPost,
+  type NewBlogPost,
 } from "./schema.js";
