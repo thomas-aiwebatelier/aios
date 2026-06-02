@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@excalidraw/excalidraw": "^0.18.1",
     "typescript": "^5.6.0"
   }
 }
