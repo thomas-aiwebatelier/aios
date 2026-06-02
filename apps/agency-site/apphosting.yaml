@@ -27,3 +27,19 @@ env:
     value: "20"
     availability:
       - BUILD
+
+  # Disable pnpm runtime supply-chain checks. Firebase's pnpm engine calls
+  # runDepsStatusCheck() before any `pnpm <script>` invocation; in pnpm 11.x
+  # that re-verifies the lockfile against minimum-release-age policies and
+  # fails at container launch when any transitive dep was published <24h ago.
+  # A per-app .npmrc didn't take effect from the runtime CWD, so we set the
+  # equivalent env vars directly. NPM_CONFIG_<setting> is pnpm's documented
+  # env-var fallback for any .npmrc setting.
+  - variable: NPM_CONFIG_VERIFY_DEPS_BEFORE_RUN
+    value: "false"
+    availability:
+      - RUNTIME
+  - variable: NPM_CONFIG_MINIMUM_RELEASE_AGE
+    value: "0"
+    availability:
+      - RUNTIME
