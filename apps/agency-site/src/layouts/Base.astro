@@ -4,17 +4,46 @@ export interface Props {
   title?: string;
   description?: string;
   canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogType?: "website" | "article";
   ogImage?: string;
+  published?: string;
 }
+
+const siteUrl = "https://aiwebatelier.com";
+
+const computedCanonical = (() => {
+  try {
+    const base = Astro.site ?? new URL(siteUrl);
+    return new URL(Astro.url.pathname, base).toString();
+  } catch {
+    return `${siteUrl}${Astro.url.pathname}`;
+  }
+})();
 
 const {
   title = "AI Web Atelier — Vakwerk websites, gebouwd met AI",
   description = "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
-  canonical = Astro.url.href,
-  ogImage = "/og-image.jpg",
+  canonical = computedCanonical,
+  ogTitle,
+  ogDescription,
+  ogType = "website",
+  ogImage,
+  published,
 } = Astro.props;
 
-const siteUrl = "https://aiwebatelier.com";
+const resolvedOgTitle = ogTitle ?? title;
+const resolvedOgDescription = ogDescription ?? description;
+
+// If ogImage is a relative path, resolve against siteUrl. If absolute, pass through.
+// If not provided at all, fall back to the default /og-image.jpg.
+const defaultOgImage = `${siteUrl}/og-image.jpg`;
+const resolvedOgImage = ogImage
+  ? (ogImage.startsWith("http://") || ogImage.startsWith("https://")
+      ? ogImage
+      : `${siteUrl}${ogImage.startsWith("/") ? "" : "/"}${ogImage}`)
+  : defaultOgImage;
 
 const schema = {
   "@context": "https://schema.org",
@@ -56,19 +85,20 @@ const schema = {
     <link rel="canonical" href={canonical} />
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="AI Web Atelier" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={resolvedOgTitle} />
+    <meta property="og:description" content={resolvedOgDescription} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={`${siteUrl}${ogImage}`} />
+    <meta property="og:image" content={resolvedOgImage} />
     <meta property="og:locale" content="nl_BE" />
+    {published && <meta property="article:published_time" content={published} />}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={`${siteUrl}${ogImage}`} />
+    <meta name="twitter:title" content={resolvedOgTitle} />
+    <meta name="twitter:description" content={resolvedOgDescription} />
+    <meta name="twitter:image" content={resolvedOgImage} />
 
     <!-- Fonts preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

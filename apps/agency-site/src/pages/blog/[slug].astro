@@ -39,6 +39,9 @@ const dateFormatter = new Intl.DateTimeFormat("nl-BE", {
 <Base
   title={post.seoTitle ?? post.title}
   description={post.seoDescription ?? post.excerpt ?? undefined}
+  ogType="article"
+  ogImage={post.ogImagePath ? new URL(post.ogImagePath, Astro.site).toString() : undefined}
+  published={post.publishedAt?.toISOString()}
 >
   <article class="blog-post">
     <header class="blog-post-header">
