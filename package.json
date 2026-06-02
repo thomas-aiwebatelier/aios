@@ -32,6 +32,12 @@
   "pnpm": {
     "overrides": {
       "@cloudflare/workers-types": "<4.20260601.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "@parcel/watcher",
+      "better-sqlite3"
+    ]
   }
 }
