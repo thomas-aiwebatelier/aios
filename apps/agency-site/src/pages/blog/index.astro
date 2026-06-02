@@ -1,0 +1,77 @@
+---
+export const prerender = false;
+
+import Base from "../../layouts/Base.astro";
+import { getDb } from "../../lib/db";
+import { blogPosts } from "@atelier/db";
+import { eq, desc } from "drizzle-orm";
+
+const runtimeEnv = (Astro.locals as any)?.runtime?.env as
+  | Record<string, unknown>
+  | undefined;
+const db = getDb(runtimeEnv);
+
+const posts = await db
+  .select({
+    slug: blogPosts.slug,
+    title: blogPosts.title,
+    excerpt: blogPosts.excerpt,
+    publishedAt: blogPosts.publishedAt,
+  })
+  .from(blogPosts)
+  .where(eq(blogPosts.status, "published"))
+  .orderBy(desc(blogPosts.publishedAt));
+
+const dateFormatter = new Intl.DateTimeFormat("nl-BE", {
+  year: "numeric", month: "long", day: "numeric",
+});
+---
+
+<Base
+  title="Blog — AI Web Atelier"
+  description="Build-in-public dispatches over AI, Claude Code en eigen AIOS-bouw."
+>
+  <section class="blog-index">
+    <header class="blog-index-header">
+      <h1>Blog</h1>
+      <p class="lead">Build-in-public dispatches. Wat we bouwen, wat we leren, wat we anders zouden doen.</p>
+    </header>
+    <ul class="blog-list">
+      {posts.map((p) => (
+        <li class="blog-card">
+          <a href={`/blog/${p.slug}`}>
+            <h2>{p.title}</h2>
+            {p.excerpt && <p class="excerpt">{p.excerpt}</p>}
+            {p.publishedAt && (
+              <time datetime={p.publishedAt.toISOString()}>
+                {dateFormatter.format(p.publishedAt)}
+              </time>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+    {posts.length === 0 && (
+      <p class="empty">Nog geen gepubliceerde posts.</p>
+    )}
+  </section>
+</Base>
+
+<style>
+  .blog-index { max-width: 800px; margin: 0 auto; padding: 4rem 1.5rem; }
+  .blog-index-header { margin-bottom: 3rem; }
+  .blog-index-header h1 { font-size: 2.5rem; margin: 0 0 0.5rem; }
+  .blog-index-header .lead { color: var(--muted, #6b7280); margin: 0; }
+  .blog-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.5rem; }
+  .blog-card a {
+    display: block; padding: 1.5rem;
+    border: 1px solid var(--border, #e5e7eb); border-radius: 0.75rem;
+    text-decoration: none; color: inherit;
+    transition: border-color 120ms ease;
+  }
+  .blog-card a:hover { border-color: var(--accent, #4b5563); }
+  .blog-card h2 { margin: 0 0 0.5rem; font-size: 1.4rem; }
+  .blog-card .excerpt { margin: 0 0 0.75rem; color: var(--muted, #4b5563); font-size: 0.95rem; }
+  .blog-card time { font-size: 0.85rem; color: var(--muted, #6b7280); }
+  .empty { color: var(--muted, #6b7280); font-style: italic; }
+</style>

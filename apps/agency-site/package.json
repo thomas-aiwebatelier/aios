@@ -4,17 +4,23 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/build-workspace-deps.mjs && astro build",
     "preview": "astro preview",
     "check": "astro check"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.13",
     "@astrojs/sitemap": "^3.2.0",
-    "astro": "^5.0.0"
+    "@atelier/db": "workspace:^",
+    "astro": "^5.0.0",
+    "drizzle-orm": "^0.38.0",
+    "marked": "^18.0.4",
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@excalidraw/excalidraw": "^0.18.1",
+    "@types/marked": "^6.0.0",
     "typescript": "^5.6.0"
   }
 }

@@ -1,0 +1,21 @@
+CREATE TABLE "blog_posts" (
+	"id" text PRIMARY KEY NOT NULL,
+	"slug" text NOT NULL,
+	"title" text NOT NULL,
+	"excerpt" text,
+	"body_markdown" text NOT NULL,
+	"language" text DEFAULT 'nl-BE' NOT NULL,
+	"status" text DEFAULT 'draft' NOT NULL,
+	"published_at" timestamp with time zone,
+	"seo_title" text,
+	"seo_description" text,
+	"og_image_path" text,
+	"attribution_name" text,
+	"attribution_framework" text,
+	"attribution_url" text,
+	"diagrams" jsonb,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"author_id" text,
+	CONSTRAINT "blog_posts_slug_unique" UNIQUE("slug")
+);

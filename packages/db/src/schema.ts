@@ -344,3 +344,46 @@ export const leadActivities = pgTable("lead_activities", {
   author:    text("author").notNull().default("thomas"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 });
+
+// =====================================================================
+// Blog
+// =====================================================================
+//
+// Shared blog table used by admin (Next.js editor) and the agency-site
+// (Astro). IDs are assigned app-side as text to stay consistent with the
+// rest of the schema (see file header re: avoiding pgEnum / native uuid
+// types). `status` is a text column constrained by an app-side TS union
+// rather than a pgEnum, matching every other status field above.
+
+export const blogPostStatusValues = ["draft", "published"] as const;
+export type BlogPostStatus = (typeof blogPostStatusValues)[number];
+
+export type BlogDiagram = {
+  slug: string;
+  alt: string;
+  svgPath: string;
+};
+
+export const blogPosts = pgTable("blog_posts", {
+  id:                    text("id").primaryKey(),
+  slug:                  text("slug").notNull().unique(),
+  title:                 text("title").notNull(),
+  excerpt:               text("excerpt"),
+  bodyMarkdown:          text("body_markdown").notNull(),
+  language:              text("language").notNull().default("nl-BE"),
+  status:                text("status").$type<BlogPostStatus>().notNull().default("draft"),
+  publishedAt:           timestamp("published_at", { withTimezone: true, mode: "date" }),
+  seoTitle:              text("seo_title"),
+  seoDescription:        text("seo_description"),
+  ogImagePath:           text("og_image_path"),
+  attributionName:       text("attribution_name"),
+  attributionFramework:  text("attribution_framework"),
+  attributionUrl:        text("attribution_url"),
+  diagrams:              jsonb("diagrams").$type<BlogDiagram[]>(),
+  createdAt:             timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:             timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+  authorId:              text("author_id"),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type NewBlogPost = typeof blogPosts.$inferInsert;
