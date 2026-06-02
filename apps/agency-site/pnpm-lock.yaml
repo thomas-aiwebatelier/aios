@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@cloudflare/workers-types': <4.20260601.0
+
 importers:
 
   .:
@@ -29,7 +32,7 @@ importers:
         version: 1.59.1
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
       googleapis:
         specifier: ^171.4.0
         version: 171.4.0
@@ -80,7 +83,7 @@ importers:
         version: 2.4.3
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
       googleapis:
         specifier: ^171.4.0
         version: 171.4.0
@@ -168,7 +171,7 @@ importers:
         version: 5.18.1(@types/node@25.6.0)(jiti@1.21.7)(rollup@4.60.3)(sass@1.51.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.4)
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
       marked:
         specifier: ^18.0.4
         version: 18.0.4
@@ -199,7 +202,7 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -239,7 +242,7 @@ importers:
         version: 22.19.17
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6)
       postgres:
         specifier: ^3.4.5
         version: 3.4.9
@@ -408,9 +411,6 @@ packages:
 
   '@chevrotain/utils@11.0.3':
     resolution: {integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==}
-
-  '@cloudflare/workers-types@4.20260602.1':
-    resolution: {integrity: sha512-0VssYYXHUn4VR1BaV+GXfhFpI53P2f6AIi17qyA9lQFyTs/u5ZF6IDPda2enDTIPFz/02872RM8CYVlXvRKtUA==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -3593,7 +3593,7 @@ packages:
     resolution: {integrity: sha512-s7/5BpLKO+WJRHspvpqTydxFob8i1vo2rEx4pY6TGY7QSMuUfWUuzaY0DIpXCkgHOo37BaFC+SJQb99dDUXT3Q==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
-      '@cloudflare/workers-types': '>=4'
+      '@cloudflare/workers-types': <4.20260601.0
       '@electric-sql/pglite': '>=0.2.0'
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
@@ -6951,9 +6951,6 @@ snapshots:
 
   '@chevrotain/utils@11.0.3': {}
 
-  '@cloudflare/workers-types@4.20260602.1':
-    optional: true
-
   '@colors/colors@1.6.0': {}
 
   '@dabh/diagnostics@2.0.8':
@@ -10053,9 +10050,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260602.1)(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6):
+  drizzle-orm@0.38.4(@electric-sql/pglite@0.2.17)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.6.1)(@types/react@19.2.14)(better-sqlite3@12.9.0)(postgres@3.4.9)(react@19.2.6):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260602.1
       '@electric-sql/pglite': 0.2.17
       '@opentelemetry/api': 1.9.1
       '@types/better-sqlite3': 7.6.13
