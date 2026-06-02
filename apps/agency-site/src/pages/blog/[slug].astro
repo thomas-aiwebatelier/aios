@@ -2,13 +2,18 @@
 export const prerender = false;
 
 import Base from "../../layouts/Base.astro";
-import { db } from "../../lib/db";
+import { getDb } from "../../lib/db";
 import { blogPosts } from "@atelier/db";
 import { and, eq } from "drizzle-orm";
 import { marked } from "marked";
 
 const { slug } = Astro.params;
 if (!slug) return new Response(null, { status: 404 });
+
+const runtimeEnv = (Astro.locals as any)?.runtime?.env as
+  | Record<string, unknown>
+  | undefined;
+const db = getDb(runtimeEnv);
 
 const [post] = await db
   .select()
