@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "node scripts/build-workspace-deps.mjs && astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "start": "node ./dist/server/entry.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.5",
