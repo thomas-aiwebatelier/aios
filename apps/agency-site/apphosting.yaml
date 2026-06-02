@@ -1,8 +1,10 @@
-# Firebase App Hosting runtime config for the agency-site Astro app.
+# Firebase App Hosting runtime config for the agency-site Next.js app.
 # Applies to both agency-site-prod and agency-site-dev backends.
 #
-# Buildpack autodetects Astro from package.json. The repo root has pnpm-workspace.yaml,
-# so pnpm install/build runs from that root and respects the workspace deps.
+# Buildpack autodetects Next.js from package.json. The repo root has
+# pnpm-workspace.yaml, so pnpm install/build runs from that root and respects
+# the workspace deps. Next.js + Firebase's @apphosting/adapter-nextjs bypasses
+# the generic Node launcher's `pnpm install` problem that broke the Astro version.
 
 runConfig:
   # Cost-conscious defaults for a marketing/blog site. Bump minInstances to 1
@@ -11,7 +13,7 @@ runConfig:
   maxInstances: 2
   concurrency: 80
   cpu: 1
-  memoryMiB: 2048
+  memoryMiB: 512
 
 env:
   # Supabase connection. Secret is created via:
@@ -19,27 +21,5 @@ env:
   # then bound to each backend with apphosting:secrets:grantaccess.
   - variable: DATABASE_URL
     secret: DATABASE_URL
-    availability:
-      - RUNTIME
-
-  # Pin Node version explicitly (Firebase buildpack default may shift).
-  - variable: NODE_VERSION
-    value: "20"
-    availability:
-      - BUILD
-
-  # Disable pnpm runtime supply-chain checks. Firebase's pnpm engine calls
-  # runDepsStatusCheck() before any `pnpm <script>` invocation; in pnpm 11.x
-  # that re-verifies the lockfile against minimum-release-age policies and
-  # fails at container launch when any transitive dep was published <24h ago.
-  # A per-app .npmrc didn't take effect from the runtime CWD, so we set the
-  # equivalent env vars directly. NPM_CONFIG_<setting> is pnpm's documented
-  # env-var fallback for any .npmrc setting.
-  - variable: NPM_CONFIG_VERIFY_DEPS_BEFORE_RUN
-    value: "false"
-    availability:
-      - RUNTIME
-  - variable: NPM_CONFIG_MINIMUM_RELEASE_AGE
-    value: "0"
     availability:
       - RUNTIME

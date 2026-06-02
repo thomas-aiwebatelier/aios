@@ -1,0 +1,308 @@
+import type { Metadata } from "next";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Privacyverklaring — AI Web Atelier",
+  description:
+    "Privacyverklaring van AI Web Atelier conform de AVG/GDPR. Hoe wij persoonsgegevens van potentiële klanten verwerken, bewaren en verwijderen.",
+  alternates: { canonical: "/privacy" },
+};
+
+const dateFormatter = new Intl.DateTimeFormat("nl-BE", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+export default function PrivacyPage() {
+  const lastUpdated = dateFormatter.format(new Date());
+
+  return (
+    <>
+      <main className="legal-page">
+        <div className="container">
+          <div className="legal-page__content">
+            <a href="/" className="legal-page__back">
+              ← Terug naar home
+            </a>
+            <h1 className="legal-page__title">Privacyverklaring</h1>
+            <p className="legal-page__updated">Laatste update: {lastUpdated}</p>
+
+            <div className="legal-page__body">
+              <h2>1. Verwerkingsverantwoordelijke</h2>
+              <p>
+                <strong>Thomas Cortebeeck</strong>
+                <br />
+                Eenmanszaak handelend onder de naam{" "}
+                <strong>AI Web Atelier</strong>
+                <br />
+                Adres: {/* TODO: vul in voor productie */}
+                <br />
+                BTW-nummer: {/* TODO: vul in voor productie */}
+                <br />
+                E-mail:{" "}
+                <a href="mailto:thomas@aiwebatelier.com">
+                  thomas@aiwebatelier.com
+                </a>
+              </p>
+
+              <h2>2. Welke gegevens wij verwerken</h2>
+              <p>
+                Wij verwerken uitsluitend gegevens van{" "}
+                <strong>potentiële zakelijke klanten</strong> (B2B-prospectie
+                via cold outreach). Het betreft de volgende categorieën:
+              </p>
+              <ul>
+                <li>
+                  <strong>
+                    Openbare bedrijfsgegevens via Google Maps Places API:
+                  </strong>{" "}
+                  bedrijfsnaam, adres, telefoonnummer, website-URL en
+                  bedrijfscategorie. Deze gegevens zijn publiek beschikbaar via
+                  Google Maps.
+                </li>
+                <li>
+                  <strong>
+                    Publieke website-analyse via Playwright (webscraping):
+                  </strong>{" "}
+                  logo, kleurenpalet, tekstinhoud en structuur van uw huidige
+                  openbare website, uitsluitend voor het opstellen van een
+                  gepersonaliseerd websitevoorstel.
+                </li>
+                <li>
+                  <strong>E-mailadres:</strong> voor het versturen van één
+                  gepersonaliseerde cold outreach-mail. Dit adres is ofwel
+                  publiek vermeld op uw website of bedrijfsvermelding, ofwel
+                  afleidbaar uit de algemeen bekende naamconventie van uw
+                  organisatie.
+                </li>
+                <li>
+                  <strong>Antwoordcorrespondentie:</strong> e-mails die u
+                  eventueel terugstuurt als reactie op onze outreach worden
+                  bewaard zolang de communicatie lopende is.
+                </li>
+              </ul>
+              <p>
+                Wij verwerken <strong>geen</strong> bijzondere categorieën
+                persoonsgegevens (gezondheid, religie, politieke opvattingen,
+                e.d.) en wij verzamelen nooit meer dan strikt noodzakelijk voor
+                het bovengenoemde doel.
+              </p>
+
+              <h2>3. Waarom wij deze gegevens verzamelen</h2>
+              <p>
+                Wij verzamelen en verwerken uw gegevens om{" "}
+                <strong>
+                  gepersonaliseerde voorstellen voor websiteverbetering
+                </strong>{" "}
+                te kunnen opstellen en te presenteren aan Belgische KMO&apos;s.
+                Dit is een puur B2B-doeleinde.
+              </p>
+              <p>
+                De rechtsgrond voor deze verwerking is het{" "}
+                <strong>gerechtvaardigd belang</strong> van AI Web Atelier
+                (artikel 6, lid 1, sub f AVG/GDPR). Wij sturen éénmalig een
+                gepersonaliseerd voorstel aan contactpersonen van ondernemingen
+                die baat kunnen hebben bij een moderne website. Deze directe
+                B2B-communicatie valt onder het gerechtvaardigd belang, mits
+                wij een eenvoudige opt-out aanbieden — wat wij doen (zie §6).
+              </p>
+              <p>
+                Uw belang op bescherming van uw persoonsgegevens primeert
+                zodra u bezwaar maakt of uw gegevens worden onmiddellijk
+                verwijderd zonder verdere verwerking.
+              </p>
+
+              <h2>4. Bewaartermijnen</h2>
+              <ul>
+                <li>
+                  <strong>Actieve leads en websitevoorbeelden:</strong> bewaard
+                  zolang er een potentiële zakelijke relatie bestaat of zolang
+                  het voorstel relevant blijft.
+                </li>
+                <li>
+                  <strong>Afgewezen leads / opt-out:</strong> alle
+                  persoonsgegevens worden{" "}
+                  <strong>binnen 24 uur na afwijzing of opt-out</strong>{" "}
+                  automatisch verwijderd van onze servers en van Cloudflare.
+                  Dit is geautomatiseerd via een nachtelijke opruimtaak.
+                </li>
+                <li>
+                  <strong>Geaccepteerde klanten:</strong> gegevens worden
+                  bewaard zolang de zakelijke relatie loopt, plus{" "}
+                  <strong>7 jaar</strong> na afloop (boekhoudkundige
+                  bewaarplicht conform Belgisch wetboek van vennootschappen en
+                  verenigingen).
+                </li>
+              </ul>
+
+              <h2>
+                5. Gebruik van uw website-inhoud bij replicatie-modus
+                (copyright-houding)
+              </h2>
+              <p>
+                Wanneer wij een voorstel-website bouwen op basis van uw
+                bestaande online aanwezigheid (<em>replication mode</em>),
+                maken wij gebruik van publiek beschikbare tekst en beeld op uw
+                huidige website. Over dit gebruik willen wij maximale
+                transparantie bieden:
+              </p>
+              <ul>
+                <li>
+                  De voorstel-versie is{" "}
+                  <strong>niet geïndexeerd door zoekmachines</strong>: de
+                  volledige website draagt een <code>noindex, nofollow</code>
+                  -markering zodat geen enkele zoekmachine de inhoud kan
+                  opnemen of tonen.
+                </li>
+                <li>
+                  Bij uw <strong>afwijzing</strong> wordt de voorstel-website{" "}
+                  <strong>binnen 24 uur volledig verwijderd</strong> van onze
+                  servers en van Cloudflare Pages — inclusief alle gekopieerde
+                  tekst, afbeeldingen en code.
+                </li>
+                <li>
+                  Bij <strong>acceptatie</strong> van ons voorstel wordt het
+                  volledige eigendom van de website — inclusief alle
+                  gegenereerde code, het ontwerp en alle aanpassingen —{" "}
+                  <strong>automatisch overgedragen</strong> als onderdeel van
+                  de €499-deal. AI Web Atelier behoudt na overdracht geen
+                  enkele aanspraak op uw merk, uw teksten of uw afbeeldingen.
+                </li>
+                <li>
+                  Wij beschouwen de kortstondige scraping voor uitsluitend
+                  intern gebruik (opstellen van een voorstel voor de
+                  rechthebbende zelf) als een redelijk en proportioneel gebruik
+                  dat valt onder het gerechtvaardigd belang. Uw inhoud wordt op
+                  geen enkele wijze gepubliceerd voor een publiek of
+                  geëxploiteerd buiten het kader van dit voorstel.
+                </li>
+              </ul>
+
+              <h2>6. Opt-out — uw gegevens laten verwijderen</h2>
+              <p>U kunt zich op elk ogenblik kosteloos uitschrijven. Er zijn twee manieren:</p>
+              <ul>
+                <li>
+                  <strong>Via e-mail reply:</strong> antwoord met het woord{" "}
+                  <em>&quot;uitschrijven&quot;</em> op een van onze e-mails.
+                  Wij verwijderen uw gegevens vervolgens binnen 24 uur.
+                </li>
+                <li>
+                  <strong>Via expliciete aanvraag:</strong> stuur een e-mail
+                  naar{" "}
+                  <a href="mailto:thomas@aiwebatelier.com">
+                    thomas@aiwebatelier.com
+                  </a>{" "}
+                  met als onderwerp <em>&quot;Verwijderingsverzoek&quot;</em>.
+                  Wij bevestigen de verwijdering binnen 24 uur.
+                </li>
+              </ul>
+              <p>
+                Na opt-out sturen wij u nooit meer een bericht en worden alle
+                gegevens die wij over u bewaren onomkeerbaar gewist.
+              </p>
+
+              <h2>7. Uw rechten onder de AVG/GDPR</h2>
+              <p>Als betrokkene heeft u de volgende rechten:</p>
+              <ul>
+                <li>
+                  <strong>Recht op inzage (art. 15 AVG):</strong> u kunt
+                  opvragen welke gegevens wij over u bewaren.
+                </li>
+                <li>
+                  <strong>Recht op rectificatie (art. 16 AVG):</strong>{" "}
+                  onjuiste gegevens laten corrigeren.
+                </li>
+                <li>
+                  <strong>Recht op gegevenswissing (art. 17 AVG):</strong> uw
+                  gegevens laten verwijderen (&quot;recht op
+                  vergetelheid&quot;).
+                </li>
+                <li>
+                  <strong>
+                    Recht op beperking van verwerking (art. 18 AVG):
+                  </strong>{" "}
+                  de verwerking tijdelijk laten bevriezen.
+                </li>
+                <li>
+                  <strong>
+                    Recht op gegevensoverdraagbaarheid (art. 20 AVG):
+                  </strong>{" "}
+                  uw gegevens in machineleesbaar formaat ontvangen.
+                </li>
+                <li>
+                  <strong>Recht van bezwaar (art. 21 AVG):</strong> bezwaar
+                  maken tegen verwerking op basis van gerechtvaardigd belang.
+                </li>
+              </ul>
+              <p>
+                Procedure: stuur een e-mail naar{" "}
+                <a href="mailto:thomas@aiwebatelier.com">
+                  thomas@aiwebatelier.com
+                </a>
+                . Wij reageren binnen <strong>30 kalenderdagen</strong> op uw
+                verzoek.
+              </p>
+
+              <h2>8. Beveiliging</h2>
+              <p>Wij nemen de volgende technische en organisatorische maatregelen:</p>
+              <ul>
+                <li>
+                  Gegevens worden lokaal opgeslagen op een{" "}
+                  <strong>versleuteld toestel</strong> (laptop van Thomas
+                  Cortebeeck, FileVault/BitLocker ingeschakeld).
+                </li>
+                <li>
+                  <strong>Cloudflare Pages</strong> voor het hosten van
+                  voorstel-websites (versleutelde verbindingen via HTTPS/TLS).
+                </li>
+                <li>
+                  <strong>Google Workspace</strong> voor e-mailcommunicatie
+                  (DKIM, SPF, encryptie at rest).
+                </li>
+                <li>
+                  Geen onderaannemers buiten de EU/EER zonder een geldige
+                  Gegevensverwerkingsovereenkomst (DPA).
+                </li>
+                <li>
+                  Nachtelijkse automatische back-ups van de database, bewaard
+                  gedurende maximaal 14 dagelijkse snapshots.
+                </li>
+              </ul>
+
+              <h2>9. Klachten</h2>
+              <p>
+                U heeft het recht om een klacht in te dienen bij de
+                toezichthoudende autoriteit:
+              </p>
+              <p>
+                <strong>Gegevensbeschermingsautoriteit (GBA)</strong>
+                <br />
+                Drukpersstraat 35, 1000 Brussel
+                <br />
+                <a
+                  href="https://www.gegevensbeschermingsautoriteit.be"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  www.gegevensbeschermingsautoriteit.be
+                </a>
+              </p>
+
+              <h2>10. Wijzigingen aan deze verklaring</h2>
+              <p>
+                Wij kunnen deze privacyverklaring van tijd tot tijd bijwerken
+                om te voldoen aan nieuwe wettelijke vereisten of om onze
+                werkwijze te verduidelijken. De datum bovenaan deze pagina
+                geeft aan wanneer de meest recente versie gepubliceerd werd.
+                Bij ingrijpende wijzigingen informeren wij u via e-mail als wij
+                uw contactgegevens bewaren.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
