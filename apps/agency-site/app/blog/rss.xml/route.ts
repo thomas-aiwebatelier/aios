@@ -1,9 +1,12 @@
-export const prerender = false;
-
-import type { APIContext } from "astro";
 import { eq, desc } from "drizzle-orm";
-import { getDb } from "../../lib/db";
-import { blogPosts } from "../../lib/blog-schema";
+import { getDb } from "@/lib/db";
+import { blogPosts } from "@/lib/blog-schema";
+
+// DB-backed; skip build-time prerender (no DATABASE_URL during `next build`).
+// Cached at the edge / Cloud Run instance via standard HTTP caching.
+export const dynamic = "force-dynamic";
+
+const SITE_URL = "https://aiwebatelier.com";
 
 function escapeXml(s: string): string {
   return s
@@ -14,7 +17,7 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export async function GET({ site }: APIContext) {
+export async function GET() {
   const db = getDb(process.env);
 
   const posts = await db
@@ -29,11 +32,12 @@ export async function GET({ site }: APIContext) {
     .orderBy(desc(blogPosts.publishedAt))
     .limit(50);
 
-  const siteUrl = site?.toString() ?? "https://aiwebatelier.com/";
   const items = posts
     .map((p) => {
-      const link = `${siteUrl.replace(/\/$/, "")}/blog/${p.slug}`;
-      const pubDate = p.publishedAt ? p.publishedAt.toUTCString() : new Date().toUTCString();
+      const link = `${SITE_URL}/blog/${p.slug}`;
+      const pubDate = p.publishedAt
+        ? p.publishedAt.toUTCString()
+        : new Date().toUTCString();
       return `    <item>
       <title>${escapeXml(p.title)}</title>
       <link>${escapeXml(link)}</link>
@@ -48,8 +52,8 @@ export async function GET({ site }: APIContext) {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>AI Web Atelier — Blog</title>
-    <link>${siteUrl}blog</link>
-    <atom:link href="${siteUrl}blog/rss.xml" rel="self" type="application/rss+xml" />
+    <link>${SITE_URL}/blog</link>
+    <atom:link href="${SITE_URL}/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Build-in-public dispatches over AI, Claude Code en eigen AIOS-bouw.</description>
     <language>nl-BE</language>
 ${items}

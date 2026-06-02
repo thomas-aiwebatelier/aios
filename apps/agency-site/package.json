@@ -1,34 +1,29 @@
 {
   "name": "agency-site",
+  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "check": "astro check",
-    "start": "node ./dist/server/entry.mjs"
+    "dev": "node --import tsx/esm ./node_modules/next/dist/bin/next dev",
+    "build": "node --import tsx/esm ./node_modules/next/dist/bin/next build && node scripts/post-build.mjs",
+    "start": "node --import tsx/esm ./node_modules/next/dist/bin/next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.5",
-    "@astrojs/sitemap": "^3.2.0",
-    "astro": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "drizzle-orm": "^0.38.0",
     "marked": "^18.0.4",
-    "postgres": "^3.4.5"
+    "next": "15.5.7",
+    "postgres": "^3.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@excalidraw/excalidraw": "^0.18.1",
-    "@types/marked": "^6.0.0",
-    "typescript": "^5.6.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "@parcel/watcher",
-      "better-sqlite3"
-    ]
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.5.7"
   }
 }
