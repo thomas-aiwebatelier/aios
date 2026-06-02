@@ -11,7 +11,7 @@ runConfig:
   maxInstances: 2
   concurrency: 80
   cpu: 1
-  memoryMiB: 1024
+  memoryMiB: 2048
 
 env:
   # Supabase connection. Secret is created via:
