@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIContext } from "astro";
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "../../lib/db";
-import { blogPosts } from "@atelier/db";
+import { blogPosts } from "../../lib/blog-schema";
 
 function escapeXml(s: string): string {
   return s

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/build-workspace-deps.mjs && astro build && node scripts/write-bundle-yaml.mjs",
+    "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
     "start": "node ./dist/server/entry.mjs"
@@ -12,7 +12,6 @@
   "dependencies": {
     "@astrojs/node": "^9.5.5",
     "@astrojs/sitemap": "^3.2.0",
-    "@atelier/db": "workspace:^",
     "astro": "^5.0.0",
     "drizzle-orm": "^0.38.0",
     "marked": "^18.0.4",

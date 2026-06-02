@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { schema } from "@atelier/db";
+import * as schema from "./blog-schema";
 
 /**
  * Resolve the Supabase connection string from whichever environment we're

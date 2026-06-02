@@ -163,9 +163,6 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.2.0
         version: 3.7.2
-      '@atelier/db':
-        specifier: workspace:^
-        version: link:../../packages/db
       astro:
         specifier: ^5.0.0
         version: 5.18.1(@types/node@25.6.0)(jiti@1.21.7)(rollup@4.60.3)(sass@1.51.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.4)
