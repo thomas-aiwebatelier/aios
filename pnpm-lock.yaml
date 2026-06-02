@@ -87,6 +87,9 @@ importers:
       lighthouse:
         specifier: ^13.2.0
         version: 13.2.0
+      marked:
+        specifier: ^18.0.4
+        version: 18.0.4
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11

@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "/discovery", label: "Discovery Queue" },
   { href: "/approval", label: "Approval Queue" },
   { href: "/sites", label: "Sites", placeholder: true },
+  { href: "/blog", label: "Blog" },
   { href: "/communication", label: "Communication", placeholder: true },
   { href: "/settings", label: "Settings", placeholder: true },
 ];
