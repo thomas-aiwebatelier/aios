@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
+import ServicesOrbital from "@/components/ServicesOrbital";
 import WhatWeDo from "@/components/WhatWeDo";
 import Process from "@/components/Process";
 import Pricing from "@/components/Pricing";
 import About from "@/components/About";
+import Testimonials from "@/components/Testimonials";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 
@@ -17,11 +20,14 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      <Nav />
       <Hero />
+      <ServicesOrbital />
       <WhatWeDo />
       <Process />
       <Pricing />
       <About />
+      <Testimonials />
       <Contact />
       <Footer />
     </>

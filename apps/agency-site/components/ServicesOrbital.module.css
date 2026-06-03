@@ -1,0 +1,353 @@
+.section {
+  background: var(--color-cream);
+  padding: 96px 0;
+}
+
+.inner {
+  width: min(1120px, 92vw);
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-sage);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 460;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  line-height: 1.05;
+  color: var(--color-forest);
+  margin: 0;
+}
+
+/* ---------- Orbital stage (wide screens) ---------- */
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+.ring {
+  position: relative;
+  width: 440px;
+  height: 440px;
+  margin: 0 auto;
+  animation: spin 40s linear infinite;
+}
+
+.ringPaused {
+  animation-play-state: paused;
+}
+
+.orbitLine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-sage) 45%, transparent);
+}
+
+/* Each slot sits at center, rotated out to its angle, then pushed to radius. */
+.nodeSlot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--angle)) translateY(-220px);
+}
+
+/* Faint connector from hub to node. */
+.connector {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 220px;
+  transform: translateX(-0.5px);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-sage) 55%, transparent),
+    transparent
+  );
+}
+
+/* Counter-rotate so the node + label stay upright. */
+.nodeCounter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(calc(-1 * var(--angle)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 116px;
+  transform-origin: center;
+  margin-left: -58px;
+  margin-top: -34px;
+}
+
+.node {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid var(--color-line);
+  background: var(--color-sage-tint);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.4s var(--ease),
+    border-color 0.4s var(--ease),
+    box-shadow 0.4s var(--ease),
+    background 0.4s var(--ease);
+}
+
+.node:focus-visible {
+  outline: 2px solid var(--color-accent-deep);
+  outline-offset: 3px;
+}
+
+.nodeIcon {
+  display: grid;
+  place-items: center;
+}
+
+.nodeActive {
+  border-color: var(--color-accent);
+  background: var(--color-paper-hi);
+  transform: translateY(-6px) scale(1.06);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--color-accent) 22%, transparent),
+    0 12px 28px color-mix(in srgb, var(--color-forest) 18%, transparent);
+}
+
+.nodeLabel {
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-forest);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Hub (center) — counter-rotated so it never spins. */
+.hubCounter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: spin-reverse 40s linear infinite;
+}
+
+.ringPaused .hubCounter {
+  animation-play-state: paused;
+}
+
+.hub {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: var(--color-paper-hi);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--color-forest) 12%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hubLabel {
+  font-family: var(--font-display);
+  font-weight: 460;
+  letter-spacing: -0.02em;
+  font-size: 0.84rem;
+  color: var(--color-forest);
+  text-align: center;
+  line-height: 1.1;
+  max-width: 92px;
+}
+
+/* Detail panel */
+.panel {
+  width: min(520px, 100%);
+  background: var(--color-paper-hi);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: 24px 26px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.35s var(--ease),
+    transform 0.35s var(--ease);
+  pointer-events: none;
+  min-height: 132px;
+}
+
+.panelVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-weight: 460;
+  letter-spacing: -0.02em;
+  font-size: 1.3rem;
+  color: var(--color-forest);
+  margin: 0 0 8px;
+}
+
+.panelDesc {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--color-forest-soft);
+  margin: 0 0 14px;
+}
+
+.panelLink,
+.cardLink {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.94rem;
+  color: var(--color-accent-deep);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent-deep) 40%, transparent);
+  padding-bottom: 1px;
+  transition: border-color 0.3s var(--ease);
+}
+
+.panelLink:hover,
+.cardLink:hover,
+.panelLink:focus-visible,
+.cardLink:focus-visible {
+  border-color: var(--color-accent-deep);
+}
+
+/* ---------- Card stack (narrow screens) — hidden by default ---------- */
+.cards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--color-paper-hi);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition:
+    transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-forest) 12%, transparent);
+}
+
+.cardIcon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-sage-tint);
+  display: grid;
+  place-items: center;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: 460;
+  letter-spacing: -0.02em;
+  font-size: 1.18rem;
+  color: var(--color-forest);
+  margin: 0;
+}
+
+.cardDesc {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-forest-soft);
+  margin: 0 0 6px;
+}
+
+.cardLink {
+  align-self: flex-start;
+}
+
+/* ---------- Responsive switch ---------- */
+@media (max-width: 760px) {
+  .section {
+    padding: 64px 0;
+  }
+  .stage {
+    display: none;
+  }
+  .cards {
+    display: flex;
+  }
+}
+
+/* ---------- Animations ---------- */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .hubCounter {
+    animation: none !important;
+  }
+  .node,
+  .nodeActive,
+  .panel,
+  .card {
+    transition: none !important;
+  }
+}

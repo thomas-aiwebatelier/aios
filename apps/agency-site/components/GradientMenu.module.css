@@ -1,0 +1,112 @@
+.menu {
+  display: block;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+}
+
+/* Default: cream circle, forest icon, hairline border. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-cream);
+  color: var(--color-forest);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(201, 123, 74, 0);
+  transition:
+    background 0.45s var(--ease),
+    color 0.45s var(--ease),
+    border-color 0.45s var(--ease),
+    box-shadow 0.45s var(--ease),
+    padding 0.45s var(--ease);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: inherit;
+  transition: color 0.45s var(--ease);
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Label hidden by default: collapsed width, faded, nudged left. */
+.label {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-0.35rem);
+  overflow: hidden;
+  transition:
+    max-width 0.5s var(--ease),
+    opacity 0.4s var(--ease),
+    transform 0.5s var(--ease);
+}
+
+/* Hover / focus: gradient pill, cream icon, label slides + fades in, glow. */
+.link:hover,
+.link:focus-visible {
+  border-color: transparent;
+  background: linear-gradient(100deg, var(--color-sage), var(--color-accent));
+  color: var(--color-cream);
+  box-shadow: 0 8px 22px -6px rgba(201, 123, 74, 0.55);
+  outline: none;
+}
+
+.link:hover .label,
+.link:focus-visible .label {
+  max-width: 12rem;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Visible focus ring for keyboard users. */
+.link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: keep color/gradient + glow, drop width/translate motion. */
+@media (prefers-reduced-motion: reduce) {
+  .link,
+  .icon,
+  .label {
+    transition-property: background, color, border-color, box-shadow, opacity;
+  }
+
+  .label {
+    transform: none;
+  }
+
+  .link:hover .label,
+  .link:focus-visible .label {
+    transform: none;
+  }
+}

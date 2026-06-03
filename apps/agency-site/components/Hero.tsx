@@ -1,14 +1,36 @@
 export default function Hero() {
   return (
     <section className="hero" aria-label="Introductie">
-      <div className="hero__mesh" aria-hidden="true" />
+      <div className="hero__glow" aria-hidden="true" />
       <div className="container hero__inner">
         <div className="hero__content">
-          <p className="hero__eyebrow">AI Web Atelier</p>
+          <p className="hero__eyebrow">
+            <span className="hero__dot" aria-hidden="true" />
+            Atelier · Antwerpen
+          </p>
           <h1 className="hero__title">
-            Vakwerk websites,
-            <br />
-            <span className="hero__title--accent">gebouwd met AI</span>
+            <span className="hw hw--1 hero__title-accent">
+              Vakwerk
+              <svg
+                className="hero__underline"
+                viewBox="0 0 200 14"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path
+                  className="hero__underline-path"
+                  d="M2 9 C50 2 150 2 198 8"
+                  stroke="#C97B4A"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>{" "}
+            <span className="hw hw--2">websites,</span>{" "}
+            <span className="hw hw--3">gebouwd</span>{" "}
+            <span className="hw hw--4">met</span>{" "}
+            <span className="hw hw--5">AI.</span>
           </h1>
           <p className="hero__tagline">
             Custom websites voor Belgische ondernemers.{" "}
@@ -18,46 +40,34 @@ export default function Hero() {
           </p>
           <div className="hero__ctas">
             <a href="#contact" className="btn btn--primary">
-              Vraag jouw voorbeeld aan
+              Vraag jouw voorbeeld aan <span className="hero__arr">→</span>
             </a>
             <a href="#wat-we-doen" className="btn btn--ghost">
               Hoe het werkt
             </a>
           </div>
+          <p className="hero__trust">
+            Online binnen <strong>7 werkdagen</strong> · u bezit de volledige code
+          </p>
         </div>
+
         <div className="hero__visual" aria-hidden="true">
-          <div className="hero__card">
-            <div className="hero__card-row">
-              <div className="hero__card-amount">
-                <span className="hero__card-currency">€</span>
-                <span className="hero__card-price">499</span>
-              </div>
-              <span className="hero__card-period">eenmalig</span>
-            </div>
-            <div className="hero__card-divider" />
-            <div className="hero__card-row hero__card-row--sub">
-              <div className="hero__card-amount hero__card-amount--sub">
-                <span className="hero__card-currency hero__card-currency--sub">
-                  €
-                </span>
-                <span className="hero__card-price hero__card-price--sub">
-                  9,99
-                </span>
-              </div>
-              <span className="hero__card-period">/maand · optioneel</span>
-            </div>
-            <div className="hero__card-lines">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="hero__card-footer">Online binnen 7 dagen</div>
+          <div className="hero__media">
+            <video
+              className="hero__video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/video-poster.png"
+            >
+              <source src="/video_logo.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div className="hero__badge">
+            <span className="hero__badge-dot" /> Online binnen 7 dagen
           </div>
         </div>
-      </div>
-      <div className="hero__scroll-hint" aria-hidden="true">
-        <span className="hero__scroll-line" />
-        <span className="hero__scroll-label">scroll</span>
       </div>
     </section>
   );

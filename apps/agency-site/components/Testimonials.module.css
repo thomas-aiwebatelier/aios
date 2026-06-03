@@ -1,0 +1,225 @@
+.section {
+  background: var(--color-sage-tint);
+  padding: clamp(4rem, 8vw, 7rem) 1.25rem;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.eyebrow {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-sage);
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  line-height: 1.05;
+  color: var(--color-forest);
+  margin: 0;
+}
+
+.carousel {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) 1fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+
+/* ---- Deck of avatar cards ---- */
+.deck {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-line);
+  box-shadow: 0 18px 40px -24px rgba(47, 59, 48, 0.45);
+  transform: scale(0.9) rotate(calc(var(--offset) * 5deg))
+    translateX(calc(var(--offset) * 10px));
+  filter: blur(3px);
+  opacity: 0.55;
+  z-index: 0;
+  transition: transform 0.6s var(--ease), opacity 0.6s var(--ease),
+    filter 0.6s var(--ease);
+}
+
+.cardActive {
+  transform: scale(1) rotate(-2deg) translateX(0);
+  filter: blur(0);
+  opacity: 1;
+  z-index: 3;
+}
+
+.card[data-tile="peach"] {
+  background: var(--color-peach);
+}
+.card[data-tile="sage"] {
+  background: var(--color-sage);
+}
+.card[data-tile="sage-tint"] {
+  background: var(--color-sage-tint);
+}
+
+.initials {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 12vw, 7rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-forest);
+  mix-blend-mode: multiply;
+}
+
+.cardReduced {
+  transition: none;
+  filter: none;
+  transform: scale(0.94) rotate(0) translateX(calc(var(--offset) * 8px));
+}
+.cardReduced.cardActive {
+  transform: scale(1) rotate(0) translateX(0);
+}
+
+/* ---- Quote + person ---- */
+.content {
+  min-width: 0;
+}
+
+.quote {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  line-height: 1.35;
+  color: var(--color-forest);
+  margin: 0 0 1.5rem;
+  font-weight: 500;
+}
+
+.word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.4em);
+  animation: wordIn 0.45s var(--ease) forwards;
+  animation-delay: calc(var(--wi) * 0.03s);
+}
+
+@keyframes wordIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 1.75rem;
+}
+
+.name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-forest);
+}
+
+.role {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-forest-soft);
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.arrow {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-forest);
+  background: transparent;
+  color: var(--color-forest);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease),
+    color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.arrow:hover,
+.arrow:focus-visible {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-paper-hi);
+  transform: translateY(-1px);
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--color-accent-deep);
+  outline-offset: 2px;
+}
+
+.caption {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-forest-soft);
+  text-align: center;
+  margin: clamp(2rem, 4vw, 3rem) 0 0;
+  font-style: italic;
+}
+
+/* ---- Responsive: stack image above text ---- */
+@media (max-width: 760px) {
+  .carousel {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .deck {
+    max-width: 240px;
+  }
+  .content {
+    text-align: center;
+  }
+  .person {
+    align-items: center;
+  }
+  .controls {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .arrow {
+    transition: none;
+  }
+  .word {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
