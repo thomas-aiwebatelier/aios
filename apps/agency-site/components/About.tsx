@@ -23,23 +23,21 @@ export default function About() {
           <span className="section-eyebrow">Over de maker</span>
           <h2 className="section-title about__title">Hallo, ik ben Thomas</h2>
           <p className="about__lead">
-            Als AI-engineer bij <strong>Streamz</strong> in Antwerpen werk ik
-            dagelijks met de nieuwste AI-technologie. In mijn vrije tijd help
-            ik Belgische ondernemers met een professionele website — zonder het
+            Overdag werk ik als AI-engineer bij <strong>Streamz</strong> in
+            Antwerpen, dagelijks met de nieuwste AI-technologie. Daarbuiten help
+            ik Belgische ondernemers aan een degelijke website, zonder het
             prijskaartje van een groot bureau.
           </p>
           <p className="about__body">
-            Ik zag te veel lokale zelfstandigen die werkten met een verouderde
-            of geen website, simpelweg omdat een professionele oplossing
-            onbetaalbaar leek. Met de juiste AI-tools kan ik vandaag een
-            website bouwen die vroeger €3.000 zou hebben gekost — en dat voor
-            €499.
+            Ik zag te veel zelfstandigen vastzitten met een verouderde site of
+            helemaal geen, gewoon omdat een fatsoenlijke oplossing onbetaalbaar
+            leek. Met de juiste AI-tools bouw ik vandaag een website die vroeger
+            €3.000 kostte. Bij mij betaal je €499.
           </p>
           <p className="about__body">
-            Het resultaat is kwalitatief hoog: unieke teksten, een eigen
-            ontwerp, correct SEO-ingesteld en snel. Geen standaard template.
-            Geen automatisch gegenereerde rommel. Vakwerk, versneld door
-            technologie.
+            En dat zonder in te boeten op kwaliteit: eigen teksten, een eigen
+            ontwerp, je SEO goed gezet en snel. Geen sjabloon, geen
+            AI-rommel die je zo herkent. Vakwerk, versneld door technologie.
           </p>
           <div className="about__tags" aria-label="Expertises">
             <span className="about__tag">AI Engineering</span>

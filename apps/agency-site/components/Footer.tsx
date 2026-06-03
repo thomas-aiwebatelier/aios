@@ -74,7 +74,7 @@ export default function Footer() {
               <p>
                 <strong>AI Web Atelier</strong>
                 <br />
-                Eenmanszaak — Thomas Cortebeeck
+                Eenmanszaak van Thomas Cortebeeck
                 <br />
                 Antwerpen, België
               </p>
@@ -85,14 +85,14 @@ export default function Footer() {
         <div className="footer__bottom">
           <div className="footer__copyright">
             <p>
-              © {year} AI Web Atelier — vakwerk websites, gebouwd met AI —
-              Antwerpen, België
+              © {year} AI Web Atelier. Vakwerk websites, gebouwd met AI.
+              Antwerpen, België.
             </p>
           </div>
           <div className="footer__gdpr">
             <p>
-              Wenst u uw gegevens te laten verwijderen? Antwoord met{" "}
-              <em>&apos;uitschrijven&apos;</em> op een van onze mails of stuur
+              Wil je je gegevens laten verwijderen? Antwoord met{" "}
+              <em>&apos;uitschrijven&apos;</em> op een van mijn mails of stuur
               een verzoek naar{" "}
               <a href="mailto:thomas@aiwebatelier.com">
                 thomas@aiwebatelier.com

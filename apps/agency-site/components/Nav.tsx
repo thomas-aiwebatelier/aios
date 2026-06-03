@@ -3,18 +3,17 @@ export default function Nav() {
     <nav className="nav" aria-label="Hoofdnavigatie">
       <div className="container nav__inner">
         <a href="/" className="nav__logo" aria-label="AI Web Atelier — homepage">
-          <svg
+          <video
             className="nav__mark"
-            width="28"
-            height="28"
-            viewBox="0 0 50 50"
-            fill="none"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/video-poster.png"
             aria-hidden="true"
           >
-            <path d="M11 40 L23 13" stroke="#2F3B30" strokeWidth="4" strokeLinecap="round" />
-            <path d="M37 40 L25 13" stroke="#2F3B30" strokeWidth="4" strokeLinecap="round" />
-            <circle cx="24" cy="28" r="4.8" fill="#C97B4A" />
-          </svg>
+            <source src="/video_logo.mp4" type="video/mp4" />
+          </video>
           <span className="nav__wordmark">AI&nbsp;Web&nbsp;Atelier</span>
         </a>
         <div className="nav__links">
@@ -25,7 +24,7 @@ export default function Nav() {
           <a href="/#over-ons">Over ons</a>
         </div>
         <a href="/#contact" className="nav__cta">
-          Vraag een voorbeeld
+          Vraag je site aan
         </a>
       </div>
     </nav>

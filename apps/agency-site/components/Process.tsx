@@ -4,37 +4,37 @@ const steps = [
   {
     phase: "01",
     label: "Research",
-    title: "We luisteren eerst",
-    body: "U vertelt ons over uw bedrijf, uw doelgroep en uw concurrenten. We stellen gerichte vragen en analyseren uw markt. Dit duurt één gesprek van 30 minuten — u hoeft niets voor te bereiden.",
+    title: "Ik luister eerst",
+    body: "Jij vertelt over je zaak, je klanten en je concurrenten. Ik stel gerichte vragen en bekijk je markt. Eén gesprek van een halfuur volstaat. Voorbereiden hoef je niets.",
     duration: "Dag 1",
   },
   {
     phase: "02",
     label: "Generate",
     title: "AI doet het zware werk",
-    body: "Ons AI-systeem genereert op basis van uw input de volledige websitestructuur, teksten en opmaak. We sturen meerdere varianten en kiezen samen de beste richting.",
-    duration: "Dag 2–3",
+    body: "Mijn AI-systeem bouwt op basis van je input de structuur, teksten en opmaak van je site. Ik kies de sterkste richting en werk die uit tot een echte eerste versie.",
+    duration: "Dag 2",
   },
   {
     phase: "03",
     label: "Review",
-    title: "U bekijkt de eerste versie",
-    body: "U krijgt een live preview op een tijdelijke URL. Klik door, deel met uw team, noteer wat u anders wilt. Geen druk, geen factuur — dit is uw MVP-moment.",
-    duration: "Dag 4",
+    title: "Jij bekijkt de eerste versie",
+    body: "Je krijgt een live preview op een tijdelijke link. Klik erdoor, deel met je team, noteer wat je anders wil. Geen druk, geen factuur. Dit is jouw moment.",
+    duration: "Dag 3",
   },
   {
     phase: "04",
     label: "Iteratie",
     title: "Eén ronde aanpassingen",
-    body: "U stuurt uw feedback in één keer. Wij verwerken alle aanpassingen aan inhoud, stijl of structuur in één iteratie. Daarna is de website af.",
-    duration: "Dag 5–6",
+    body: "Je bundelt je feedback en stuurt alles in één keer door. Ik verwerk je aanpassingen aan tekst, stijl of structuur in één iteratie. Daarna is je site af.",
+    duration: "Dag 4",
   },
   {
     phase: "05",
     label: "Launch",
-    title: "Live op uw domein",
-    body: "We publiceren uw website op uw eigen domein. Inclusief beveiligde verbinding (HTTPS), correcte SEO-instellingen en snelle laadtijden. U lanceert met vertrouwen.",
-    duration: "Dag 7",
+    title: "Live op je eigen domein",
+    body: "Ik zet je site online op je eigen domein. Met beveiligde verbinding (HTTPS), je SEO correct ingesteld en snelle laadtijden. Klaar voor je eerste bezoekers.",
+    duration: "Dag 5",
   },
 ];
 
@@ -47,7 +47,7 @@ export default function Process() {
           <h2 className="section-title">
             Van gesprek tot live
             <br />
-            in 7 dagen
+            in 5 werkdagen
           </h2>
         </div>
         <div className="process__timeline" role="list">

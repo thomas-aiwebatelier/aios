@@ -39,8 +39,8 @@ export default function Contact() {
           <span className="section-eyebrow">Contact</span>
           <h2 className="section-title">Vraag jouw voorbeeld aan</h2>
           <p className="section-subtitle">
-            Vertel ons iets over uw bedrijf. We sturen u binnen 24 uur een
-            gratis voorbeeld terug — geen verplichtingen.
+            Vertel iets over je zaak. Binnen 24 uur stuur ik je een gratis
+            voorbeeld terug, zonder verplichtingen.
           </p>
         </div>
         <div className="contact__wrap">
@@ -53,7 +53,7 @@ export default function Contact() {
             >
               <div className="form__group">
                 <label className="form__label" htmlFor="contact-name">
-                  Uw naam
+                  Je naam
                 </label>
                 <input
                   className="form__input"
@@ -81,14 +81,14 @@ export default function Contact() {
               </div>
               <div className="form__group">
                 <label className="form__label" htmlFor="contact-message">
-                  Vertel ons over uw bedrijf
+                  Vertel iets over je zaak
                 </label>
                 <textarea
                   className="form__input form__textarea"
                   id="contact-message"
                   name="message"
                   rows={5}
-                  placeholder="Mijn bedrijf doet... Ik zoek een website voor... Mijn doelgroep is..."
+                  placeholder="Mijn zaak doet... Ik zoek een website voor... Mijn klanten zijn..."
                   required
                 />
               </div>
@@ -106,8 +106,8 @@ export default function Contact() {
                   </span>
                 </button>
                 <p className="form__privacy">
-                  Uw gegevens worden uitsluitend gebruikt om uw aanvraag te
-                  beantwoorden. Zie onze{" "}
+                  Je gegevens gebruik ik alleen om je aanvraag te beantwoorden.
+                  Meer in de{" "}
                   <a href="/privacy">privacyverklaring</a>.
                 </p>
               </div>
@@ -119,8 +119,8 @@ export default function Contact() {
               </div>
               <h3 className="confirm__title">Bedankt!</h3>
               <p className="confirm__body">
-                Uw e-mailprogramma is geopend met een bericht klaar voor
-                verzending. Stuur het op en we antwoorden u binnen 24 uur.
+                Je e-mailprogramma is geopend met een bericht klaar om te
+                versturen. Stuur het op en je hoort binnen 24 uur van mij.
               </p>
               <p className="confirm__note">
                 E-mailprogramma niet geopend?{" "}
@@ -134,7 +134,7 @@ export default function Contact() {
             </div>
           )}
           <div className="contact__info">
-            <h3 className="contact__info-title">Of schrijf ons rechtstreeks</h3>
+            <h3 className="contact__info-title">Of mail me rechtstreeks</h3>
             <a
               href="mailto:thomas@aiwebatelier.com"
               className="contact__email"
@@ -152,7 +152,7 @@ export default function Contact() {
               </span>
               <div>
                 <strong>Geen betaling vooraf</strong>
-                <p>U betaalt pas nadat u de preview heeft goedgekeurd.</p>
+                <p>Je betaalt pas nadat je de preview hebt goedgekeurd.</p>
               </div>
             </div>
           </div>

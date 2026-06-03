@@ -1,9 +1,9 @@
 const buildIncludes = [
-  "Volledig op maat — geen sjabloon",
-  "Eerste versie binnen 7 dagen na akkoord",
-  "Eén iteratieronde na uw review — daarna is de site af",
-  "Volledig eigendom van code en inhoud",
-  "Snel + mobielvriendelijk + SEO-basis correct",
+  "Volledig op maat, geen sjabloon",
+  "Online in 5 werkdagen: 5 stappen, elke dag één",
+  "Eén iteratieronde na je review, daarna is de site af",
+  "Code en inhoud volledig van jou",
+  "Snel, mobielvriendelijk en met je SEO-basis correct",
 ];
 
 const maintenanceIncludes = [
@@ -29,9 +29,9 @@ export default function Pricing() {
             </span>
           </h2>
           <p className="section-subtitle">
-            U betaalt eenmalig voor de bouw, plus optioneel een vast bedrag per
-            maand voor hosting en onderhoud. Geen verrassingen, geen
-            contractduur. Opzegbaar per maand.
+            Je betaalt eenmalig voor de bouw. Wil je onderhoud, dan komt daar
+            een vast bedrag per maand bij. Geen verrassingen, geen
+            contractduur, opzegbaar per maand.
           </p>
         </div>
 
@@ -47,8 +47,8 @@ export default function Pricing() {
               <span className="pricing__period">eenmalig</span>
             </div>
             <p className="pricing__tagline">
-              Wij bouwen een eerste versie op basis van research + uw merk. U
-              geeft feedback. Wij doen één iteratie. <strong>Klaar.</strong>
+              Ik bouw een eerste versie op basis van research en je merk. Jij
+              geeft feedback. Ik doe één iteratie. <strong>Klaar.</strong>
             </p>
             <ul
               className="pricing__list"
@@ -64,10 +64,10 @@ export default function Pricing() {
               ))}
             </ul>
             <a href="#contact" className="btn btn--primary pricing__cta">
-              Vraag jouw voorbeeld aan
+              Vraag je site aan
             </a>
             <p className="pricing__note">
-              U betaalt pas wanneer u de eerste versie heeft goedgekeurd.
+              Je betaalt pas wanneer je de eerste versie hebt goedgekeurd.
             </p>
           </article>
 
@@ -81,11 +81,12 @@ export default function Pricing() {
             <div className="pricing__amount">
               <span className="pricing__currency">€</span>
               <span className="pricing__price">9,99</span>
-              <span className="pricing__period">/maand · optioneel</span>
+              <span className="pricing__period">/maand · of €99/jaar</span>
             </div>
             <p className="pricing__tagline">
-              Wij houden uw site snel, veilig en bereikbaar — zodat u zich kan
-              focussen op uw zaak. Of hosten zelf — u bezit de volledige code.
+              Ik hou je site snel, veilig en bereikbaar, zodat jij je op je
+              zaak kan focussen. Liever zelf hosten? Ook goed. De code is van
+              jou.
             </p>
             <ul
               className="pricing__list"
@@ -104,7 +105,7 @@ export default function Pricing() {
               Meer info
             </a>
             <p className="pricing__note">
-              Opzegbaar per maand. U behoudt altijd het eigendom van de code.
+              Opzegbaar per maand. De code blijft altijd van jou.
             </p>
           </article>
         </div>
@@ -115,11 +116,11 @@ export default function Pricing() {
               Eerste jaar, alles inbegrepen:
             </span>
             <span className="pricing__total-value">
-              €499 + €119,88 = <strong>€618,88</strong>
+              €499 + €99 = <strong>€598</strong>
             </span>
           </div>
           <p className="pricing__total-note">
-            Of zonder onderhoud: gewoon €499 eenmalig en u host het zelf.
+            Of zonder onderhoud: gewoon €499 eenmalig en je host het zelf.
           </p>
         </div>
 

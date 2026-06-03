@@ -1,20 +1,20 @@
 const cards = [
   {
     number: "01",
-    title: "Onderzoek + design",
-    body: "We starten met een gesprek over uw bedrijf, uw klanten en uw doelen. Daarna analyseren we uw sector en maken we een visuele richting klaar — kleurenpalet, typografie, structuur. U krijgt een preview vóór we iets bouwen.",
+    title: "Onderzoek en design",
+    body: "Ik begin met een gesprek over je zaak, je klanten en wat je wil bereiken. Daarna bekijk ik je sector en zet ik een visuele richting klaar: kleuren, typografie, structuur. Je ziet de aanpak voor er iets gebouwd wordt.",
     icon: "🔍",
   },
   {
     number: "02",
-    title: "AI-generatie",
-    body: "Op basis van uw feedback genereert ons AI-systeem de volledige website: teksten, opmaak en code. Wat vroeger weken duurde, is nu klaar op enkele dagen. Het resultaat is uniek, op maat en professioneel afgewerkt.",
+    title: "AI doet de bouw",
+    body: "Op basis van die input bouwt mijn AI-systeem de volledige website: teksten, opmaak en code. Wat vroeger weken kostte, staat nu in enkele dagen klaar. Op maat, geen sjabloon, netjes afgewerkt.",
     icon: "⚡",
   },
   {
     number: "03",
-    title: "Lancering + bijsturing",
-    body: "We publiceren uw site op uw eigen domein. Daarna mag u één herzieningsronde aanvragen: aanpassingen aan teksten, kleuren of structuur. We sturen bij tot u tevreden bent. Online, klaar voor klanten.",
+    title: "Live en bijgestuurd",
+    body: "Ik zet je site online op je eigen domein. Daarna krijg je één iteratieronde: aanpassingen aan teksten, kleuren of structuur, alles in één keer. Ik stuur bij tot het klopt. Klaar voor je klanten.",
     icon: "🚀",
   },
 ];
@@ -26,13 +26,12 @@ export default function WhatWeDo() {
         <div className="what__header">
           <span className="section-eyebrow">Wat we doen</span>
           <h2 className="section-title">
-            Uw professionele website
+            Een website waar je trots op bent
             <br />
             in drie stappen
           </h2>
           <p className="section-subtitle">
-            Geen technische kennis nodig. U levert de informatie — wij bouwen de
-            rest.
+            Geen technische kennis nodig. Jij levert de info, ik bouw de rest.
           </p>
         </div>
         <div className="what__cards">

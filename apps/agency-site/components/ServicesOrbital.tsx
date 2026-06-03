@@ -14,7 +14,7 @@ const services: Service[] = [
   {
     id: "websites",
     title: "AI-websites",
-    desc: "Websites op maat, gebouwd met AI — inclusief hosting en onderhoud. Eenmalig €499, optioneel €9,99/maand.",
+    desc: "Een website op maat, gebouwd met AI. Eenmalig €499, hosting en onderhoud optioneel voor €9,99/maand.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="2.5" y="4" width="19" height="13" rx="2" />
@@ -26,7 +26,7 @@ const services: Service[] = [
   {
     id: "consultancy",
     title: "AI-consultancy",
-    desc: "Advies over hoe AI uw bedrijf concreet vooruithelpt — van strategie tot de juiste tools.",
+    desc: "Concreet advies over waar AI je zaak echt vooruithelpt, van strategie tot de juiste tools.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M9 18h6" />
@@ -38,7 +38,7 @@ const services: Service[] = [
   {
     id: "marketing",
     title: "AI-marketing",
-    desc: "Creatieve generatie én performance marketing. Content die opvalt, campagnes die renderen.",
+    desc: "Van creatieve generatie tot performance marketing. Content die opvalt en campagnes die opbrengen.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 20V9" />
@@ -51,7 +51,7 @@ const services: Service[] = [
   {
     id: "os",
     title: "AI-besturingssysteem",
-    desc: "Een AI-OS dat uw terugkerende taken automatiseert en uw tools met elkaar verbindt.",
+    desc: "Een AI-OS dat je terugkerende taken automatiseert en je tools met elkaar laat praten.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="6" y="6" width="12" height="12" rx="2" />
@@ -113,7 +113,7 @@ export default function ServicesOrbital() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <span className={styles.eyebrow}>Onze diensten</span>
-          <h2 className={styles.title}>Wat we voor u bouwen</h2>
+          <h2 className={styles.title}>Wat ik voor je bouw</h2>
         </header>
 
         {/* Orbital visual — wider screens only */}

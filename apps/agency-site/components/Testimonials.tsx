@@ -15,24 +15,24 @@ type Testimonial = {
 const testimonials: Testimonial[] = [
   {
     quote:
-      "Ze maakten AI aanvoelen als een collega, niet als een bedreiging. Eindelijk staat de site online waar ik twee jaar over twijfelde.",
-    name: "Voorbeeld — bakkerij",
+      "Ik stelde die website al twee jaar uit. Hier was AI ineens een hulp in plaats van een drempel, en stond hij gewoon online.",
+    name: "Voorbeeld: bakkerij",
     role: "Zaakvoerder, Antwerpen",
     initials: "B",
     tile: "peach",
   },
   {
     quote:
-      "Eerlijke prijs, duidelijke afspraken, online binnen de week. Geen verrassingen achteraf.",
-    name: "Voorbeeld — advocatenkantoor",
+      "Eerlijke prijs, duidelijke afspraken, binnen de week online. Geen verrassingen op de factuur achteraf.",
+    name: "Voorbeeld: advocatenkantoor",
     role: "Vennoot, Gent",
     initials: "A",
     tile: "sage",
   },
   {
     quote:
-      "Mijn boekingen lopen nu via de site. Het voelt als vakwerk, niet als een sjabloon.",
-    name: "Voorbeeld — bloemist",
+      "Mijn boekingen lopen nu via de site. Het voelt als vakwerk, niet als een sjabloon dat iedereen heeft.",
+    name: "Voorbeeld: bloemist",
     role: "Eigenaar, Mechelen",
     initials: "F",
     tile: "sage-tint",
@@ -177,7 +177,7 @@ export default function Testimonials() {
         </div>
 
         <p className={styles.caption}>
-          Voorbeeldgetuigenissen — echte klantengetuigenissen volgen.
+          Voorbeeldgetuigenissen. Echte verhalen van klanten volgen binnenkort.
         </p>
       </div>
     </section>

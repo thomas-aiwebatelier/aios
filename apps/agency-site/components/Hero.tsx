@@ -33,40 +33,22 @@ export default function Hero() {
             <span className="hw hw--5">AI.</span>
           </h1>
           <p className="hero__tagline">
-            Custom websites voor Belgische ondernemers.{" "}
-            <strong>€499 voor de bouw</strong> — inclusief één iteratieronde na
-            uw eerste review. Optioneel <strong>€9,99/maand</strong> voor
-            zorgeloos hosting en onderhoud.
+            Een website op maat voor jouw zaak, gebouwd met AI.{" "}
+            <strong>€499 voor de bouw</strong>, inclusief één iteratieronde na
+            je eerste review. Wil je er niet meer naar omkijken? Dan host en
+            onderhoud ik hem voor <strong>€9,99/maand</strong>.
           </p>
           <div className="hero__ctas">
             <a href="#contact" className="btn btn--primary">
-              Vraag jouw voorbeeld aan <span className="hero__arr">→</span>
+              Vraag je site aan <span className="hero__arr">→</span>
             </a>
-            <a href="#wat-we-doen" className="btn btn--ghost">
+            <a href="#werkwijze" className="btn btn--ghost">
               Hoe het werkt
             </a>
           </div>
           <p className="hero__trust">
-            Online binnen <strong>7 werkdagen</strong> · u bezit de volledige code
+            Online in <strong>5 werkdagen</strong> · je bezit de volledige code
           </p>
-        </div>
-
-        <div className="hero__visual" aria-hidden="true">
-          <div className="hero__media">
-            <video
-              className="hero__video"
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster="/video-poster.png"
-            >
-              <source src="/video_logo.mp4" type="video/mp4" />
-            </video>
-          </div>
-          <div className="hero__badge">
-            <span className="hero__badge-dot" /> Online binnen 7 dagen
-          </div>
         </div>
       </div>
     </section>
