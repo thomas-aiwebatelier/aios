@@ -18,6 +18,7 @@
 
 import {
   pgTable,
+  index,
   text,
   integer,
   doublePrecision,
@@ -251,7 +252,13 @@ export const pipelineJobs = pgTable("pipeline_jobs", {
   attemptCount:    integer("attempt_count").notNull().default(0),
   lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true, mode: "date" }),
   createdAt:       timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-});
+}, (t) => ({
+  // Hot path: the worker polls `WHERE status='queued' AND pipeline_step=?
+  // ORDER BY created_at` every 5s (FOR UPDATE SKIP LOCKED).
+  pollIdx:  index("pipeline_jobs_poll_idx").on(t.pipelineStep, t.status, t.createdAt),
+  brandIdx: index("pipeline_jobs_brand_idx").on(t.brandId),
+  leadIdx:  index("pipeline_jobs_lead_idx").on(t.leadId),
+}));
 
 // ── worker_heartbeats ─────────────────────────────────────────────────────────
 //
@@ -435,7 +442,11 @@ export const brands = pgTable("brands", {
   errorMessage:     text("error_message"),
   createdAt:        timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   updatedAt:        timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
-});
+}, (t) => ({
+  // Every portal page + RLS subquery filters brands by owner.
+  ownerIdx: index("brands_owner_idx").on(t.ownerUserId),
+  leadIdx:  index("brands_lead_idx").on(t.leadId),
+}));
 
 export const brandKitFileTypeValues = [
   "visual-identity", "voice-and-messaging", "business",
@@ -452,7 +463,9 @@ export const brandKitFiles = pgTable("brand_kit_files", {
   content:     text("content").notNull(),
   storagePath: text("storage_path"),
   updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
-});
+}, (t) => ({
+  brandIdx: index("brand_kit_files_brand_idx").on(t.brandId),
+}));
 
 export const brandKitAssetRoleValues = ["logo", "product", "hero", "other"] as const;
 export type BrandKitAssetRole = (typeof brandKitAssetRoleValues)[number];
@@ -467,7 +480,9 @@ export const brandKitAssets = pgTable("brand_kit_assets", {
   storagePath: text("storage_path").notNull(),
   originalUrl: text("original_url"),
   createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-});
+}, (t) => ({
+  brandIdx: index("brand_kit_assets_brand_idx").on(t.brandId),
+}));
 
 export type Brand = typeof brands.$inferSelect;
 export type NewBrand = typeof brands.$inferInsert;
@@ -517,7 +532,9 @@ export const operateProjects = pgTable("operate_projects", {
   brief:     text("brief"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
-});
+}, (t) => ({
+  brandIdx: index("operate_projects_brand_idx").on(t.brandId),
+}));
 
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
@@ -553,7 +570,9 @@ export const adAssets = pgTable("ad_assets", {
   state:       text("state").$type<AdAssetState>().notNull().default("draft"),
   createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
-});
+}, (t) => ({
+  brandIdx: index("ad_assets_brand_idx").on(t.brandId),
+}));
 
 export type AdAsset = typeof adAssets.$inferSelect;
 export type NewAdAsset = typeof adAssets.$inferInsert;

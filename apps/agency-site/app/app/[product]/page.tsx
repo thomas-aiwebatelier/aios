@@ -169,7 +169,7 @@ export default async function ProductModule({
           {brand.status === "ready" && (
             <>
               {" "}
-              · <a href="/app/brand">bekijk je merkkit →</a>
+              · <a href="/app/market/brand">bekijk je merkkit →</a>
             </>
           )}
         </p>

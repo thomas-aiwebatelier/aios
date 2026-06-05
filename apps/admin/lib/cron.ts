@@ -27,7 +27,3 @@
 export function registerCronJobs(): void {
   // Intentionally empty — see file header.
 }
-
-export function stopCronJobs(): void {
-  // Intentionally empty — see file header.
-}

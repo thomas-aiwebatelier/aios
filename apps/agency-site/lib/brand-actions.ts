@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireUser, createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { assertSafePublicUrl, UnsafeUrlError } from "@/lib/url-guard";
 
 const VALID = new Set(["build", "market", "operate"]);
 
@@ -45,8 +46,22 @@ function slugify(s: string): string {
  */
 export async function startFromUrl(formData: FormData) {
   const product = String(formData.get("product") ?? "");
-  const url = String(formData.get("url") ?? "").trim();
+  const rawUrl = String(formData.get("url") ?? "").trim();
   if (!VALID.has(product)) redirect("/app");
+
+  // SSRF guard: market/build fetch this URL server-side, so it must be a public
+  // http(s) target. operate is intake-only and may omit the URL.
+  let url = "";
+  if (rawUrl) {
+    try {
+      url = assertSafePublicUrl(rawUrl);
+    } catch (err) {
+      if (err instanceof UnsafeUrlError) redirect(`/app/${product}?error=url`);
+      throw err;
+    }
+  } else if (product !== "operate") {
+    redirect(`/app/${product}?error=url`);
+  }
 
   const userClient = await createSupabaseServerClient();
   const user = await requireUser(userClient);

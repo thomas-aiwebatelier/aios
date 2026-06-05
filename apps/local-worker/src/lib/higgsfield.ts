@@ -15,17 +15,25 @@ export interface RunHiggsfieldOptions {
   timeoutMs?: number;
 }
 
+// Characters that are dangerous in cmd.exe (we use shell:true to launch the
+// .cmd shim) and cannot be reliably escaped inside a quoted string — a bare
+// double-quote ends the quote and the rest runs as a command (RCE). Built from
+// a string to avoid character-class range mistakes: control chars (00-1f, incl.
+// newlines), the double-quote, cmd metacharacters, and env-expansion markers.
+// Hyphens/letters/digits/_/:/ are NOT included, so flags (--prompt), models
+// (nano_banana_2) and ratios (1:1) survive intact.
+const WIN_UNSAFE = new RegExp('[\\u0000-\\u001f"&|<>^()%!`]', "g");
+
 /**
- * Quote an argument for Windows `cmd.exe` (used when `shell: true`).
- * Node does NOT auto-quote args when shell:true, so a `--prompt "many words"`
- * value would otherwise be split into multiple positional args
- * ("Too many positional args"). Standard CommandLineToArgvW quoting:
- * double internal backslashes before a quote, escape the quote, then wrap.
+ * Make an argument safe to pass through cmd.exe. SECURITY: the `--prompt` value
+ * is user-derived (the customer's ad-campaign text), so we STRIP unsafe chars
+ * rather than escape them. Lossless for legitimate image prompts. After
+ * stripping, wrapping a value that contains spaces in double quotes is safe.
  */
 function quoteWinArg(arg: string): string {
-  if (arg.length > 0 && !/[ \t"&|<>^()%!]/.test(arg)) return arg;
-  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, "$1$1");
-  return `"${escaped}"`;
+  const cleaned = arg.replace(WIN_UNSAFE, " ").replace(/\s+/g, " ").trim();
+  if (cleaned.length === 0) return '""';
+  return /\s/.test(cleaned) ? `"${cleaned}"` : cleaned;
 }
 
 /** Run the higgsfield CLI with raw args; resolves with stdout on exit 0. */
@@ -38,8 +46,8 @@ export function runHiggsfield(
   return new Promise((resolve, reject) => {
     logger.debug("higgsfield_spawn", { args });
     // On Windows the `higgsfield` shim is a `.cmd`, which Node can only launch
-    // via the shell — but shell:true means WE must quote. On POSIX we pass the
-    // args array directly (no shell), so spaces are handled by the OS.
+    // via the shell — but shell:true means WE must quote/sanitize. On POSIX we
+    // pass the args array directly (no shell), so spaces are handled by the OS.
     const isWin = process.platform === "win32";
     const child = isWin
       ? spawn(["higgsfield", ...args.map(quoteWinArg)].join(" "), {

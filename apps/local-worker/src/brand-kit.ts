@@ -31,6 +31,7 @@ type BrandKitAssetRole = "logo" | "product" | "hero" | "other";
 import { logger } from "./logger.js";
 import { getBrowser } from "./lib/playwright-pool.js";
 import { generateText } from "./lib/llm.js";
+import { assertPublicUrl } from "./lib/url-guard.js";
 
 type BrandKitPayload = { brandId?: string; url?: string; product?: string };
 
@@ -64,13 +65,10 @@ export async function processBrandKitJob(
 
     // Regenerate cleanly: replace any existing files for this brand.
     await db.delete(brandKitFiles).where(eq(brandKitFiles.brandId, brandId));
-    for (const f of files) {
-      await db.insert(brandKitFiles).values({
-        id: nanoid(),
-        brandId,
-        type: f.type,
-        content: f.content,
-      });
+    if (files.length > 0) {
+      await db.insert(brandKitFiles).values(
+        files.map((f) => ({ id: nanoid(), brandId, type: f.type, content: f.content })),
+      );
     }
 
     // Replace scraped assets (logo / hero / visuals lifted from the site).
@@ -80,17 +78,19 @@ export async function processBrandKitJob(
       .where(
         and(eq(brandKitAssets.brandId, brandId), eq(brandKitAssets.source, "scraped")),
       );
-    for (const a of assets) {
-      await db.insert(brandKitAssets).values({
-        id: nanoid(),
-        brandId,
-        role: a.role,
-        source: "scraped",
-        // We reference the asset at its source URL (no Storage upload yet);
-        // storage_path is NOT NULL, so it holds the resolvable URL too.
-        storagePath: a.url,
-        originalUrl: a.url,
-      });
+    // We reference each asset at its source URL (no Storage upload yet);
+    // storage_path is NOT NULL, so it holds the resolvable URL too.
+    if (assets.length > 0) {
+      await db.insert(brandKitAssets).values(
+        assets.map((a) => ({
+          id: nanoid(),
+          brandId,
+          role: a.role,
+          source: "scraped" as const,
+          storagePath: a.url,
+          originalUrl: a.url,
+        })),
+      );
     }
     logger.info("brandkit_assets_saved", { brandId, count: assets.length });
 
@@ -116,6 +116,9 @@ type ScrapedAsset = { role: BrandKitAssetRole; url: string };
 async function extractBrandSignals(
   url: string,
 ): Promise<{ signals: BrandSignals; assets: ScrapedAsset[] }> {
+  // SSRF guard: resolve DNS and reject private/internal targets before we fetch.
+  await assertPublicUrl(url);
+
   const browser = await getBrowser();
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await ctx.newPage();

@@ -32,5 +32,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return { response, user };
+  // Resolve the role here (same client/cookies) so the middleware can enforce
+  // admin-only access at the edge without a second client. RLS lets a user
+  // read their own profile row.
+  let role: string | null = null;
+  if (user) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    role = (data?.role as string | undefined) ?? null;
+  }
+
+  return { response, user, role };
 }
