@@ -3,6 +3,7 @@ import { getUser } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { startFromUrl } from "@/lib/brand-actions";
 import CreativeChat from "@/components/CreativeChat";
+import PollRefresh from "@/components/PollRefresh";
 
 type AssetRow = {
   id: string;
@@ -74,6 +75,10 @@ export default async function MarketModule({
             Merkkit: <strong>{brand.status}</strong> ·{" "}
             <a href="/app/brand">bekijk &amp; bewerk →</a>
           </p>
+          {((brand.status !== "ready" && brand.status !== "failed") ||
+            assets.some((a) => a.status === "queued" || a.status === "generating")) && (
+            <PollRefresh />
+          )}
 
           <section className="creative">
             <h2 className="creative__title">Nieuwe advertentie</h2>

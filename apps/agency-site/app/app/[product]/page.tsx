@@ -3,6 +3,7 @@ import { getUser, createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { startFromUrl } from "@/lib/brand-actions";
 import OperateIntakeForm from "@/components/OperateIntakeForm";
+import PollRefresh from "@/components/PollRefresh";
 
 const PRODUCTS: Record<string, { title: string; cta: string }> = {
   build: { title: "Build — je AI-website", cta: "Bouw mijn site" },
@@ -106,6 +107,9 @@ export default async function ProductModule({
         ) : (
           <>
             <p className="portal-home__lead">{buildStatusLabel(leadStatus)}</p>
+            {leadStatus &&
+              leadStatus !== "deployed" &&
+              leadStatus !== "generation_failed" && <PollRefresh intervalMs={8000} />}
             {liveUrl && (
               <p className="portal-home__lead">
                 <a className="btn btn--primary" href={liveUrl} target="_blank" rel="noreferrer">

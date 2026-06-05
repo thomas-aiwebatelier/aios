@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { marked } from "marked";
 import { getUser } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import BrandFileEditor from "@/components/BrandFileEditor";
+import BrandKitTabs, { type KitTab } from "@/components/BrandKitTabs";
+import PollRefresh from "@/components/PollRefresh";
 
 const TITLES: Record<string, string> = {
   "visual-identity": "Visuele identiteit",
@@ -44,31 +45,38 @@ export default async function BrandGuidelines() {
   const ordered = ORDER.map((t) => (files as Kit[] | null)?.find((f) => f.type === t)).filter(
     Boolean,
   ) as Kit[];
-  const rendered = await Promise.all(
-    ordered.map(async (f) => ({ ...f, html: String(await marked.parse(f.content)) })),
+  const tabs: KitTab[] = await Promise.all(
+    ordered.map(async (f) => ({
+      id: f.id,
+      title: TITLES[f.type] ?? f.type,
+      content: f.content,
+      html: String(await marked.parse(f.content)),
+    })),
   );
+
+  const building = brand.status !== "ready" && brand.status !== "failed";
 
   return (
     <main className="container portal-home">
       <h1 className="portal-home__title">Merkkit</h1>
-      <p className="portal-home__lead">
-        Status: <strong>{brand.status}</strong>
-        {brand.source_url ? ` — ${brand.source_url}` : ""}
-      </p>
-      {rendered.length === 0 ? (
+
+      {tabs.length > 0 ? (
+        <BrandKitTabs files={tabs} />
+      ) : building ? (
+        <div className="processing">
+          <span className="processing__spinner" aria-hidden="true" />
+          <p className="portal-home__lead">
+            Je merkkit wordt gegenereerd op basis van {brand.source_url}. Dit
+            duurt ongeveer een minuut…
+          </p>
+          <PollRefresh />
+        </div>
+      ) : brand.status === "failed" ? (
         <p className="portal-home__lead">
-          Je merkkit verschijnt hier zodra de analyse van je site klaar is.
+          Het genereren is misgelopen. Probeer het opnieuw vanaf de Market-pagina.
         </p>
       ) : (
-        rendered.map((f) => (
-          <BrandFileEditor
-            key={f.id}
-            id={f.id}
-            title={TITLES[f.type] ?? f.type}
-            content={f.content}
-            html={f.html}
-          />
-        ))
+        <p className="portal-home__lead">Nog geen merkkit.</p>
       )}
     </main>
   );

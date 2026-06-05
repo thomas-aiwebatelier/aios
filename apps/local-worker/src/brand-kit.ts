@@ -94,16 +94,15 @@ async function extractBrandSignals(url: string): Promise<BrandSignals> {
     // Give client-rendered (SPA) sites a moment to hydrate.
     await page.waitForTimeout(1_500);
 
+    // NOTE: no named inner functions inside page.evaluate — esbuild (via tsx)
+    // name-wraps them with __name, which is undefined in the browser context.
     const fonts = await page.evaluate(() => {
-      const clean = (f: string) =>
-        (f || "").split(",")[0].replace(/["']/g, "").trim();
-      const headingEl = document.querySelector("h1, h2");
-      const heading = headingEl
-        ? getComputedStyle(headingEl).fontFamily
-        : getComputedStyle(document.body).fontFamily;
+      const headingEl = document.querySelector("h1, h2") || document.body;
+      const rawHeading = getComputedStyle(headingEl).fontFamily || "";
+      const rawBody = getComputedStyle(document.body).fontFamily || "";
       return {
-        heading: clean(heading),
-        body: clean(getComputedStyle(document.body).fontFamily),
+        heading: rawHeading.split(",")[0].replace(/["']/g, "").trim(),
+        body: rawBody.split(",")[0].replace(/["']/g, "").trim(),
       };
     });
 

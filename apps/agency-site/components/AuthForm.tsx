@@ -22,7 +22,7 @@ export default function AuthForm() {
     const supabase = createSupabaseBrowserClient();
 
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -30,11 +30,15 @@ export default function AuthForm() {
         },
       });
       setBusy(false);
-      setMsg(
-        error
-          ? error.message
-          : "Bijna klaar — check je mailbox om je account te bevestigen.",
-      );
+      if (error) {
+        setMsg(error.message);
+      } else if (data.session) {
+        // Email confirmation is off → already signed in; go straight in.
+        router.push(next);
+      } else {
+        // Confirmation required → no session yet.
+        setMsg("Bijna klaar — check je mailbox om je account te bevestigen.");
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
