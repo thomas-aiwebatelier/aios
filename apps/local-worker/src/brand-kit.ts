@@ -14,6 +14,8 @@
  * `extractWithClaude` to OpenRouter (OpenAI-compatible, OPENROUTER_API_KEY)
  * behind the same interface — the processor logic stays identical.
  */
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import {
@@ -285,11 +287,14 @@ type ClaudeBrand = {
   products?: { name: string; description?: string; price?: string }[];
 };
 
-async function extractWithClaude(url: string, text: string): Promise<ClaudeBrand> {
-  const prompt = `Je analyseert de website ${url}. Hieronder de zichtbare tekst van de pagina.
+// Canonical prompt lives in skills/brand-kit/analysis-prompt.md (one source of
+// truth, editable without touching code — same pattern as the Build pipeline's
+// skills/atelier-design-system/generation-prompt.md). This inline copy is only
+// a fallback so generation still works if the skill file is missing at runtime.
+const FALLBACK_BRANDKIT_PROMPT = `Je analyseert de website {{URL}}. Hieronder de zichtbare tekst van de pagina.
 
 """
-${text}
+{{PAGE_TEXT}}
 """
 
 Geef UITSLUITEND geldige JSON terug (geen uitleg, geen markdown-codeblok) met exact deze velden, in het Nederlands:
@@ -299,6 +304,23 @@ Geef UITSLUITEND geldige JSON terug (geen uitleg, geen markdown-codeblok) met ex
   "audience": "korte beschrijving van de doelgroep",
   "products": [{ "name": "...", "description": "...", "price": "... of leeg laten" }]
 }`;
+
+function loadBrandKitPrompt(url: string, pageText: string): string {
+  const root = process.env.REPO_ROOT ?? process.cwd();
+  const file = path.join(root, "skills", "brand-kit", "analysis-prompt.md");
+  let template: string;
+  try {
+    // Strip the leading HTML comment (authoring note) before sending to the LLM.
+    template = readFileSync(file, "utf8").replace(/^<!--[\s\S]*?-->\s*/, "");
+  } catch {
+    logger.warn("brandkit_skill_prompt_missing", { file });
+    template = FALLBACK_BRANDKIT_PROMPT;
+  }
+  return template.replace(/\{\{URL\}\}/g, url).replace(/\{\{PAGE_TEXT\}\}/g, pageText);
+}
+
+async function extractWithClaude(url: string, text: string): Promise<ClaudeBrand> {
+  const prompt = loadBrandKitPrompt(url, text);
 
   let raw = "";
   try {

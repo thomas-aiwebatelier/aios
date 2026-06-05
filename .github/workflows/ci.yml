@@ -33,11 +33,11 @@ jobs:
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
 
-      # @atelier/db and @atelier/shared expose only their compiled dist entry
-      # (package.json "exports" -> ./dist). admin's vitest resolves them by
-      # package entry, so the dist must exist before admin tests run.
+      # @atelier/db, @atelier/shared and @atelier/auth expose only their compiled
+      # dist entry (package.json "exports" -> ./dist). admin's vitest resolves
+      # them by package entry, so the dist must exist before admin tests run.
       - name: Build workspace deps
-        run: pnpm --filter @atelier/db build && pnpm --filter @atelier/shared build
+        run: pnpm --filter @atelier/db build && pnpm --filter @atelier/shared build && pnpm --filter @atelier/auth build
 
       - name: Test @atelier/db
         run: pnpm --filter @atelier/db test
@@ -70,13 +70,14 @@ jobs:
       - name: Build admin
         run: pnpm --filter admin build
         env:
-          # Build-time placeholders. The Next.js build doesn't execute auth
-          # callbacks; these just need to be defined so the Auth.js v5 module
-          # doesn't bail at config-load. Real values come from .env on local
-          # and are never deployed (admin is local-first per spec §3.1).
-          ADMIN_EMAIL: ci-placeholder@example.com
-          ADMIN_PASSWORD_HASH: '$2a$10$ci.placeholder.hash.not.real.for.build.only.x.x.x.x.x'
-          AUTH_SECRET: ci_placeholder_64char_hex_secret_0000000000000000000000000000000000
+          # Build-time placeholders. Admin now uses Supabase Auth (migrated off
+          # next-auth). NEXT_PUBLIC_* are inlined into the client bundle at build
+          # time, so they must be DEFINED — but the build opens no connection, so
+          # placeholder values are fine. Real values come from apps/admin/.env.local
+          # locally and from App Hosting secrets in prod.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_placeholder_anon_key
+          SUPABASE_SERVICE_ROLE_KEY: ci_placeholder_service_role_key
           # The Next.js build doesn't open a real connection; the variable just
           # needs to exist. Tests use pglite (in-process) via getTestDb() — no
           # external Postgres required.
