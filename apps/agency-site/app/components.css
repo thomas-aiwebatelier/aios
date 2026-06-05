@@ -2108,7 +2108,19 @@ section[id] { scroll-margin-top: 84px; }
 /* ============ PORTAL (Studio Human) ============ */
 .portal { min-height: 100vh; background: var(--color-cream); }
 .portal__body { padding: var(--space-8) 0 var(--space-24); }
-.portal .portal-home { padding: 0; }
+/* Portal column: a touch narrower than the marketing site so it reads as
+   centered on desktop, with responsive side gutters on mobile. Both the nav
+   (.container) and page content (.container) inherit this, so they stay
+   aligned. padding-inline here is what restores the side padding that the
+   `padding-block: 0` reset below would otherwise leave at the global default. */
+.portal .container {
+  max-width: 1040px;
+  padding-inline: clamp(1.25rem, 5vw, var(--space-8));
+}
+/* Vertical spacing for portal pages comes from .portal__body — zero it here
+   WITHOUT touching the horizontal padding above (the old `padding: 0` wiped
+   both, pushing content flush to the screen edge). */
+.portal .portal-home { padding-block: 0; }
 
 .pnav {
   position: sticky;

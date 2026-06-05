@@ -5,6 +5,8 @@ dist
 .env
 .env.local
 .env.*.local
+.env.production
+.env.prod
 data/
 generated-sites/
 logs/
