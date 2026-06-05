@@ -83,3 +83,72 @@ jobs:
           # external Postgres required.
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/atelier_ci
           SITE_STATUS: preview
+
+  build-agency-site:
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      # agency-site's own prebuild builds @atelier/auth, but typecheck runs
+      # first and needs the dist (.d.ts) to resolve @atelier/auth.
+      - name: Build workspace deps
+        run: pnpm --filter @atelier/auth build
+
+      - name: Typecheck agency-site
+        run: pnpm --filter agency-site typecheck
+
+      - name: Build agency-site
+        run: pnpm --filter agency-site build
+        env:
+          # NEXT_PUBLIC_* are inlined into the bundle at build; placeholders are
+          # fine — the build opens no Supabase connection. Real values come from
+          # App Hosting secrets (apphosting.yaml) in dev/prod.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_placeholder_anon_key
+          SUPABASE_SERVICE_ROLE_KEY: ci_placeholder_service_role_key
+          SITE_STATUS: preview
+
+  worker:
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      # The worker imports @atelier/db (and transitively @atelier/shared) by
+      # package entry (-> dist), so build those before typecheck/test.
+      - name: Build workspace deps
+        run: pnpm --filter @atelier/db build && pnpm --filter @atelier/shared build
+
+      - name: Typecheck local-worker
+        run: pnpm --filter local-worker typecheck
+
+      # Worker tests use pglite (in-process Postgres) — no external DB needed.
+      - name: Test local-worker
+        run: pnpm --filter local-worker test
