@@ -27,6 +27,10 @@ export default function CreativeChat() {
             <option value="image">Afbeelding</option>
           </select>
         </label>
+        <label className="creative-chat__field">
+          <span>Referentiebeeld (optioneel)</span>
+          <input type="file" name="reference" accept="image/png,image/jpeg,image/webp" />
+        </label>
         <button type="submit" className="btn btn--primary">
           Genereer
         </button>

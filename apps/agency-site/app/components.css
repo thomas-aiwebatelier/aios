@@ -1975,7 +1975,7 @@ section[id] { scroll-margin-top: 84px; }
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-5);
 }
 .asset-card {
@@ -2076,7 +2076,7 @@ section[id] { scroll-margin-top: 84px; }
   color: var(--color-forest-soft);
   text-transform: uppercase;
 }
-.asset-grid {
+.brandkit-asset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: var(--space-4);

@@ -93,11 +93,13 @@ export function runHiggsfield(
  */
 export async function generateImage(
   prompt: string,
-  opts: { aspectRatio?: string; model?: string } = {},
+  opts: { aspectRatio?: string; model?: string; imagePath?: string } = {},
 ): Promise<string> {
   const model = opts.model ?? "nano_banana_2";
   const args = ["generate", "create", model, "--prompt", prompt, "--wait"];
   if (opts.aspectRatio) args.push("--aspect_ratio", opts.aspectRatio);
+  // Optional reference image (local file path; the CLI auto-uploads it).
+  if (opts.imagePath) args.push("--image", opts.imagePath);
 
   const out = await runHiggsfield(args);
   const url = extractMediaUrl(out);

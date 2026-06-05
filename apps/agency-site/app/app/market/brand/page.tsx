@@ -116,7 +116,7 @@ export default async function MarketBrandAssets() {
           {assets.length > 0 && (
             <section className="brandkit-panel">
               <h2 className="brandkit-panel__title">Logo &amp; visuals</h2>
-              <div className="asset-grid">
+              <div className="brandkit-asset-grid">
                 {assets.map((a) => (
                   <figure key={a.id} className={`asset-tile asset-tile--${a.role}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}

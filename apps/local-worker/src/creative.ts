@@ -5,6 +5,9 @@
  * OpenRouter in prod) and an on-brand image (higgsfield CLI), and fills the
  * ad_assets row. Status: queued → generating → ready | failed.
  */
+import { writeFileSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import {
   adAssets,
@@ -15,8 +18,16 @@ import {
 import { logger } from "./logger.js";
 import { generateText } from "./lib/llm.js";
 import { generateImage } from "./lib/higgsfield.js";
+import {
+  storageConfigured,
+  rehostImage,
+  fetchBytes,
+  extFor,
+} from "./lib/storage.js";
 
-type CreativePayload = { adAssetId?: string; brandId?: string };
+const AD_MEDIA_BUCKET = "ad-media";
+
+type CreativePayload = { adAssetId?: string; brandId?: string; referenceUrl?: string };
 
 const ASPECT: Record<string, string> = {
   feed: "1:1",
@@ -59,8 +70,41 @@ export async function processCreativeJob(
       brandName: brand?.sourceUrl ?? "",
       campaign: asset.prompt,
       visual,
+      hasReference: Boolean(payload.referenceUrl),
     });
-    const mediaUrl = await generateImage(imagePrompt, { aspectRatio: aspect });
+
+    // Optional reference image: download it to a temp file and hand it to the
+    // CLI as --image. Cleaned up afterwards.
+    let refPath: string | undefined;
+    if (payload.referenceUrl) {
+      try {
+        const { bytes, contentType } = await fetchBytes(payload.referenceUrl);
+        refPath = join(tmpdir(), `atelier-ref-${adAssetId}.${extFor(contentType)}`);
+        writeFileSync(refPath, bytes);
+      } catch (err) {
+        logger.warn("creative_reference_download_failed", { error: String(err) });
+        refPath = undefined;
+      }
+    }
+
+    let genUrl: string;
+    try {
+      genUrl = await generateImage(imagePrompt, { aspectRatio: aspect, imagePath: refPath });
+    } finally {
+      if (refPath) {
+        try {
+          unlinkSync(refPath);
+        } catch {
+          /* temp cleanup best-effort */
+        }
+      }
+    }
+
+    // Re-host the generated image in our own public bucket so it survives the
+    // provider's CDN expiry; fall back to the provider URL if Storage is off.
+    const mediaUrl = storageConfigured()
+      ? await rehostImage(genUrl, AD_MEDIA_BUCKET, `generated/${adAssetId}`)
+      : genUrl;
 
     await db
       .update(adAssets)
@@ -127,11 +171,15 @@ function buildImagePrompt(input: {
   brandName: string;
   campaign: string;
   visual: string;
+  hasReference?: boolean;
 }): string {
   const palette = (input.visual.match(/#[0-9a-fA-F]{6}/g) ?? []).slice(0, 3).join(", ");
   const parts = [
     `On-brand social ad image. Campaign: ${input.campaign}.`,
     palette ? `Use the brand palette: ${palette}.` : "",
+    input.hasReference
+      ? "Use the provided reference image as style, mood and composition guidance."
+      : "",
     "Clean, modern, high-quality commercial photography or illustration.",
     "No text overlays, no watermarks, no logos.",
   ];
