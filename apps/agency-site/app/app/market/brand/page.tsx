@@ -14,10 +14,10 @@ const ORDER = ["visual-identity", "voice-and-messaging", "business"];
 
 type Kit = { id: string; type: string; content: string };
 
-export default async function BrandGuidelines() {
+export default async function MarketBrandAssets() {
   const supabase = await createSupabaseServerClient();
   const user = await getUser(supabase);
-  if (!user) redirect("/login?next=/app/brand");
+  if (!user) redirect("/login?next=/app/market/brand");
 
   const { data: brand } = await supabase
     .from("brands")
@@ -28,10 +28,9 @@ export default async function BrandGuidelines() {
   if (!brand) {
     return (
       <main className="container portal-home">
-        <h1 className="portal-home__title">Merkkit</h1>
+        <h1 className="portal-home__title">Brand assets</h1>
         <p className="portal-home__lead">
-          Voeg eerst je website toe (op de Build- of Market-pagina) om je merkkit
-          te genereren.
+          Voeg eerst je website toe op de Market-pagina om je merkkit te genereren.
         </p>
       </main>
     );
@@ -58,16 +57,15 @@ export default async function BrandGuidelines() {
 
   return (
     <main className="container portal-home">
-      <h1 className="portal-home__title">Merkkit</h1>
-
+      <h1 className="portal-home__title">Brand assets</h1>
       {tabs.length > 0 ? (
         <BrandKitTabs files={tabs} />
       ) : building ? (
         <div className="processing">
           <span className="processing__spinner" aria-hidden="true" />
           <p className="portal-home__lead">
-            Je merkkit wordt gegenereerd op basis van {brand.source_url}. Dit
-            duurt ongeveer een minuut…
+            Je merkkit wordt gegenereerd op basis van {brand.source_url}. Dit duurt
+            ongeveer een minuut…
           </p>
           <PollRefresh />
         </div>

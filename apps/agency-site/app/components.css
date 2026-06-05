@@ -2035,3 +2035,117 @@ section[id] { scroll-margin-top: 84px; }
   border-bottom-color: var(--color-accent);
   font-weight: 500;
 }
+
+/* ============ PORTAL (Studio Human) ============ */
+.portal { min-height: 100vh; background: var(--color-cream); }
+.portal__body { padding: var(--space-8) 0 var(--space-24); }
+.portal .portal-home { padding: 0; }
+
+.pnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--color-cream) 85%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-line);
+}
+.pnav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.pnav__brand {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  color: var(--color-forest);
+  white-space: nowrap;
+}
+.pnav__tabs { display: flex; gap: var(--space-1); }
+.pnav__tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm, 0.92rem);
+  color: var(--color-forest-soft);
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.pnav__tab:hover { color: var(--color-forest); background: var(--color-sage-tint); }
+.pnav__tab--active { color: var(--color-forest); background: var(--color-sage-tint); font-weight: 500; }
+.pnav__right { margin-left: auto; display: flex; align-items: center; gap: var(--space-4); }
+.pnav__email { font-size: 13px; color: var(--color-forest-soft); }
+.pnav__signout {
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-forest);
+  cursor: pointer;
+}
+.pnav__signout:hover { background: var(--color-paper); }
+@media (max-width: 640px) {
+  .pnav__email { display: none; }
+  .pnav__inner { gap: var(--space-3); }
+  .pnav__tab { padding: 8px 12px; }
+}
+
+/* Market sub-tabs */
+.msub {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-line);
+  margin: var(--space-2) 0 var(--space-8);
+  flex-wrap: wrap;
+}
+.msub__tab {
+  padding: 10px 16px;
+  font-size: var(--text-base);
+  color: var(--color-forest-soft);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.msub__tab:hover { color: var(--color-forest); }
+.msub__tab--active { color: var(--color-forest); border-bottom-color: var(--color-accent); font-weight: 500; }
+
+/* Portal home module cards */
+.pcards {
+  list-style: none; margin: var(--space-8) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6);
+}
+.pcard__link {
+  display: flex; flex-direction: column; height: 100%;
+  padding: var(--space-8);
+  border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+  background: var(--color-paper-hi); color: var(--color-forest);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.pcard__link:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--color-sage); }
+.pcard__title { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 460; margin: 0 0 var(--space-2); }
+.pcard__desc { color: var(--color-forest-soft); line-height: 1.6; margin: 0 0 var(--space-5); }
+.pcard__more { margin-top: auto; font-weight: 500; color: var(--color-accent-deep); }
+
+/* Dashboard stats + links */
+.stat-grid { display: flex; gap: var(--space-4); flex-wrap: wrap; margin: var(--space-6) 0; }
+.stat {
+  min-width: 160px; padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--color-line); border-radius: var(--radius-md); background: var(--color-paper-hi);
+}
+.stat__label { display: block; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-sage); }
+.stat__value { display: block; font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 440; color: var(--color-forest); text-transform: capitalize; }
+.dash-links { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-top: var(--space-6); }
+
+/* "Binnenkort" placeholder */
+.soon {
+  border: 1px dashed var(--color-line); border-radius: var(--radius-lg);
+  background: var(--color-paper-hi); padding: var(--space-10); max-width: 640px;
+}
+.soon__badge {
+  display: inline-block; margin-bottom: var(--space-4);
+  padding: 4px 12px; border-radius: var(--radius-pill);
+  background: var(--color-sage-tint); color: var(--color-forest);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+}

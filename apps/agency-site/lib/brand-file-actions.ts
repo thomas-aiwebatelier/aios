@@ -19,5 +19,5 @@ export async function updateBrandFile(id: string, content: string) {
     .eq("id", id);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/app/brand");
+  revalidatePath("/app/market/brand");
 }

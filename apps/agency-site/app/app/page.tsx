@@ -1,5 +1,11 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+const MODULES = [
+  { href: "/app/build", title: "Build", desc: "Je AI-website — aangevraagd, gebouwd en online." },
+  { href: "/app/market", title: "Market", desc: "Je merkkit en advertenties, met AI gemaakt." },
+  { href: "/app/operate", title: "Operate", desc: "Je AI-besturingssysteem dat het saaie werk overneemt." },
+];
+
 export default async function PortalHome() {
   const supabase = await createSupabaseServerClient();
   const {
@@ -8,20 +14,22 @@ export default async function PortalHome() {
 
   return (
     <main className="container portal-home">
+      <span className="section-eyebrow">Portaal</span>
       <h1 className="portal-home__title">
         Welkom{user?.email ? `, ${user.email}` : ""}
       </h1>
-      <p className="portal-home__lead">
-        Dit wordt je portaal. Straks beheer je hier je merk en je drie modules:
-      </p>
-      <ul className="portal-home__modules">
-        <li><strong>Build</strong> — je AI-website</li>
-        <li><strong>Market</strong> — je merkkit en advertenties</li>
-        <li><strong>Operate</strong> — je AI-besturingssysteem</li>
+      <p className="portal-home__lead">Kies een module om verder te gaan.</p>
+      <ul className="pcards">
+        {MODULES.map((m) => (
+          <li key={m.href} className="pcard">
+            <a href={m.href} className="pcard__link">
+              <h2 className="pcard__title">{m.title}</h2>
+              <p className="pcard__desc">{m.desc}</p>
+              <span className="pcard__more">Open →</span>
+            </a>
+          </li>
+        ))}
       </ul>
-      <form action="/auth/signout" method="post">
-        <button type="submit" className="btn btn--ghost">Afmelden</button>
-      </form>
     </main>
   );
 }
