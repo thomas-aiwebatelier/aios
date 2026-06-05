@@ -1937,3 +1937,64 @@ section[id] { scroll-margin-top: 84px; }
 .brandfile__md h3 { font-family: var(--font-display); font-weight: 460; color: var(--color-forest); }
 .brandfile__md ul { padding-left: 1.2em; list-style: disc; }
 .brandfile__md a { color: var(--color-accent-deep); }
+
+/* Creative chat + asset library (Market) */
+.creative { margin: var(--space-8) 0; }
+.creative__title {
+  font-family: var(--font-display);
+  font-weight: 460;
+  font-size: var(--text-xl);
+  color: var(--color-forest);
+  margin: 0 0 var(--space-4);
+}
+.creative-chat { display: flex; flex-direction: column; gap: var(--space-3); max-width: 640px; }
+.creative-chat__prompt {
+  padding: 12px 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-hi);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-forest);
+  resize: vertical;
+}
+.creative-chat__prompt:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.creative-chat__row { display: flex; gap: var(--space-4); align-items: flex-end; flex-wrap: wrap; }
+.creative-chat__field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--color-forest-soft); }
+.creative-chat__field select {
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-hi);
+  font: inherit;
+  color: var(--color-forest);
+}
+.asset-lib { margin-top: var(--space-10); }
+.asset-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-5);
+}
+.asset-card {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-paper-hi);
+}
+.asset-card__img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.asset-card__placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-sage-tint);
+  color: var(--color-forest-soft);
+  font-size: 14px;
+}
+.asset-card__body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.asset-card__body p { margin: 0; color: var(--color-forest-soft); font-size: 0.9rem; }
+.asset-card__meta { font-size: 12px; color: var(--color-sage); text-transform: capitalize; }

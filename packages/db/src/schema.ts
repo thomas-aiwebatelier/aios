@@ -523,3 +523,37 @@ export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type OperateProject = typeof operateProjects.$inferSelect;
 export type NewOperateProject = typeof operateProjects.$inferInsert;
+
+// ── ad_assets — Market creative (ad objects: copy + media together) ────────────
+
+export const adAssetStatusValues = [
+  "queued", "generating", "ready", "failed",
+] as const;
+export type AdAssetStatus = (typeof adAssetStatusValues)[number];
+
+export const adAssetStateValues = ["draft", "approved", "rejected"] as const;
+export type AdAssetState = (typeof adAssetStateValues)[number];
+
+export const adAssets = pgTable("ad_assets", {
+  id:          text("id").primaryKey(),
+  brandId:     text("brand_id").notNull().references(() => brands.id, { onDelete: "cascade" }),
+  prompt:      text("prompt").notNull(),
+  placement:   text("placement"), // feed | story | reels
+  format:      text("format"),    // image | video
+  aspectRatio: text("aspect_ratio"),
+  // generation lifecycle
+  status:       text("status").$type<AdAssetStatus>().notNull().default("queued"),
+  errorMessage: text("error_message"),
+  // generated content
+  headline:    text("headline"),
+  primaryText: text("primary_text"),
+  description: text("description"),
+  mediaUrl:    text("media_url"),
+  // approval state (independent of generation status)
+  state:       text("state").$type<AdAssetState>().notNull().default("draft"),
+  createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+});
+
+export type AdAsset = typeof adAssets.$inferSelect;
+export type NewAdAsset = typeof adAssets.$inferInsert;

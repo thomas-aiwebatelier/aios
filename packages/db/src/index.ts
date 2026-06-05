@@ -36,6 +36,7 @@ export {
   brandKitAssets,
   profiles,
   operateProjects,
+  adAssets,
   // Enum value arrays
   leadStatusValues,
   blogPostStatusValues,
@@ -55,7 +56,13 @@ export {
   brandKitAssetSourceValues,
   userRoleValues,
   operateProjectStatusValues,
+  adAssetStatusValues,
+  adAssetStateValues,
   // Types
+  type AdAsset,
+  type NewAdAsset,
+  type AdAssetStatus,
+  type AdAssetState,
   type BrandSignals,
   type BrandStatus,
   type BrandKitFileType,

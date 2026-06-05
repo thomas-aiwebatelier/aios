@@ -74,3 +74,9 @@ create policy "brand_kit_assets_rw_own" on public.brand_kit_assets
 create policy "operate_projects_rw_own" on public.operate_projects
   for all using (brand_id in (select id from public.brands where owner_user_id = auth.uid()))
   with check (brand_id in (select id from public.brands where owner_user_id = auth.uid()));
+
+-- 6. ad_assets (Market creative — via owning brand) ----------------------------
+alter table public.ad_assets enable row level security;
+create policy "ad_assets_rw_own" on public.ad_assets
+  for all using (brand_id in (select id from public.brands where owner_user_id = auth.uid()))
+  with check (brand_id in (select id from public.brands where owner_user_id = auth.uid()));

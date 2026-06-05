@@ -38,6 +38,7 @@ import { processGenerationJob } from "./generation.js";
 import { processDeployJob } from "./deploy.js";
 import { processResearchJob } from "./research.js";
 import { processBrandKitJob } from "./brand-kit.js";
+import { processCreativeJob } from "./creative.js";
 import { closeBrowserPool } from "./lib/playwright-pool.js";
 
 // ── Locate repo root + load .env ──────────────────────────────────────────────
@@ -94,7 +95,7 @@ const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS ?? 5_000);
 // which is upstream of deploy. claimNext tries each step in turn, first match wins.
 // NOTE: step names must match what the enqueue side uses. The admin approve
 // endpoint enqueues "generation" (not "generate") — keep these in sync.
-const STEPS = ["research", "generation", "deploy", "brand-kit"];
+const STEPS = ["research", "generation", "deploy", "brand-kit", "creative"];
 
 logger.info("boot", {
   worker: WORKER_NAME,
@@ -195,6 +196,7 @@ startPollLoop(db, {
     generation: processGenerationJob,
     deploy: processDeployJob,
     "brand-kit": processBrandKitJob,
+    creative: processCreativeJob,
   },
 }).catch((err) => {
   logger.error("poll_loop_crashed", { error: String(err) });
