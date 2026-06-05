@@ -58,7 +58,9 @@ export async function startFromUrl(formData: FormData) {
       brand_id: brandId,
       pipeline_step: step,
       status: "queued",
-      payload: { product, url },
+      // brandId in the payload too: the worker's Processor type only exposes
+      // { id, payload, leadId }, so brand-scoped jobs read brandId from here.
+      payload: { product, url, brandId },
     });
   }
 
