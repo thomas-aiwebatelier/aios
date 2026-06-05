@@ -13,7 +13,7 @@ import {
   type Db,
 } from "@atelier/db";
 import { logger } from "./logger.js";
-import { runClaudeCode } from "./lib/claude-code.js";
+import { generateText } from "./lib/llm.js";
 import { generateImage } from "./lib/higgsfield.js";
 
 type CreativePayload = { adAssetId?: string; brandId?: string };
@@ -109,7 +109,7 @@ Geef UITSLUITEND geldige JSON terug (geen uitleg, geen codeblok):
 }`;
   let raw = "";
   try {
-    raw = await runClaudeCode(prompt, { timeoutMs: 3 * 60 * 1000 });
+    raw = await generateText(prompt, { timeoutMs: 3 * 60 * 1000 });
   } catch (err) {
     logger.warn("creative_copy_failed", { error: String(err) });
     return {};

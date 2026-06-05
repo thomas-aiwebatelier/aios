@@ -25,7 +25,7 @@ import {
 } from "@atelier/db";
 import { logger } from "./logger.js";
 import { getBrowser } from "./lib/playwright-pool.js";
-import { runClaudeCode } from "./lib/claude-code.js";
+import { generateText } from "./lib/llm.js";
 
 type BrandKitPayload = { brandId?: string; url?: string; product?: string };
 
@@ -196,7 +196,7 @@ Geef UITSLUITEND geldige JSON terug (geen uitleg, geen markdown-codeblok) met ex
 
   let raw = "";
   try {
-    raw = await runClaudeCode(prompt, { timeoutMs: 3 * 60 * 1000 });
+    raw = await generateText(prompt, { timeoutMs: 3 * 60 * 1000 });
   } catch (err) {
     logger.warn("brandkit_claude_failed", { error: String(err) });
     return {};
