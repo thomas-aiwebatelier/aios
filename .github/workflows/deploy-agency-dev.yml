@@ -1,0 +1,88 @@
+name: Deploy agency-site to Firebase App Hosting (dev)
+
+# Triggers an App Hosting rollout for the agency-site-dev backend on pushes to
+# develop (the dev environment), plus manual dispatch. The build itself runs in
+# Firebase's Cloud Build (it pulls the connected repo, builds apps/agency-site
+# in europe-west4, deploys to Cloud Run). This workflow only TRIGGERS the
+# rollout via the Firebase CLI.
+#
+# Same prerequisites as deploy-admin.yml (already satisfied):
+#   - Workload Identity Federation on aiwebatelier-spine
+#   - github-deploy SA with roles/firebaseapphosting.admin + roles/run.viewer
+#   - GitHub repo secrets GCP_WIF_PROVIDER and GCP_SA_EMAIL
+#
+# DEV ONLY. Prod (agency-site-prod / main) stays admin-only — no workflow here.
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/agency-site/**'
+      - 'packages/auth/**'
+      - 'packages/db/**'
+      - 'packages/shared/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - '.github/workflows/deploy-agency-dev.yml'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deploy'
+        required: false
+        default: 'Manual rollout'
+
+# Let an in-flight rollout finish; queue the next.
+concurrency:
+  group: deploy-agency-dev-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Trigger agency-site-dev rollout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: aiwebatelier-spine
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Trigger App Hosting rollout
+        run: |
+          echo "Triggering rollout for backend 'agency-site-dev' on branch develop..."
+          # --location omitted intentionally (the installed firebase-tools rejects
+          # it for rollouts:create; the default resolves the backend's location).
+          firebase apphosting:rollouts:create agency-site-dev \
+            --git-branch=develop \
+            --project=aiwebatelier-spine \
+            --force
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Deploy result (agency-site-dev)" >> $GITHUB_STEP_SUMMARY
+          echo "Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit:  \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Reason:  ${{ github.event.inputs.reason || 'auto on push' }}" >> $GITHUB_STEP_SUMMARY
+          echo "Status:  ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "When Firebase finishes the build, the new revision is live at:" >> $GITHUB_STEP_SUMMARY
+          echo "https://dev.aiwebatelier.com (and the agency-site-dev hosted.app URL)" >> $GITHUB_STEP_SUMMARY
