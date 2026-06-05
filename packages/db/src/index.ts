@@ -8,6 +8,13 @@ export {
 
 export * as schema from "./schema.js";
 
+// Brand-kit renderer (pure)
+export {
+  renderBrandKit,
+  type BrandKitMeta,
+  type RenderedBrandFile,
+} from "./brand-kit.js";
+
 // Convenience re-exports of all table objects
 export {
   leads,
@@ -23,6 +30,13 @@ export {
   sequenceSteps,
   leadActivities,
   blogPosts,
+  // Self-serve platform (AI Marketing)
+  brands,
+  brandKitFiles,
+  brandKitAssets,
+  profiles,
+  operateProjects,
+  adAssets,
   // Enum value arrays
   leadStatusValues,
   blogPostStatusValues,
@@ -36,7 +50,33 @@ export {
   sequenceAngleValues,
   sequenceStepStatusValues,
   activityTypeValues,
+  brandStatusValues,
+  brandKitFileTypeValues,
+  brandKitAssetRoleValues,
+  brandKitAssetSourceValues,
+  userRoleValues,
+  operateProjectStatusValues,
+  adAssetStatusValues,
+  adAssetStateValues,
   // Types
+  type AdAsset,
+  type NewAdAsset,
+  type AdAssetStatus,
+  type AdAssetState,
+  type BrandSignals,
+  type BrandStatus,
+  type BrandKitFileType,
+  type Brand,
+  type NewBrand,
+  type BrandKitFile,
+  type NewBrandKitFile,
+  type BrandKitAsset,
+  type Profile,
+  type NewProfile,
+  type OperateProject,
+  type NewOperateProject,
+  type OperateIntake,
+  type UserRole,
   type LeadStatus,
   type LogoSource,
   type GeneratedSiteCreatedVia,

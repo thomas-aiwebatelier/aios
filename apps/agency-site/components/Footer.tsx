@@ -46,12 +46,23 @@ export default function Footer() {
             <p className="footer__location">Antwerpen, België</p>
           </div>
 
+          <nav className="footer__col" aria-label="Diensten">
+            <h3 className="footer__col-title">Diensten</h3>
+            <ul className="footer__links">
+              <li><a href="/diensten/build" className="footer__link">Build</a></li>
+              <li><a href="/diensten/market" className="footer__link">Market</a></li>
+              <li><a href="/diensten/operate" className="footer__link">Operate</a></li>
+              <li><a href="/diensten/educate" className="footer__link">Educate</a></li>
+              <li><a href="/diensten" className="footer__link">Alle diensten</a></li>
+            </ul>
+          </nav>
+
           <nav className="footer__col" aria-label="Navigatielinks">
             <h3 className="footer__col-title">Informatie</h3>
             <ul className="footer__links">
-              <li><a href="/#wat-we-doen" className="footer__link">Wat we doen</a></li>
               <li><a href="/#werkwijze" className="footer__link">Werkwijze</a></li>
               <li><a href="/#prijzen" className="footer__link">Prijzen</a></li>
+              <li><a href="/blog" className="footer__link">Blog</a></li>
               <li><a href="/#over-ons" className="footer__link">Over ons</a></li>
               <li><a href="/#contact" className="footer__link">Contact</a></li>
               <li><a href="/privacy" className="footer__link">Privacyverklaring</a></li>

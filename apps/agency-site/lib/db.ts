@@ -30,7 +30,21 @@ function getConnectionString(runtimeEnv?: Record<string, unknown>): string {
 
 // `prepare: false` is required when going through Supabase's pgbouncer
 // pooler (port 6543).
-export function getDb(runtimeEnv?: Record<string, unknown>) {
-  const client = postgres(getConnectionString(runtimeEnv), { prepare: false });
+function build(runtimeEnv?: Record<string, unknown>) {
+  const client = postgres(getConnectionString(runtimeEnv), { prepare: false, max: 5 });
   return drizzle(client, { schema });
+}
+
+// Reuse one pooled client across requests. Previously getDb() opened a fresh
+// postgres pool on every call (every dynamic blog/RSS request), churning
+// connections against the pooler. Memoize the no-override case; an explicit
+// runtimeEnv override still builds a one-off client.
+let _db: ReturnType<typeof build> | undefined;
+
+export function getDb(runtimeEnv?: Record<string, unknown>) {
+  if (!runtimeEnv) {
+    if (!_db) _db = build();
+    return _db;
+  }
+  return build(runtimeEnv);
 }

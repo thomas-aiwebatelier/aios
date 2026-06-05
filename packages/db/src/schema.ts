@@ -18,6 +18,7 @@
 
 import {
   pgTable,
+  index,
   text,
   integer,
   doublePrecision,
@@ -239,6 +240,9 @@ export type PipelineJobStatus = (typeof pipelineJobStatusValues)[number];
 export const pipelineJobs = pgTable("pipeline_jobs", {
   id:              text("id").primaryKey(),
   leadId:          text("lead_id").references(() => leads.id, { onDelete: "cascade" }),
+  // Self-serve AI Marketing jobs are brand-scoped instead of lead-scoped.
+  // Exactly one of leadId / brandId is set per job.
+  brandId:         text("brand_id").references(() => brands.id, { onDelete: "cascade" }),
   pipelineStep:    text("pipeline_step").notNull(),
   status:          text("status").$type<PipelineJobStatus>().notNull().default("queued"),
   startedAt:       timestamp("started_at", { withTimezone: true, mode: "date" }),
@@ -248,7 +252,13 @@ export const pipelineJobs = pgTable("pipeline_jobs", {
   attemptCount:    integer("attempt_count").notNull().default(0),
   lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true, mode: "date" }),
   createdAt:       timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
-});
+}, (t) => ({
+  // Hot path: the worker polls `WHERE status='queued' AND pipeline_step=?
+  // ORDER BY created_at` every 5s (FOR UPDATE SKIP LOCKED).
+  pollIdx:  index("pipeline_jobs_poll_idx").on(t.pipelineStep, t.status, t.createdAt),
+  brandIdx: index("pipeline_jobs_brand_idx").on(t.brandId),
+  leadIdx:  index("pipeline_jobs_lead_idx").on(t.leadId),
+}));
 
 // ── worker_heartbeats ─────────────────────────────────────────────────────────
 //
@@ -387,3 +397,182 @@ export const blogPosts = pgTable("blog_posts", {
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type NewBlogPost = typeof blogPosts.$inferInsert;
+
+// =====================================================================
+// AI Marketing — self-serve "Market" product
+// =====================================================================
+//
+// Self-serve customers (Supabase Auth users) own a `brand` workspace, SEPARATE
+// from cold-outreach `leads`. Optional `lead_id` links a self-serve brand to an
+// existing lead when they're the same business (coexistence, per product
+// decision). The brand-identification job REUSES the lead-gen extraction logic
+// (Playwright render + node-vibrant palette + Claude) but persists here:
+// structured signals in `brands.extracted_signals` (mirrors the brand_profiles
+// shape), human-editable docs in `brand_kit_files`, real images in
+// `brand_kit_assets`. Row-level security (restrict to owner_user_id =
+// auth.uid()) is added in the migration SQL — it can't be expressed in Drizzle.
+
+export const brandStatusValues = [
+  "queued", "scraping", "generating", "ready", "failed",
+] as const;
+export type BrandStatus = (typeof brandStatusValues)[number];
+
+// Structured brand signals — mirrors the lead-gen `brand_profiles` shape so the
+// same extraction logic can populate either store.
+export interface BrandSignals {
+  palette?: string[];
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  fonts?: { heading: string; body: string };
+  toneOfVoiceSummary?: string;
+  socialLinks?: Record<string, string>;
+  products?: { name: string; description?: string; price?: string }[];
+  positioning?: string;
+  audience?: string;
+}
+
+export const brands = pgTable("brands", {
+  id:               text("id").primaryKey(),
+  ownerUserId:      text("owner_user_id").notNull(), // Supabase auth.users.id
+  leadId:           text("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  sourceUrl:        text("source_url").notNull(),
+  status:           text("status").$type<BrandStatus>().notNull().default("queued"),
+  extractedSignals: jsonb("extracted_signals").$type<BrandSignals>(),
+  errorMessage:     text("error_message"),
+  createdAt:        timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:        timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  // Every portal page + RLS subquery filters brands by owner.
+  ownerIdx: index("brands_owner_idx").on(t.ownerUserId),
+  leadIdx:  index("brands_lead_idx").on(t.leadId),
+}));
+
+export const brandKitFileTypeValues = [
+  "visual-identity", "voice-and-messaging", "business",
+] as const;
+export type BrandKitFileType = (typeof brandKitFileTypeValues)[number];
+
+// One row per markdown doc. `content` is the editable source of truth shown in
+// the Brand Guidelines tab and re-read at generation time; `storage_path` is an
+// optional mirror in Supabase Storage.
+export const brandKitFiles = pgTable("brand_kit_files", {
+  id:          text("id").primaryKey(),
+  brandId:     text("brand_id").notNull().references(() => brands.id, { onDelete: "cascade" }),
+  type:        text("type").$type<BrandKitFileType>().notNull(),
+  content:     text("content").notNull(),
+  storagePath: text("storage_path"),
+  updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  brandIdx: index("brand_kit_files_brand_idx").on(t.brandId),
+}));
+
+export const brandKitAssetRoleValues = ["logo", "product", "hero", "other"] as const;
+export type BrandKitAssetRole = (typeof brandKitAssetRoleValues)[number];
+export const brandKitAssetSourceValues = ["scraped", "uploaded"] as const;
+export type BrandKitAssetSource = (typeof brandKitAssetSourceValues)[number];
+
+export const brandKitAssets = pgTable("brand_kit_assets", {
+  id:          text("id").primaryKey(),
+  brandId:     text("brand_id").notNull().references(() => brands.id, { onDelete: "cascade" }),
+  role:        text("role").$type<BrandKitAssetRole>().notNull().default("other"),
+  source:      text("source").$type<BrandKitAssetSource>().notNull(),
+  storagePath: text("storage_path").notNull(),
+  originalUrl: text("original_url"),
+  createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+}, (t) => ({
+  brandIdx: index("brand_kit_assets_brand_idx").on(t.brandId),
+}));
+
+export type Brand = typeof brands.$inferSelect;
+export type NewBrand = typeof brands.$inferInsert;
+export type BrandKitFile = typeof brandKitFiles.$inferSelect;
+export type NewBrandKitFile = typeof brandKitFiles.$inferInsert;
+export type BrandKitAsset = typeof brandKitAssets.$inferSelect;
+
+// ── profiles — unified Supabase Auth identity ──────────────────────────────────
+//
+// 1:1 extension of auth.users (Supabase-managed, `auth` schema). `id` equals the
+// auth user id. `role` drives access: 'customer' for self-serve users, 'admin'
+// for the operator. The auth.users FK + the on-signup trigger that inserts this
+// row live in the hand-written sql/rls-and-auth.sql (Drizzle can't express
+// cross-schema FKs or triggers).
+
+export const userRoleValues = ["customer", "admin"] as const;
+export type UserRole = (typeof userRoleValues)[number];
+
+export const profiles = pgTable("profiles", {
+  id:        text("id").primaryKey(), // = auth.users.id
+  email:     text("email"),
+  fullName:  text("full_name"),
+  role:      text("role").$type<UserRole>().notNull().default("customer"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+});
+
+// ── operate_projects — Operate product (intake-only v1) ────────────────────────
+
+export const operateProjectStatusValues = [
+  "submitted", "reviewing", "scoped", "building", "live",
+] as const;
+export type OperateProjectStatus = (typeof operateProjectStatusValues)[number];
+
+export interface OperateIntake {
+  toolsUsed?: string[];
+  tasksToAutomate?: string;
+  systemsToConnect?: string[];
+  volume?: string;
+  notes?: string;
+}
+
+export const operateProjects = pgTable("operate_projects", {
+  id:        text("id").primaryKey(),
+  brandId:   text("brand_id").notNull().references(() => brands.id, { onDelete: "cascade" }),
+  status:    text("status").$type<OperateProjectStatus>().notNull().default("submitted"),
+  intake:    jsonb("intake").$type<OperateIntake>(),
+  brief:     text("brief"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  brandIdx: index("operate_projects_brand_idx").on(t.brandId),
+}));
+
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;
+export type OperateProject = typeof operateProjects.$inferSelect;
+export type NewOperateProject = typeof operateProjects.$inferInsert;
+
+// ── ad_assets — Market creative (ad objects: copy + media together) ────────────
+
+export const adAssetStatusValues = [
+  "queued", "generating", "ready", "failed",
+] as const;
+export type AdAssetStatus = (typeof adAssetStatusValues)[number];
+
+export const adAssetStateValues = ["draft", "approved", "rejected"] as const;
+export type AdAssetState = (typeof adAssetStateValues)[number];
+
+export const adAssets = pgTable("ad_assets", {
+  id:          text("id").primaryKey(),
+  brandId:     text("brand_id").notNull().references(() => brands.id, { onDelete: "cascade" }),
+  prompt:      text("prompt").notNull(),
+  placement:   text("placement"), // feed | story | reels
+  format:      text("format"),    // image | video
+  aspectRatio: text("aspect_ratio"),
+  // generation lifecycle
+  status:       text("status").$type<AdAssetStatus>().notNull().default("queued"),
+  errorMessage: text("error_message"),
+  // generated content
+  headline:    text("headline"),
+  primaryText: text("primary_text"),
+  description: text("description"),
+  mediaUrl:    text("media_url"),
+  // approval state (independent of generation status)
+  state:       text("state").$type<AdAssetState>().notNull().default("draft"),
+  createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  brandIdx: index("ad_assets_brand_idx").on(t.brandId),
+}));
+
+export type AdAsset = typeof adAssets.$inferSelect;
+export type NewAdAsset = typeof adAssets.$inferInsert;

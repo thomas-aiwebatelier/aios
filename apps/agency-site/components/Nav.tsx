@@ -17,10 +17,11 @@ export default function Nav() {
           <span className="nav__wordmark">AI&nbsp;Web&nbsp;Atelier</span>
         </a>
         <div className="nav__links">
-          <a href="/#diensten">Diensten</a>
+          <a href="/diensten">Diensten</a>
           <a href="/#werkwijze">Werkwijze</a>
           <a href="/#prijzen">Prijzen</a>
           <a href="/#getuigenissen">Getuigenissen</a>
+          <a href="/blog">Blog</a>
           <a href="/#over-ons">Over ons</a>
         </div>
         <a href="/#contact" className="nav__cta">

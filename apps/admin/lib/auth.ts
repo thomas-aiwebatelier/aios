@@ -1,37 +1,23 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
+import { getUser, getRole } from "@atelier/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
+export interface AdminSession {
+  user: { id: string; email: string };
+}
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Credentials({
-      credentials: { email: {}, password: {} },
-      authorize: async (creds) => {
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const passwordHash = process.env.ADMIN_PASSWORD_HASH;
-        if (!adminEmail || !passwordHash) return null;
-
-        const parsed = credentialsSchema.safeParse(creds);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-        if (email.toLowerCase() !== adminEmail.toLowerCase()) return null;
-
-        try {
-          const ok = await bcrypt.compare(password, passwordHash);
-          return ok ? { id: "admin", email } : null;
-        } catch {
-          return null;
-        }
-      },
-    }),
-  ],
-  pages: { signIn: "/login" },
-  session: { strategy: "jwt" },
-});
+/**
+ * Returns the current session ONLY if the signed-in user is an admin
+ * (profiles.role = 'admin'); otherwise null.
+ *
+ * Migrated from next-auth → Supabase Auth. The contract is deliberately kept
+ * identical to the old next-auth `auth()` (truthy = allowed) so existing call
+ * sites — the (admin) layout and /api/blog handlers — work unchanged.
+ */
+export async function auth(): Promise<AdminSession | null> {
+  const supabase = await createSupabaseServerClient();
+  const user = await getUser(supabase);
+  if (!user) return null;
+  const role = await getRole(supabase, user.id);
+  if (role !== "admin") return null;
+  return { user: { id: user.id, email: user.email ?? "" } };
+}
