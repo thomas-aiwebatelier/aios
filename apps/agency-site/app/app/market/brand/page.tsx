@@ -85,7 +85,8 @@ export default async function MarketBrandAssets() {
 
   // ── Assets (logo + visuals scraped from the site) ──────────────────────────
   const assets = ((assetRows as AssetRow[] | null) ?? [])
-    .map((a) => ({ id: a.id, role: a.role, url: a.original_url || a.storage_path }))
+    // Prefer our re-hosted copy (storage_path); fall back to the source URL.
+    .map((a) => ({ id: a.id, role: a.role, url: a.storage_path || a.original_url || "" }))
     .filter((a) => a.url);
 
   const building = brand.status !== "ready" && brand.status !== "failed";

@@ -32,6 +32,9 @@ import { logger } from "./logger.js";
 import { getBrowser } from "./lib/playwright-pool.js";
 import { generateText } from "./lib/llm.js";
 import { assertPublicUrl } from "./lib/url-guard.js";
+import { storageConfigured, rehostImage } from "./lib/storage.js";
+
+const BRAND_MEDIA_BUCKET = "brand-media";
 
 type BrandKitPayload = { brandId?: string; url?: string; product?: string };
 
@@ -78,16 +81,25 @@ export async function processBrandKitJob(
       .where(
         and(eq(brandKitAssets.brandId, brandId), eq(brandKitAssets.source, "scraped")),
       );
-    // We reference each asset at its source URL (no Storage upload yet);
-    // storage_path is NOT NULL, so it holds the resolvable URL too.
     if (assets.length > 0) {
+      // Re-host each scraped image into our public bucket so it persists even
+      // if the source site changes. rehostImage falls back to the source URL on
+      // failure, so this never blocks kit generation. storage_path holds the
+      // re-hosted (or fallback) URL the UI renders; original_url is provenance.
+      const hosted = storageConfigured()
+        ? await Promise.all(
+            assets.map((a, i) =>
+              rehostImage(a.url, BRAND_MEDIA_BUCKET, `brands/${brandId}/${a.role}-${i}`),
+            ),
+          )
+        : assets.map((a) => a.url);
       await db.insert(brandKitAssets).values(
-        assets.map((a) => ({
+        assets.map((a, i) => ({
           id: nanoid(),
           brandId,
           role: a.role,
           source: "scraped" as const,
-          storagePath: a.url,
+          storagePath: hosted[i],
           originalUrl: a.url,
         })),
       );
