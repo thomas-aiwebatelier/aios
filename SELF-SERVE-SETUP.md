@@ -7,9 +7,9 @@ DB migrations `0007/0008/0009` are **already applied**. Project ref: `owooqqxnul
 
 ## A. Supabase dashboard (do these in order)
 
-1. **Apply RLS + auth trigger** — SQL Editor → New query → paste the full contents of
-   `packages/db/sql/rls-and-auth.sql` → **Run**. (Enables row-level security, the
-   on-signup `profiles` trigger, and `is_admin()`.)
+1. **Apply RLS + auth trigger** — ✅ **already applied** (7 policies + the
+   `on_auth_user_created` trigger). The SQL lives in `packages/db/sql/rls-and-auth.sql`
+   and is idempotent — only re-run (SQL Editor → paste → Run) if you reset the DB.
 
 2. **Email auth for frictionless testing** — Authentication → Providers → **Email**:
    toggle **"Confirm email" OFF** (so signups log in immediately). You can re-enable later.
