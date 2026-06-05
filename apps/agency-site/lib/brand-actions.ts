@@ -6,19 +6,42 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const VALID = new Set(["build", "market", "operate"]);
 
-// Async job step enqueued per product (operate is intake-only — no job in v1).
-const PRODUCT_STEP: Record<string, string | null> = {
-  build: "site-request",
-  market: "brand-kit",
-  operate: null,
-};
+function newId(): string {
+  return crypto.randomUUID();
+}
+
+function nameFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    const base = host.split(".")[0];
+    return base.charAt(0).toUpperCase() + base.slice(1);
+  } catch {
+    return "Mijn zaak";
+  }
+}
+
+function slugify(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "site"
+  );
+}
 
 /**
- * Server action: ensure the signed-in user has a brand (one per account,
- * created from their URL) and enqueue the product's job. Auth is checked with
- * the RLS user client; the brand + queue writes use the service-role client so
- * the shared operational `pipeline_jobs` table is never exposed to the user
- * role — ownership is set explicitly from the verified user id.
+ * Ensure the signed-in user has a brand (one per account, from their URL) and
+ * kick off the product's flow:
+ *  - market  → enqueue the `brand-kit` job (brand-scoped)
+ *  - build   → create/link a minimal `lead` + enqueue `research` (reuses the
+ *              existing pipeline; admin approves before generation/deploy)
+ *  - operate → no job; the intake form on /app/operate handles it
+ *
+ * Auth uses the RLS user client; all writes use the service-role client with
+ * ownership set from the verified user. `leads`/`pipeline_jobs` are shared
+ * operational tables, so they must never be touched by the user role.
  */
 export async function startFromUrl(formData: FormData) {
   const product = String(formData.get("product") ?? "");
@@ -27,19 +50,18 @@ export async function startFromUrl(formData: FormData) {
 
   const userClient = await createSupabaseServerClient();
   const user = await requireUser(userClient);
-
   const svc = createServiceSupabase();
 
   // One brand per account.
   const { data: existing } = await svc
     .from("brands")
-    .select("id, source_url")
+    .select("id, source_url, lead_id")
     .eq("owner_user_id", user.id)
     .maybeSingle();
 
   let brandId = existing?.id as string | undefined;
   if (!brandId) {
-    brandId = crypto.randomUUID();
+    brandId = newId();
     const { error } = await svc.from("brands").insert({
       id: brandId,
       owner_user_id: user.id,
@@ -51,18 +73,44 @@ export async function startFromUrl(formData: FormData) {
     await svc.from("brands").update({ source_url: url }).eq("id", brandId);
   }
 
-  const step = PRODUCT_STEP[product];
-  if (step) {
+  if (product === "market") {
     await svc.from("pipeline_jobs").insert({
-      id: crypto.randomUUID(),
+      id: newId(),
       brand_id: brandId,
-      pipeline_step: step,
+      pipeline_step: "brand-kit",
       status: "queued",
-      // brandId in the payload too: the worker's Processor type only exposes
-      // { id, payload, leadId }, so brand-scoped jobs read brandId from here.
       payload: { product, url, brandId },
     });
+  } else if (product === "build") {
+    // Reuse the existing lead pipeline. Create one lead, enqueue research;
+    // admin approves before generation + Cloudflare deploy.
+    let leadId = existing?.lead_id as string | null | undefined;
+    if (!leadId) {
+      leadId = newId();
+      const name = nameFromUrl(url);
+      const slug = `${slugify(name)}-${newId().slice(0, 6)}`;
+      const { error } = await svc.from("leads").insert({
+        id: leadId,
+        slug,
+        status: "discovered",
+        business_name: name,
+        city: "België",
+        industry_key: "professional-services", // valid guide; admin can adjust
+        existing_website_url: url,
+        language: "nl",
+      });
+      if (error) throw new Error(error.message);
+      await svc.from("brands").update({ lead_id: leadId }).eq("id", brandId);
+      await svc.from("pipeline_jobs").insert({
+        id: newId(),
+        lead_id: leadId,
+        pipeline_step: "research",
+        status: "queued",
+        payload: { leadId },
+      });
+    }
   }
+  // operate: intake-only — handled on /app/operate.
 
   redirect(`/app/${product}`);
 }

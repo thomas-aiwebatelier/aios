@@ -11,7 +11,8 @@
  *
  * The Claude call goes through `runClaudeCode` (the `claude` CLI). Locally that
  * uses the operator's Max-plan auth — no API key. For a deployed worker, swap
- * `extractWithClaude` to the Anthropic API behind the same interface.
+ * `extractWithClaude` to OpenRouter (OpenAI-compatible, OPENROUTER_API_KEY)
+ * behind the same interface — the processor logic stays identical.
  */
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
