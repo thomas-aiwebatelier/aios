@@ -1,45 +1,55 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * Search-engine protection for non-production environments.
- *
- * Only the canonical production hostnames may be indexed. Every other host the
- * app can be reached on — dev.aiwebatelier.com, the raw Firebase App Hosting
- * URLs (*.hosted.app), Cloud Run URLs (*.run.app), preview channels, bare IPs —
- * gets a hard `noindex` and a Disallow-all robots.txt.
- *
- * Host-based (not env-based) on purpose: the dev and prod App Hosting backends
- * share one apphosting.yaml with no distinguishing env var, so the Host header
- * is the only reliable signal. This also shields the backend URLs that get
- * generated automatically and would otherwise be crawlable.
+ * Two responsibilities:
+ *  1. Search-engine protection for non-production hosts (host-based noindex +
+ *     Disallow-all robots.txt) — only the canonical prod hostnames are
+ *     indexable. (Unchanged behaviour.)
+ *  2. Supabase session refresh on every request, and gating the authenticated
+ *     portal under /app (redirect to /login when signed out).
  */
 const PROD_HOSTS = new Set(["aiwebatelier.com", "www.aiwebatelier.com"]);
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  const isProd = PROD_HOSTS.has(host);
+  const path = request.nextUrl.pathname;
 
-  // Production hosts behave normally (indexable).
-  if (PROD_HOSTS.has(host)) {
-    return NextResponse.next();
-  }
-
-  // Non-production: serve a Disallow-all robots.txt...
-  if (request.nextUrl.pathname === "/robots.txt") {
+  // Non-production robots.txt short-circuit (no auth work needed).
+  if (!isProd && path === "/robots.txt") {
     return new NextResponse("User-agent: *\nDisallow: /\n", {
       status: 200,
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
   }
 
-  // ...and tag every other response noindex so it can never enter the index,
-  // even if a URL is discovered through a link.
-  const response = NextResponse.next();
-  response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  // Refresh the Supabase session (rebuilds the response with fresh cookies).
+  const { response, user } = await updateSession(request);
+
+  // Gate the authenticated portal.
+  if (path.startsWith("/app") && !user) {
+    const url = request.nextUrl.clone();
+    const dest = path + request.nextUrl.search; // preserve ?url=… through signup
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", dest);
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+    if (!isProd) {
+      redirect.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    }
+    return redirect;
+  }
+
+  if (!isProd) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
   return response;
 }
 
 export const config = {
-  // Run on all routes except Next.js build assets (they don't need the header).
+  // Run on all routes except Next.js build assets.
   matcher: ["/((?!_next/static|_next/image).*)"],
 };

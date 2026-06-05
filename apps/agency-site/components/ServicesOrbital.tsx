@@ -5,6 +5,7 @@ import styles from "./ServicesOrbital.module.css";
 
 type Service = {
   id: string;
+  slug: string;
   title: string;
   desc: string;
   icon: React.ReactNode;
@@ -12,8 +13,9 @@ type Service = {
 
 const services: Service[] = [
   {
-    id: "websites",
-    title: "AI-websites",
+    id: "build",
+    slug: "build",
+    title: "Build",
     desc: "Een website op maat, gebouwd met AI. Eenmalig €499, hosting en onderhoud optioneel voor €9,99/maand.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -24,20 +26,9 @@ const services: Service[] = [
     ),
   },
   {
-    id: "consultancy",
-    title: "AI-consultancy",
-    desc: "Concreet advies over waar AI je zaak echt vooruithelpt, van strategie tot de juiste tools.",
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M9 18h6" />
-        <path d="M10 21h4" />
-        <path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2.5h6c0-1.3.3-1.8 1-2.5A6 6 0 0 0 12 3Z" />
-      </svg>
-    ),
-  },
-  {
-    id: "marketing",
-    title: "AI-marketing",
+    id: "market",
+    slug: "market",
+    title: "Market",
     desc: "Van creatieve generatie tot performance marketing. Content die opvalt en campagnes die opbrengen.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -49,14 +40,28 @@ const services: Service[] = [
     ),
   },
   {
-    id: "os",
-    title: "AI-besturingssysteem",
+    id: "operate",
+    slug: "operate",
+    title: "Operate",
     desc: "Een AI-OS dat je terugkerende taken automatiseert en je tools met elkaar laat praten.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="6" y="6" width="12" height="12" rx="2" />
         <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
         <circle cx="12" cy="12" r="2" />
+      </svg>
+    ),
+  },
+  {
+    id: "educate",
+    slug: "educate",
+    title: "Educate",
+    desc: "Concreet advies over waar AI je zaak echt vooruithelpt, van strategie tot de juiste tools.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M9 18h6" />
+        <path d="M10 21h4" />
+        <path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2.5h6c0-1.3.3-1.8 1-2.5A6 6 0 0 0 12 3Z" />
       </svg>
     ),
   },
@@ -171,8 +176,11 @@ export default function ServicesOrbital() {
               <>
                 <h3 className={styles.panelTitle}>{activeService.title}</h3>
                 <p className={styles.panelDesc}>{activeService.desc}</p>
-                <a className={styles.panelLink} href="#contact">
-                  Vraag een voorbeeld →
+                <a
+                  className={styles.panelLink}
+                  href={`/diensten/${activeService.slug}`}
+                >
+                  Lees meer →
                 </a>
               </>
             )}
@@ -187,8 +195,8 @@ export default function ServicesOrbital() {
               <div className={styles.cardBody}>
                 <h3 className={styles.cardTitle}>{s.title}</h3>
                 <p className={styles.cardDesc}>{s.desc}</p>
-                <a className={styles.cardLink} href="#contact">
-                  Vraag een voorbeeld →
+                <a className={styles.cardLink} href={`/diensten/${s.slug}`}>
+                  Lees meer →
                 </a>
               </div>
             </li>

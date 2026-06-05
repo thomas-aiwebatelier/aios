@@ -1,7 +1,10 @@
 "use server";
 
-import { signOut } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function handleSignOut() {
-  await signOut({ redirectTo: "/login" });
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }

@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "node --import tsx/esm ./node_modules/next/dist/bin/next dev",
-    "build": "node --import tsx/esm ./node_modules/next/dist/bin/next build && node scripts/post-build.mjs",
+    "build": "node scripts/build-workspace-deps.mjs && node --import tsx/esm ./node_modules/next/dist/bin/next build && node scripts/post-build.mjs",
     "start": "node --import tsx/esm ./node_modules/next/dist/bin/next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@atelier/auth": "workspace:*",
+    "@supabase/ssr": "^0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

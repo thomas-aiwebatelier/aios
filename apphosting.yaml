@@ -40,15 +40,20 @@ env:
     availability:
       - RUNTIME
 
-  # ── Secret env vars (Cloud Secret Manager references) ─────────────────────
-  - variable: AUTH_SECRET
-    secret: admin-auth-secret
+  # Supabase Auth (unified identity). URL is public; the anon key is publishable
+  # but kept as a secret ref so it isn't committed. Both must be BUILD-available
+  # so Next can inline NEXT_PUBLIC_* into the client bundle.
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    value: https://owooqqxnuluddvizkrzt.supabase.co
     availability:
+      - BUILD
       - RUNTIME
 
-  - variable: ADMIN_PASSWORD_HASH
-    secret: admin-password-hash
+  # ── Secret env vars (Cloud Secret Manager references) ─────────────────────
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    secret: supabase-anon-key
     availability:
+      - BUILD
       - RUNTIME
 
   - variable: DATABASE_URL

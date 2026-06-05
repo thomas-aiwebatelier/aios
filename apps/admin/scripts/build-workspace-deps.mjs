@@ -16,7 +16,7 @@ import { join } from "node:path";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = join(__dirname, "..", "..", "..");
 
-const packagesToBuild = ["packages/db", "packages/shared"];
+const packagesToBuild = ["packages/db", "packages/shared", "packages/auth"];
 
 for (const pkg of packagesToBuild) {
   console.log(`[build-deps] Building ${pkg}...`);

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { blogPosts } from "@/lib/blog-schema";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 // DB-backed; skip build-time prerender (no DATABASE_URL during `next build`).
 export const dynamic = "force-dynamic";
@@ -34,32 +36,40 @@ export default async function BlogIndexPage() {
     .orderBy(desc(blogPosts.publishedAt));
 
   return (
-    <section className="blog-index">
-      <header className="blog-index-header">
-        <h1>Blog</h1>
-        <p className="lead">
-          Build-in-public dispatches. Wat we bouwen, wat we leren, wat we
-          anders zouden doen.
-        </p>
-      </header>
-      <ul className="blog-list">
-        {posts.map((p) => (
-          <li key={p.slug} className="blog-card">
-            <a href={`/blog/${p.slug}`}>
-              <h2>{p.title}</h2>
-              {p.excerpt && <p className="excerpt">{p.excerpt}</p>}
-              {p.publishedAt && (
-                <time dateTime={p.publishedAt.toISOString()}>
-                  {dateFormatter.format(p.publishedAt)}
-                </time>
-              )}
-            </a>
-          </li>
-        ))}
-      </ul>
-      {posts.length === 0 && (
-        <p className="empty">Nog geen gepubliceerde posts.</p>
-      )}
-    </section>
+    <>
+      <Nav />
+      <main className="blog-index">
+        <header className="blog-index-header">
+          <span className="section-eyebrow">Blog</span>
+          <h1>Build-in-public</h1>
+          <p className="lead">
+            Dispatches uit het atelier. Wat ik bouw, wat ik leer en wat ik een
+            volgende keer anders zou doen.
+          </p>
+        </header>
+        {posts.length > 0 ? (
+          <ul className="blog-list">
+            {posts.map((p) => (
+              <li key={p.slug} className="blog-card">
+                <a href={`/blog/${p.slug}`}>
+                  <h2>{p.title}</h2>
+                  {p.excerpt && <p className="excerpt">{p.excerpt}</p>}
+                  {p.publishedAt && (
+                    <time dateTime={p.publishedAt.toISOString()}>
+                      {dateFormatter.format(p.publishedAt)}
+                    </time>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="blog-empty">
+            Nog geen gepubliceerde posts. Binnenkort verschijnt hier de eerste.
+          </p>
+        )}
+      </main>
+      <Footer />
+    </>
   );
 }
