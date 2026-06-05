@@ -15,6 +15,19 @@ export interface RunHiggsfieldOptions {
   timeoutMs?: number;
 }
 
+/**
+ * Quote an argument for Windows `cmd.exe` (used when `shell: true`).
+ * Node does NOT auto-quote args when shell:true, so a `--prompt "many words"`
+ * value would otherwise be split into multiple positional args
+ * ("Too many positional args"). Standard CommandLineToArgvW quoting:
+ * double internal backslashes before a quote, escape the quote, then wrap.
+ */
+function quoteWinArg(arg: string): string {
+  if (arg.length > 0 && !/[ \t"&|<>^()%!]/.test(arg)) return arg;
+  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, "$1$1");
+  return `"${escaped}"`;
+}
+
 /** Run the higgsfield CLI with raw args; resolves with stdout on exit 0. */
 export function runHiggsfield(
   args: string[],
@@ -24,10 +37,19 @@ export function runHiggsfield(
 
   return new Promise((resolve, reject) => {
     logger.debug("higgsfield_spawn", { args });
-    const child = spawn("higgsfield", args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      shell: process.platform === "win32", // resolve higgsfield.cmd shim on PATH
-    });
+    // On Windows the `higgsfield` shim is a `.cmd`, which Node can only launch
+    // via the shell — but shell:true means WE must quote. On POSIX we pass the
+    // args array directly (no shell), so spaces are handled by the OS.
+    const isWin = process.platform === "win32";
+    const child = isWin
+      ? spawn(["higgsfield", ...args.map(quoteWinArg)].join(" "), {
+          stdio: ["ignore", "pipe", "pipe"],
+          shell: true,
+        })
+      : spawn("higgsfield", args, {
+          stdio: ["ignore", "pipe", "pipe"],
+          shell: false,
+        });
 
     let stdout = "";
     let stderr = "";

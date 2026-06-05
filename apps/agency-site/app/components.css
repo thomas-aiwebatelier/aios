@@ -2036,6 +2036,75 @@ section[id] { scroll-margin-top: 84px; }
   font-weight: 500;
 }
 
+/* ---- Brand assets: colour swatches + scraped visuals ---- */
+.brandkit-visuals {
+  display: grid;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+.brandkit-panel {
+  background: var(--color-paper, #fff);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-6);
+}
+.brandkit-panel__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--color-forest);
+  margin: 0 0 var(--space-4);
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.swatch { display: flex; align-items: center; gap: 10px; }
+.swatch__chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-forest) 12%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  flex: none;
+}
+.swatch__meta { display: flex; flex-direction: column; line-height: 1.3; }
+.swatch__label { font-size: 13px; color: var(--color-forest); }
+.swatch__hex {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--color-forest-soft);
+  text-transform: uppercase;
+}
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+.asset-tile {
+  margin: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: var(--color-cream);
+}
+.asset-tile img {
+  display: block;
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  background:
+    repeating-conic-gradient(#0000000a 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+  padding: 8px;
+}
+.asset-tile--logo img { object-fit: contain; }
+.asset-tile figcaption {
+  font-size: 12px;
+  color: var(--color-forest-soft);
+  padding: 6px 10px;
+  border-top: 1px solid var(--color-line);
+}
+
 /* ============ PORTAL (Studio Human) ============ */
 .portal { min-height: 100vh; background: var(--color-cream); }
 .portal__body { padding: var(--space-8) 0 var(--space-24); }

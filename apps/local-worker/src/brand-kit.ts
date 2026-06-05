@@ -14,15 +14,18 @@
  * `extractWithClaude` to OpenRouter (OpenAI-compatible, OPENROUTER_API_KEY)
  * behind the same interface — the processor logic stays identical.
  */
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import {
   brands,
   brandKitFiles,
+  brandKitAssets,
   renderBrandKit,
   type Db,
   type BrandSignals,
 } from "@atelier/db";
+
+type BrandKitAssetRole = "logo" | "product" | "hero" | "other";
 import { logger } from "./logger.js";
 import { getBrowser } from "./lib/playwright-pool.js";
 import { generateText } from "./lib/llm.js";
@@ -45,7 +48,7 @@ export async function processBrandKitJob(
     await db.update(brands).set({ status: "scraping" }).where(eq(brands.id, brandId));
     logger.info("brandkit_scrape_start", { brandId, url });
 
-    const signals = await extractBrandSignals(url);
+    const { signals, assets } = await extractBrandSignals(url);
 
     await db
       .update(brands)
@@ -68,6 +71,27 @@ export async function processBrandKitJob(
       });
     }
 
+    // Replace scraped assets (logo / hero / visuals lifted from the site).
+    // Uploaded assets (source = 'uploaded') are kept — only re-scrape the rest.
+    await db
+      .delete(brandKitAssets)
+      .where(
+        and(eq(brandKitAssets.brandId, brandId), eq(brandKitAssets.source, "scraped")),
+      );
+    for (const a of assets) {
+      await db.insert(brandKitAssets).values({
+        id: nanoid(),
+        brandId,
+        role: a.role,
+        source: "scraped",
+        // We reference the asset at its source URL (no Storage upload yet);
+        // storage_path is NOT NULL, so it holds the resolvable URL too.
+        storagePath: a.url,
+        originalUrl: a.url,
+      });
+    }
+    logger.info("brandkit_assets_saved", { brandId, count: assets.length });
+
     await db
       .update(brands)
       .set({ status: "ready", errorMessage: null })
@@ -85,7 +109,11 @@ export async function processBrandKitJob(
 
 // ── extraction ────────────────────────────────────────────────────────────────
 
-async function extractBrandSignals(url: string): Promise<BrandSignals> {
+type ScrapedAsset = { role: BrandKitAssetRole; url: string };
+
+async function extractBrandSignals(
+  url: string,
+): Promise<{ signals: BrandSignals; assets: ScrapedAsset[] }> {
   const browser = await getBrowser();
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await ctx.newPage();
@@ -125,6 +153,39 @@ async function extractBrandSignals(url: string): Promise<BrandSignals> {
       return out;
     });
 
+    // Raw image/logo candidates. NOTE: no named inner functions inside
+    // page.evaluate (esbuild's __name wrapper is undefined in the browser) —
+    // gather raw strings here, resolve/dedupe/classify in Node below.
+    const rawAssets = await page.evaluate(() => {
+      const out: { kind: string; src: string; isLogo: boolean; area: number }[] = [];
+      for (const img of Array.from(document.querySelectorAll("img"))) {
+        const el = img as HTMLImageElement;
+        const src = el.currentSrc || el.src || "";
+        if (!src) continue;
+        const cls = typeof el.className === "string" ? el.className : "";
+        const hay = ((el.getAttribute("alt") || "") + " " + cls + " " + src).toLowerCase();
+        const w = el.naturalWidth || el.width || 0;
+        const h = el.naturalHeight || el.height || 0;
+        out.push({ kind: "img", src, isLogo: hay.includes("logo"), area: w * h });
+      }
+      const og =
+        document.querySelector('meta[property="og:image"]') ||
+        document.querySelector('meta[name="og:image"]');
+      if (og) {
+        const c = og.getAttribute("content") || "";
+        if (c) out.push({ kind: "og", src: c, isLogo: false, area: 0 });
+      }
+      const icon =
+        document.querySelector('link[rel="apple-touch-icon"]') ||
+        document.querySelector('link[rel="icon"]') ||
+        document.querySelector('link[rel="shortcut icon"]');
+      if (icon) {
+        const href = (icon as HTMLLinkElement).href || icon.getAttribute("href") || "";
+        if (href) out.push({ kind: "icon", src: href, isLogo: true, area: 0 });
+      }
+      return out;
+    });
+
     let palette: string[] = [];
     let primaryColor: string | undefined;
     let secondaryColor: string | undefined;
@@ -154,21 +215,67 @@ async function extractBrandSignals(url: string): Promise<BrandSignals> {
     const text = htmlToText(html).slice(0, 6_000);
     const claude = await extractWithClaude(url, text);
 
+    const assets = normalizeAssets(rawAssets, url);
+
     return {
-      palette,
-      primaryColor,
-      secondaryColor,
-      accentColor,
-      fonts,
-      socialLinks,
-      toneOfVoiceSummary: claude.toneOfVoiceSummary,
-      positioning: claude.positioning,
-      audience: claude.audience,
-      products: claude.products,
+      signals: {
+        palette,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        fonts,
+        socialLinks,
+        toneOfVoiceSummary: claude.toneOfVoiceSummary,
+        positioning: claude.positioning,
+        audience: claude.audience,
+        products: claude.products,
+      },
+      assets,
     };
   } finally {
     await ctx.close();
   }
+}
+
+/**
+ * Resolve raw scraped image candidates to absolute URLs, dedupe, classify into
+ * logo / hero / other, and cap the count. Logos first, then the og hero, then
+ * the largest in-page visuals (≥200px wide-ish by rendered area).
+ */
+function normalizeAssets(
+  raw: { kind: string; src: string; isLogo: boolean; area: number }[],
+  pageUrl: string,
+): ScrapedAsset[] {
+  const seen = new Set<string>();
+  const logos: ScrapedAsset[] = [];
+  const heroes: ScrapedAsset[] = [];
+  const others: { url: string; area: number }[] = [];
+
+  for (const c of raw) {
+    let abs: string;
+    try {
+      abs = new URL(c.src, pageUrl).href;
+    } catch {
+      continue;
+    }
+    if (!/^https?:/i.test(abs)) continue; // skip data: / blob:
+    if (seen.has(abs)) continue;
+    seen.add(abs);
+
+    if (c.kind === "icon" || c.isLogo) logos.push({ role: "logo", url: abs });
+    else if (c.kind === "og") heroes.push({ role: "hero", url: abs });
+    else others.push({ url: abs, area: c.area });
+  }
+
+  // Drop tiny in-page images (flags, badges, share icons): keep ≥ ~200×200,
+  // but keep area=0 (browser couldn't measure it) rather than over-filtering.
+  const visuals: ScrapedAsset[] = others
+    .filter((o) => o.area === 0 || o.area >= 40_000)
+    .sort((a, b) => b.area - a.area)
+    .slice(0, 6)
+    .map((o) => ({ role: "other", url: o.url }));
+
+  return [...logos.slice(0, 3), ...heroes.slice(0, 1), ...visuals].slice(0, 9);
 }
 
 type ClaudeBrand = {

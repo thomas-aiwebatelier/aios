@@ -13,6 +13,20 @@ const TITLES: Record<string, string> = {
 const ORDER = ["visual-identity", "voice-and-messaging", "business"];
 
 type Kit = { id: string; type: string; content: string };
+type AssetRow = { id: string; role: string; storage_path: string; original_url: string | null };
+type Signals = {
+  palette?: string[];
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+};
+
+const ASSET_LABEL: Record<string, string> = {
+  logo: "Logo",
+  hero: "Hoofdbeeld",
+  product: "Product",
+  other: "Visual",
+};
 
 export default async function MarketBrandAssets() {
   const supabase = await createSupabaseServerClient();
@@ -21,7 +35,7 @@ export default async function MarketBrandAssets() {
 
   const { data: brand } = await supabase
     .from("brands")
-    .select("id, source_url, status")
+    .select("id, source_url, status, extracted_signals")
     .eq("owner_user_id", user.id)
     .maybeSingle();
 
@@ -36,10 +50,13 @@ export default async function MarketBrandAssets() {
     );
   }
 
-  const { data: files } = await supabase
-    .from("brand_kit_files")
-    .select("id, type, content")
-    .eq("brand_id", brand.id);
+  const [{ data: files }, { data: assetRows }] = await Promise.all([
+    supabase.from("brand_kit_files").select("id, type, content").eq("brand_id", brand.id),
+    supabase
+      .from("brand_kit_assets")
+      .select("id, role, storage_path, original_url")
+      .eq("brand_id", brand.id),
+  ]);
 
   const ordered = ORDER.map((t) => (files as Kit[] | null)?.find((f) => f.type === t)).filter(
     Boolean,
@@ -53,11 +70,66 @@ export default async function MarketBrandAssets() {
     })),
   );
 
+  // ── Colours (swatches) from the extracted signals ──────────────────────────
+  const sig = (brand.extracted_signals as Signals | null) ?? {};
+  const named = [
+    sig.primaryColor && { hex: sig.primaryColor, label: "Primair" },
+    sig.secondaryColor && { hex: sig.secondaryColor, label: "Secundair" },
+    sig.accentColor && { hex: sig.accentColor, label: "Accent" },
+  ].filter(Boolean) as { hex: string; label: string }[];
+  const seenHex = new Set(named.map((n) => n.hex.toLowerCase()));
+  const extra = (sig.palette ?? [])
+    .filter((h) => h && !seenHex.has(h.toLowerCase()))
+    .map((hex) => ({ hex, label: "" }));
+  const swatches = [...named, ...extra];
+
+  // ── Assets (logo + visuals scraped from the site) ──────────────────────────
+  const assets = ((assetRows as AssetRow[] | null) ?? [])
+    .map((a) => ({ id: a.id, role: a.role, url: a.original_url || a.storage_path }))
+    .filter((a) => a.url);
+
   const building = brand.status !== "ready" && brand.status !== "failed";
 
   return (
     <main className="container portal-home">
       <h1 className="portal-home__title">Brand assets</h1>
+
+      {(swatches.length > 0 || assets.length > 0) && (
+        <div className="brandkit-visuals">
+          {swatches.length > 0 && (
+            <section className="brandkit-panel">
+              <h2 className="brandkit-panel__title">Kleuren</h2>
+              <div className="swatches">
+                {swatches.map((s) => (
+                  <div key={s.hex + s.label} className="swatch">
+                    <span className="swatch__chip" style={{ backgroundColor: s.hex }} />
+                    <span className="swatch__meta">
+                      {s.label && <strong className="swatch__label">{s.label}</strong>}
+                      <code className="swatch__hex">{s.hex}</code>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {assets.length > 0 && (
+            <section className="brandkit-panel">
+              <h2 className="brandkit-panel__title">Logo &amp; visuals</h2>
+              <div className="asset-grid">
+                {assets.map((a) => (
+                  <figure key={a.id} className={`asset-tile asset-tile--${a.role}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={a.url} alt={ASSET_LABEL[a.role] ?? "Visual"} loading="lazy" />
+                    <figcaption>{ASSET_LABEL[a.role] ?? "Visual"}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
       {tabs.length > 0 ? (
         <BrandKitTabs files={tabs} />
       ) : building ? (
