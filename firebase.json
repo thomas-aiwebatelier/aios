@@ -11,7 +11,61 @@
       "**/test-results/**",
       "**/playwright-report/**",
       "apps/agency-site/**",
-      "apps/local-worker/**"
+      "apps/local-worker/**",
+      "services/**"
     ]
+  },
+  "functions": [
+    {
+      "source": "services/video-studio/functions",
+      "codebase": "videostudio",
+      "runtime": "nodejs22",
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"],
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local",
+        "scripts/**"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "services/video-studio/web/dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow, noarchive"
+          }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "services/video-studio/firestore.rules",
+    "indexes": "services/video-studio/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "services/video-studio/storage.rules"
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "hosting": { "port": 5000 },
+    "ui": { "enabled": true, "port": 4000 },
+    "singleProjectMode": true
   }
 }
