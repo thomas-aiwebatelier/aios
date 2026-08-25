@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getUser } from "@atelier/auth";
+import { getUser, getRole } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PortalNav from "@/components/PortalNav";
 
@@ -17,10 +17,11 @@ export default async function AppLayout({
   const supabase = await createSupabaseServerClient();
   const user = await getUser(supabase);
   if (!user) redirect("/login?next=/app");
+  const isAdmin = (await getRole(supabase, user.id)) === "admin";
 
   return (
     <div className="portal">
-      <PortalNav email={user.email} />
+      <PortalNav email={user.email} isAdmin={isAdmin} />
       <div className="portal__body">{children}</div>
     </div>
   );

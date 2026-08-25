@@ -82,17 +82,22 @@ alter table public.lead_intents       enable row level security;
 -- 2b. REVOKE WRITE GRANTS ------------------------------------------------------
 -- The half that policies cannot do for you. Without this, dropping the write
 -- policies below is cosmetic.
-revoke insert, update, delete on public.profiles           from authenticated, anon;
-revoke insert, update, delete on public.brands             from authenticated, anon;
-revoke insert, update, delete on public.brand_kit_files    from authenticated, anon;
-revoke insert, update, delete on public.brand_kit_assets   from authenticated, anon;
-revoke insert, update, delete on public.operate_projects   from authenticated, anon;
-revoke insert, update, delete on public.ad_assets          from authenticated, anon;
-revoke insert, update, delete on public.video_deliverables from authenticated, anon;
+-- TRUNCATE is in the list on purpose. Supabase's default `grant all` hands it
+-- to anon and authenticated, and — unlike insert/update/delete — RLS does not
+-- constrain it at all: one TRUNCATE empties the table regardless of policy.
+-- PostgREST exposes no truncate verb today, so this is hygiene rather than an
+-- open hole, but it is the only grant on these tables that could lose data.
+revoke insert, update, delete, truncate on public.profiles           from authenticated, anon;
+revoke insert, update, delete, truncate on public.brands             from authenticated, anon;
+revoke insert, update, delete, truncate on public.brand_kit_files    from authenticated, anon;
+revoke insert, update, delete, truncate on public.brand_kit_assets   from authenticated, anon;
+revoke insert, update, delete, truncate on public.operate_projects   from authenticated, anon;
+revoke insert, update, delete, truncate on public.ad_assets          from authenticated, anon;
+revoke insert, update, delete, truncate on public.video_deliverables from authenticated, anon;
 
 -- lead_intents is the one exception: insert-only, never readable by a client.
-revoke select, update, delete on public.lead_intents from authenticated, anon;
-grant  insert                 on public.lead_intents to   authenticated, anon;
+revoke select, update, delete, truncate on public.lead_intents from authenticated, anon;
+grant  insert                           on public.lead_intents to   authenticated, anon;
 
 -- Customers still need to READ their own rows.
 grant select on public.profiles           to authenticated;

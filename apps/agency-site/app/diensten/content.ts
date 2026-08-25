@@ -5,6 +5,12 @@ export type ServiceContent = {
   slug: "build" | "market" | "operate" | "educate" | "video";
   icon: "websites" | "consultancy" | "marketing" | "os" | "video";
   navTitle: string;
+  /**
+   * Built and deployed, but invisible to the public: no nav tab, no card on
+   * /diensten, and a genuine 404 on the detail page for anyone who is not an
+   * admin (enforced in middleware.ts — this flag only drives the UI).
+   */
+  hidden?: boolean;
   title: string;
   eyebrow: string;
   heroLead: string;
@@ -31,9 +37,9 @@ export const services: ServiceContent[] = [
   {
     slug: "build",
     icon: "websites",
-    navTitle: "Build",
+    navTitle: "Website",
     title: "Een website op maat, gebouwd met AI",
-    eyebrow: "Build",
+    eyebrow: "Website",
     heroLead:
       "Ik bouw je site met AI: op maat, geen sjabloon, online in 5 werkdagen. €249 voor het ontwerp, een herzieningsronde kost €100. Je weet vooraf precies wat je krijgt.",
     heroCtaLabel: "Vraag je site aan",
@@ -112,9 +118,9 @@ export const services: ServiceContent[] = [
   {
     slug: "market",
     icon: "marketing",
-    navTitle: "Market",
+    navTitle: "Marketing",
     title: "AI-marketing die ook echt converteert",
-    eyebrow: "Market",
+    eyebrow: "Marketing",
     heroLead:
       "Advertenties, content en landingspagina’s, met AI gemaakt en op cijfers gestuurd. €499 opzet per kanaal, daarna €199 per maand per kanaal. Meer dan mooie posts: campagnes die klanten opleveren.",
     heroCtaLabel: "Vraag een voorbeeld",
@@ -191,6 +197,10 @@ export const services: ServiceContent[] = [
     slug: "operate",
     icon: "os",
     navTitle: "Operate",
+    // Hidden with Consulting: both are the advisory track, and the nav carries
+    // three public tabs (Website · Content · Marketing) plus Consulting for
+    // admins only.
+    hidden: true,
     title: "Een AI-besturingssysteem voor je zaak",
     eyebrow: "Operate",
     heroLead:
@@ -261,9 +271,10 @@ export const services: ServiceContent[] = [
   {
     slug: "educate",
     icon: "consultancy",
-    navTitle: "Educate",
+    navTitle: "Consulting",
+    hidden: true,
     title: "Concreet advies over waar AI je zaak echt helpt",
-    eyebrow: "Educate",
+    eyebrow: "Consulting",
     heroLead:
       "Geen hype, geen vaag toekomstpraat. Ik kijk naar jouw zaak en zeg je waar AI nu al tijd of geld oplevert en wat je beter laat liggen.",
     heroCtaLabel: "Stel je vraag",
@@ -332,9 +343,9 @@ export const services: ServiceContent[] = [
   {
     slug: "video",
     icon: "video",
-    navTitle: "Video",
+    navTitle: "Content",
     title: "AI-commercials die er professioneel uitzien",
-    eyebrow: "Video",
+    eyebrow: "Content",
     heroLead:
       "Ik maak een commercial van 15 seconden met AI. €99 per video, excl. btw. Jij stuurt je foto’s en je verhaal, ik lever de video.",
     heroCtaLabel: "Vraag je video aan",
@@ -427,3 +438,28 @@ export function getService(slug: string): ServiceContent | undefined {
 }
 
 export const serviceSlugs = services.map((s) => s.slug);
+
+/**
+ * What a visitor may see. Admins get everything; everyone else gets the three
+ * public tabs. Both the nav and the /diensten grid read this, so a service can
+ * never appear in one and not the other.
+ */
+const NAV_ORDER: ServiceContent["slug"][] = [
+  "build", // Website
+  "video", // Content
+  "market", // Marketing
+  "educate", // Consulting — hidden
+  "operate", // hidden
+];
+
+export function visibleServices(isAdmin: boolean): ServiceContent[] {
+  const shown = isAdmin ? services : services.filter((s) => !s.hidden);
+  // The array above is in the order the pages were written; the nav has its own
+  // order (Website · Content · Marketing) and it is the one people see.
+  return [...shown].sort(
+    (a, b) => NAV_ORDER.indexOf(a.slug) - NAV_ORDER.indexOf(b.slug),
+  );
+}
+
+/** Slugs that must 404 for non-admins. Keep middleware.ts in step with this. */
+export const hiddenServiceSlugs = services.filter((s) => s.hidden).map((s) => s.slug);

@@ -2,7 +2,7 @@ import type { ServiceContent } from "@/app/diensten/content";
 import ServiceIcon from "@/components/ServiceIcon";
 import Faq from "@/components/Faq";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
-import type { LeadService } from "@/lib/lead-intent-actions";
+import type { LeadService } from "@/lib/lead-services";
 
 /**
  * Front-door capture, per service. Each page asks ONE qualifying thing at the
@@ -19,7 +19,6 @@ const CAPTURE: Partial<Record<
     label: "Wat is je huidige website? Geen site? Plak je Facebook- of Instagram-pagina.",
     placeholder: "mijnzaak.be of facebook.com/mijnzaak",
     ctaLabel: "Vraag je ontwerp aan",
-    signupAfter: true,
   },
   video: {
     service: "video",
@@ -27,14 +26,12 @@ const CAPTURE: Partial<Record<
     label: "Wat moet je video tonen?",
     placeholder: "Bijvoorbeeld: mijn nieuwe koffiebar in Gent, gezellig en warm, met focus op de latte art.",
     ctaLabel: "Vraag je video aan",
-    signupAfter: true,
   },
   market: {
     service: "market",
     variant: "cta",
     label: "",
     ctaLabel: "Vraag een gratis audit",
-    signupAfter: true,
   },
 };
 

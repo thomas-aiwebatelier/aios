@@ -12,8 +12,14 @@ import { updateSession } from "@/lib/supabase/middleware";
  */
 const PROD_HOSTS = new Set(["aiwebatelier.com", "www.aiwebatelier.com"]);
 
-/** Built, deployed, and invisible to everyone but an admin. See below. */
-const HIDDEN_ROUTES = ["/diensten/educate/setup"];
+/**
+ * Built, deployed, and invisible to everyone but an admin. See below.
+ *
+ * Prefix match, so /diensten/educate also covers /diensten/educate/setup.
+ * Keep in step with `hidden: true` in app/diensten/content.ts — that flag hides
+ * the tab and the card; this list is what actually makes the page not exist.
+ */
+const HIDDEN_ROUTES = ["/diensten/educate", "/diensten/operate", "/app/operate"];
 
 export async function middleware(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();

@@ -37,7 +37,7 @@ const READ_ONLY_TABLES = [
 describe("portal read-only guarantees", () => {
   it.each(READ_ONLY_TABLES)("revokes write grants on %s", (table) => {
     const pattern = new RegExp(
-      `revoke\\s+insert,\\s*update,\\s*delete\\s+on\\s+public\\.${table}\\s+from`,
+      `revoke\\s+insert,\\s*update,\\s*delete,\\s*truncate\\s+on\\s+public\\.${table}\\s+from`,
     );
     expect(
       pattern.test(sql),
@@ -71,7 +71,9 @@ describe("portal read-only guarantees", () => {
     // The front door must accept an insert from someone with no account yet…
     expect(/grant\s+insert\s+on\s+public\.lead_intents\s+to/.test(sql)).toBe(true);
     // …but must never be readable by a client, or it becomes a lead scraper.
-    expect(/revoke\s+select,\s*update,\s*delete\s+on\s+public\.lead_intents/.test(sql)).toBe(true);
+    expect(
+      /revoke\s+select,\s*update,\s*delete,\s*truncate\s+on\s+public\.lead_intents/.test(sql),
+    ).toBe(true);
     expect(/create\s+policy\s+"lead_intents_select_admin"/.test(sql)).toBe(true);
   });
 

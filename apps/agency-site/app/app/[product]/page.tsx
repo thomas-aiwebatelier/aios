@@ -19,19 +19,19 @@ import { statusLabel, isTerminal } from "@/lib/portal-status";
 
 const PRODUCTS: Record<string, { title: string; blurb: string }> = {
   build: {
-    title: "Build — je AI-website",
+    title: "Website — je AI-site",
     blurb: "Je website op maat, gebouwd met AI.",
   },
   video: {
-    title: "Video — je AI-commercial",
+    title: "Content — je AI-commercial",
     blurb: "Je commercial van 15 seconden.",
   },
   market: {
-    title: "Market — je merkkit & advertenties",
+    title: "Marketing — je merkkit & advertenties",
     blurb: "Je campagnes per kanaal, gestuurd op cijfers.",
   },
   operate: {
-    title: "Operate — je AI-besturingssysteem",
+    title: "Consulting — je AI-besturingssysteem",
     blurb: "De AI-laag onder je dagelijkse werk.",
   },
 };
@@ -211,7 +211,12 @@ export default async function ProductModule({
           ) : null}
           {brand.status === "ready" && (
             <p className="portal-home__lead">
-              <a href="/app/market/brand">Bekijk je merkkit →</a>
+              <a className="btn btn--primary" href="/app/market/brand">
+                Bekijk je merkkit →
+              </a>{" "}
+              <a className="btn btn--ghost" href="/app/market/creative">
+                Bekijk je advertenties →
+              </a>
             </p>
           )}
           {!isTerminal("market", brand.status) && <PollRefresh intervalMs={8000} />}

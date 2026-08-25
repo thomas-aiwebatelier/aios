@@ -3,6 +3,11 @@
 import { createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normaliseLeadUrl } from "@/lib/url-guard";
+import {
+  LEAD_SERVICES,
+  type LeadService,
+  type LeadIntentResult,
+} from "@/lib/lead-services";
 
 /**
  * The front door.
@@ -20,13 +25,6 @@ import { normaliseLeadUrl } from "@/lib/url-guard";
  * insert-only — no select, no update (see packages/db/sql/rls-and-auth.sql).
  * We still go through the service-role client so the shape is ours to control.
  */
-
-export const LEAD_SERVICES = ["build", "video", "market", "educate"] as const;
-export type LeadService = (typeof LEAD_SERVICES)[number];
-
-export type LeadIntentResult =
-  | { ok: true; id: string }
-  | { ok: false; error: string };
 
 /** Max characters we keep from a free-text answer. */
 const MAX_TEXT = 2000;

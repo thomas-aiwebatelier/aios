@@ -1,3 +1,15 @@
+import NavSession from "@/components/NavSession";
+import { visibleServices } from "@/app/diensten/content";
+
+/**
+ * The public header.
+ *
+ * The service tabs are the navigation now — Website · Content · Marketing.
+ * Consulting is hidden: it only appears for an admin, and NavSession adds it
+ * client-side so this component (and with it every marketing page) can stay
+ * statically prerendered. The real gate is middleware.ts, which 404s the hidden
+ * service pages for anyone who is not an admin.
+ */
 export default function Nav() {
   return (
     <nav className="nav" aria-label="Hoofdnavigatie">
@@ -17,14 +29,16 @@ export default function Nav() {
           <span className="nav__wordmark">AI&nbsp;Web&nbsp;Atelier</span>
         </a>
         <div className="nav__links">
-          <a href="/diensten">Diensten</a>
-          <a href="/#werkwijze">Werkwijze</a>
+          {visibleServices(false).map((s) => (
+            <a key={s.slug} href={`/diensten/${s.slug}`}>
+              {s.navTitle}
+            </a>
+          ))}
           <a href="/#prijzen">Prijzen</a>
-          <a href="/#getuigenissen">Getuigenissen</a>
           <a href="/blog">Blog</a>
-          <a href="/#over-ons">Over ons</a>
+          <NavSession />
         </div>
-        <a href="/#contact" className="nav__cta">
+        <a href="/diensten/build" className="nav__cta">
           Vraag je site aan
         </a>
       </div>
