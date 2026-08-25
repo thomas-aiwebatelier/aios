@@ -24,18 +24,25 @@ export default function NavSession() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user || cancelled) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      setState({ signedIn: true, isAdmin: data?.role === "admin" });
+      try {
+        const supabase = createSupabaseBrowserClient();
+        // getSession() reads the cookie locally; getUser() calls Supabase. Nearly
+        // every visitor to a marketing page is signed out, and they should not
+        // each cost a round-trip to learn that.
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user || cancelled) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        setState({ signedIn: true, isAdmin: data?.role === "admin" });
+      } catch {
+        // Two optional links are not worth breaking the header over.
+      }
     })();
     return () => {
       cancelled = true;
