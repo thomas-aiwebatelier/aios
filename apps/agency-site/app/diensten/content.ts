@@ -2,8 +2,8 @@ export type FaqItem = { q: string; a: string };
 export type ProcessStep = { label: string; title: string; body: string };
 
 export type ServiceContent = {
-  slug: "build" | "market" | "operate" | "educate";
-  icon: "websites" | "consultancy" | "marketing" | "os";
+  slug: "build" | "market" | "operate" | "educate" | "video";
+  icon: "websites" | "consultancy" | "marketing" | "os" | "video";
   navTitle: string;
   title: string;
   eyebrow: string;
@@ -321,6 +321,97 @@ export const services: ServiceContent[] = [
     seoTitle: "AI-consultancy voor kmo’s — AI Web Atelier",
     seoDescription:
       "Concreet AI-advies voor Belgische zelfstandigen en kmo’s. Ik zeg je waar AI nu al tijd en geld oplevert en wat je beter laat liggen. Stel je vraag.",
+  },
+  {
+    slug: "video",
+    icon: "video",
+    navTitle: "Video",
+    title: "AI-commercials die er professioneel uitzien",
+    eyebrow: "Video",
+    heroLead:
+      "Ik maak een commercial van 30 seconden met AI. Vaste prijs van €249. Jij stuurt je foto’s en je verhaal, ik lever de video.",
+    heroCtaLabel: "Vraag je video aan",
+    heroCtaHref: "/#contact",
+    intro:
+      "Een professionele AI-commercial van 30 seconden voor €249.",
+    problemTitle: "Waarom je nog geen video hebt",
+    problemBody:
+      "Je weet dat video werkt. Op Instagram, op Facebook, op je eigen homepage. Maar een videograaf vraagt €2.000 en een draaidag, je moet acteurs regelen en zelf voor de camera staan, en drie weken later krijg je één clip terug. Dus blijft het bij foto’s van je gsm. Ondertussen scrollt je klant voorbij aan de concurrent die wél een filmpje heeft.",
+    solutionTitle: "Hoe ik het maak",
+    solutionBody:
+      "Je stuurt me foto’s van je product of van jezelf en vertelt wat je wil verkopen. Daaruit leg ik eerst vast hoe je product er van elke hoek uitziet, zodat het in elke scène hetzelfde blijft. Daarna schrijf ik het scenario en de beeldrichting, en die keur jij goed vóór ik iets genereer. Pas dan maak ik de scènes en monteer ik ze aan elkaar, met stem en geluid erbij. Geen draaidag, geen acteurs, geen studio.",
+    includesTitle: "Wat je krijgt",
+    includes: [
+      "Een commercial van 30 seconden, in jouw huisstijl",
+      "Vaste prijs van €249, je weet vooraf wat je betaalt",
+      "Je product of jezelf herkenbaar in beeld, van elke hoek",
+      "Stem en geluid mee gegenereerd",
+      "Klaar in 5 werkdagen",
+      "Eén iteratieronde: één scène opnieuw",
+      "Geleverd in 1080p, klaar voor Meta, Instagram en YouTube",
+      "De video is van jou, je mag ze commercieel gebruiken",
+    ],
+    process: [
+      {
+        label: "Stap 1",
+        title: "Brief",
+        body: "Je vertelt me wat je wil tonen en aan wie. Eén paragraaf volstaat.",
+      },
+      {
+        label: "Stap 2",
+        title: "Materiaal",
+        body: "Je stuurt foto’s van je product of van jezelf. Hoe scherper, hoe beter.",
+      },
+      {
+        label: "Stap 3",
+        title: "Scenario",
+        body: "Ik schrijf het scenario en de beeldrichting. Jij keurt goed voor er iets gegenereerd wordt.",
+      },
+      {
+        label: "Stap 4",
+        title: "Productie",
+        body: "Ik genereer de scènes, controleer elke take en monteer alles aan elkaar.",
+      },
+      {
+        label: "Stap 5",
+        title: "Oplevering",
+        body: "Je krijgt je video, plus één ronde om één scène bij te sturen.",
+      },
+    ],
+    faq: [
+      {
+        q: "Wat kost het precies?",
+        a: "€249 voor één commercial van 30 seconden, inclusief één iteratieronde. Wil je meerdere versies of een langere video, dan spreken we een prijs af.",
+      },
+      {
+        q: "Hoe lang duurt het?",
+        a: "5 werkdagen nadat ik je foto’s en je brief heb.",
+      },
+      {
+        q: "Blijft mijn product er hetzelfde uitzien?",
+        a: "Ja. Ik leg je product eerst vast van elke hoek, en die referenties gebruik ik in elke scène. Dat is precies waarom het niet gaat zweven zoals bij een losse AI-prompt.",
+      },
+      {
+        q: "Moet ik zelf voor de camera?",
+        a: "Nee. Foto’s volstaan. Wil je zelf in beeld, dan kan dat ook, met foto’s van jou.",
+      },
+      {
+        q: "Van wie is de video?",
+        a: "Van jou. Je mag ze commercieel gebruiken, op eender welk kanaal.",
+      },
+      {
+        q: "Wat als ik ze niet goed vind?",
+        a: "Je krijgt één iteratieronde: ik maak één scène opnieuw met jouw opmerkingen erin.",
+      },
+    ],
+    ctaTitle: "Klaar voor je eerste commercial?",
+    ctaBody:
+      "Stuur me kort wat je wil tonen en aan wie. Binnen 5 werkdagen staat je video klaar.",
+    ctaLabel: "Vraag je video aan",
+    ctaHref: "/#contact",
+    seoTitle: "AI-commercial van 30 seconden voor €249 — AI Web Atelier",
+    seoDescription:
+      "Een professionele AI-commercial van 30 seconden voor €249. Ik maak je video met AI, klaar in 5 werkdagen. Vraag vandaag je video aan.",
   },
 ];
 
