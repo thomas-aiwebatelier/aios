@@ -11,6 +11,58 @@
 
 export class UnsafeUrlError extends Error {}
 
+/** Social handles we accept bare, mapped to the profile URL they imply. */
+const SOCIAL_HOSTS = [
+  "facebook.com", "fb.com", "instagram.com", "linkedin.com",
+  "tiktok.com", "youtube.com", "x.com", "twitter.com",
+];
+
+/**
+ * Normalise what someone types into the front-door capture field.
+ *
+ * This is NOT the SSRF guard — see assertSafePublicUrl for that. A lead intent
+ * is stored, never fetched, so the job here is only to be forgiving about
+ * shape. Half the businesses we want have no website at all and will paste a
+ * Facebook page; `<input type="url">` rejects `facebook.com/mijnzaak` outright,
+ * which loses exactly the leads the field exists to catch.
+ *
+ * Accepts:  mijnzaak.be · www.mijnzaak.be · https://mijnzaak.be/over
+ *           facebook.com/mijnzaak · @mijnzaak (assumed Instagram)
+ * Returns a canonical https URL, or null if it cannot make sense of it.
+ */
+export function normaliseLeadUrl(raw: string): string | null {
+  let s = (raw ?? "").trim();
+  if (!s) return null;
+
+  // "@handle" — no dot, so the host parse below would never succeed.
+  if (/^@[A-Za-z0-9._-]{2,}$/.test(s)) {
+    return `https://instagram.com/${s.slice(1)}`;
+  }
+
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`;
+
+  let u: URL;
+  try {
+    u = new URL(s);
+  } catch {
+    return null;
+  }
+
+  const host = u.hostname.toLowerCase().replace(/^www\./, "");
+  // Must look like a domain: at least one dot and a plausible TLD.
+  if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host)) return null;
+  if (!/\.[a-z]{2,}$/.test(host)) return null;
+
+  // A bare social host with no path is someone typing the network, not their
+  // page — worth nothing as a lead signal.
+  const isSocial = SOCIAL_HOSTS.includes(host);
+  if (isSocial && (u.pathname === "/" || u.pathname === "")) return null;
+
+  u.protocol = "https:";
+  u.hash = "";
+  return u.toString().replace(/\/$/, "");
+}
+
 /**
  * Sanitise a post-login `next` redirect target. Returns it only if it is a
  * same-origin relative path; otherwise falls back to "/app". Blocks open

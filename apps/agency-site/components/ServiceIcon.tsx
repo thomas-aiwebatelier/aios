@@ -25,6 +25,12 @@ const paths: Record<IconKey, React.ReactNode> = {
       <path d="M21 4l-4 4-3-2-4 3" />
     </>
   ),
+  video: (
+    <>
+      <rect x="2.5" y="6" width="13" height="12" rx="2" />
+      <path d="M15.5 10.5l6-3.5v10l-6-3.5" />
+    </>
+  ),
   os: (
     <>
       <rect x="6" y="6" width="12" height="12" rx="2" />

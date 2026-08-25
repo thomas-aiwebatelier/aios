@@ -16,7 +16,7 @@ const services: Service[] = [
     id: "build",
     slug: "build",
     title: "Build",
-    desc: "Een website op maat, gebouwd met AI. Eenmalig €499, hosting en onderhoud optioneel voor €9,99/maand.",
+    desc: "Een website op maat, gebouwd met AI. €249 voor het ontwerp, herzieningsronde €100. Hosting en onderhoud optioneel vanaf €9,99/maand.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="2.5" y="4" width="19" height="13" rx="2" />
@@ -29,7 +29,7 @@ const services: Service[] = [
     id: "market",
     slug: "market",
     title: "Market",
-    desc: "Van creatieve generatie tot performance marketing. Content die opvalt en campagnes die opbrengen.",
+    desc: "Van creatieve generatie tot performance marketing. €499 opzet per kanaal, daarna €199 per maand per kanaal.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 20V9" />
@@ -62,6 +62,18 @@ const services: Service[] = [
         <path d="M9 18h6" />
         <path d="M10 21h4" />
         <path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2.5h6c0-1.3.3-1.8 1-2.5A6 6 0 0 0 12 3Z" />
+      </svg>
+    ),
+  },
+  {
+    id: "video",
+    slug: "video",
+    title: "Video",
+    desc: "Een AI-commercial van 15 seconden voor je zaak of je product. €99 per video, klaar in 5 werkdagen.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2.5" y="6" width="13" height="12" rx="2" />
+        <path d="M15.5 10.5l6-3.5v10l-6-3.5" />
       </svg>
     ),
   },

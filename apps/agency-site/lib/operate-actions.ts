@@ -1,18 +1,20 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireUser, createServiceSupabase } from "@atelier/auth";
+import { requireAdmin, createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
- * Saves the Operate intake questionnaire as an operate_project for the user's
- * brand (intake-only v1 — no async job). Auth via the RLS user client; the
- * write uses the service-role client with brand ownership verified from the
- * authenticated user.
+ * Saves the Operate intake questionnaire as an operate_project for a brand.
+ *
+ * ADMIN ONLY. Customers reach the questionnaire through the hidden consulting
+ * route (/diensten/educate/setup), which we walk them through — their answers
+ * land in lead_intents, not here. This action is how an admin turns one of
+ * those into a real project.
  */
 export async function submitOperateIntake(formData: FormData) {
   const userClient = await createSupabaseServerClient();
-  const user = await requireUser(userClient);
+  const user = await requireAdmin(userClient);
 
   const svc = createServiceSupabase();
   const { data: brand } = await svc

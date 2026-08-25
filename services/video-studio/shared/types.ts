@@ -1,0 +1,783 @@
+/**
+ * Shared domain model for the AI Video Studio.
+ *
+ * A Project moves through this pipeline:
+ *   draft → (analyze subjects) → (plan briefing) → briefing_ready →
+ *   (user edits + accepts) → briefing_accepted → (generate assets + scenes) →
+ *   (assemble) → done
+ *
+ * The briefing structure mirrors Dan Kieft's Seedance 2.5 advanced prompt
+ * template: [GOAL] [REFERENCE MATERIAL] [CONTINUITY] [STAGES] [VISUAL STYLE]
+ * [CAMERA AND PERFORMANCE] [AUDIO] [EXCLUSIONS] [MAINTAIN CONSISTENCY].
+ * Scene prompts are assembled deterministically from these structured fields,
+ * so users can edit any field and the prompt regenerates.
+ */
+
+// Type-only, so this stays erased at compile time and no runtime cycle forms
+// with verify.ts (which imports SceneDoc back from here).
+import type { SceneVerdict } from './verify';
+
+// ---------------------------------------------------------------------------
+// Generation status shared by all generated assets
+// ---------------------------------------------------------------------------
+
+export type GenStatus =
+  | 'idle'        // not yet requested
+  | 'queued'      // job submitted to provider
+  | 'generating'  // provider reports in progress
+  | 'completed'   // asset stored in Firebase Storage
+  | 'failed';
+
+export interface GenerationInfo {
+  status: GenStatus;
+  jobSetId?: string;      // legacy field
+  jobId?: string;         // provider job/request id
+  /** which provider ran this job: 'higgsfield' | 'fal' | 'mock' */
+  provider?: string;
+  error?: string;
+  startedAt?: number;     // epoch ms
+  completedAt?: number;
+  /** provider result URL (temporary); the durable copy lives at `path` */
+  resultUrl?: string;
+  /** set when the provider's content filter rejected some reference images
+   *  and the job was retried without them (e.g. ModelArk flags face
+   *  close-ups as "may contain real person", even AI-generated ones) */
+  moderationNote?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Subjects (characters & products)
+// ---------------------------------------------------------------------------
+
+export type SubjectKind = 'character' | 'product';
+
+export type ProductType =
+  | 'footwear'
+  | 'garment'
+  | 'handheld_prop'
+  | 'furniture_or_large_object'
+  | 'vehicle'
+  | 'other';
+
+/**
+ * Angle-set presets, following the prompting guide:
+ *  - characters: "fast" = 4 full-body + 4 close-ups (recommended default),
+ *    "full" = 8 full-body + 4 close-ups, "minimal" = 4 full-body only.
+ *  - products: count derived from product type (footwear 6, garment 4–5,
+ *    handheld prop 4, furniture 5–6, vehicle 6–8).
+ */
+export type AngleSetId = 'minimal' | 'fast' | 'full' | 'product_auto';
+
+export interface VoiceSpec {
+  /** e.g. "English", "Dutch" */
+  language: string;
+  /** e.g. "neutral American", "soft Flemish accent" */
+  accent?: string;
+  /** e.g. "warm, unhurried, slightly amused" */
+  delivery?: string;
+  /** Text description used for ElevenLabs voice design (v2 feature) */
+  designDescription?: string;
+  /** Assigned ElevenLabs voice id once chosen/created */
+  elevenLabsVoiceId?: string;
+  /** Storage path of a generated voice sample (attach to Seedance as @audio ref) */
+  sampleAudioPath?: string;
+  sampleStatus?: GenStatus;
+}
+
+/**
+ * The character/product sheet — everything the director needs to write
+ * consistent prompts. Text blocks are written once and reused VERBATIM in
+ * every prompt so the design cannot drift.
+ */
+export interface SubjectSheet {
+  /** Story role used in prompts: "the climber", "the vendor" — never "the man" */
+  roleName: string;
+  /** One-line read on who/what this is */
+  oneLineRead: string;
+
+  // -- character fields --
+  /** Age → hair → brows/eyes/nose/face shape/jaw → facial hair → marks → what the face communicates → skin texture */
+  identityBlock?: string;
+  /** Physique with numbers: "175 cm, average build with narrow shoulders…" */
+  physique?: string;
+  /** Each garment: fabric, cut, colour, condition, how it hangs + negations */
+  wardrobe?: string;
+  /** One or two distinguishing marks worth locking */
+  distinguishingMarks?: string;
+  /** Voice casting for dialogue (drives ElevenLabs in v2) */
+  voice?: VoiceSpec;
+
+  // -- product fields --
+  productType?: ProductType;
+  /** "What it is and what it's for" — the purpose line that makes the shape correct */
+  purposeLine?: string;
+  /** Proportions, stance, weight */
+  silhouette?: string;
+  /** Material → construction → hardware → colour (positive names) → condition */
+  materialsAndColour?: string;
+  /** Surfaces the master view doesn't show (e.g. a sole) that need full description */
+  hiddenSurfaces?: string;
+
+  /** Things it must NOT be/look like (negations do more work than descriptions) */
+  negations?: string;
+}
+
+export interface SubjectAngle {
+  id: string;
+  /** e.g. "Full body — front (master)", "Face — three-quarter" */
+  label: string;
+  framing: 'full_body' | 'close_up' | 'product_view';
+  /** True for the master angle: generated first, referenced by all others */
+  isMaster?: boolean;
+  /** The exact image prompt used (assembled by the director) */
+  prompt?: string;
+  generation: GenerationInfo;
+  /** Storage path of the generated image */
+  imagePath?: string;
+}
+
+export interface SubjectDoc {
+  id: string;
+  kind: SubjectKind;
+  /** User-facing name, e.g. "Lena", "Raid bouldering shoe" */
+  name: string;
+  /** Free-form notes from the user (outfit wishes, what matters) */
+  notes?: string;
+  /** Uploaded source images (Storage paths) */
+  sourceImagePaths: string[];
+  angleSet: AngleSetId;
+  sheet?: SubjectSheet;
+  angles: SubjectAngle[];
+  /**
+   * Character casting clip ("screen test"): a short generated video of the
+   * character alone — slow turn, then one spoken line to camera. It is the
+   * character's identity AND voice anchor, attached to scenes as a @video
+   * reference (platform moderation rejects character *images* since
+   * 2026-08-23; videos pass). Regenerate until the person is right — every
+   * scene follows this clip.
+   */
+  screenTest?: {
+    prompt?: string;
+    videoPath?: string;
+    versions?: { videoPath: string; createdAt: number }[];
+    generation: GenerationInfo;
+    durationSec?: number;
+  };
+  status: 'new' | 'analyzing' | 'analyzed' | 'generating_angles' | 'ready' | 'error';
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// Environments (location reference images generated in the background)
+// ---------------------------------------------------------------------------
+
+export interface EnvironmentDoc {
+  id: string;
+  /** e.g. "the bouldering gym", "the neon alley at night" */
+  name: string;
+  /** Space, materials, light behaviour */
+  description: string;
+  /** Image prompt used to generate the reference */
+  refPrompt: string;
+  /**
+   * 'location' (default): a wide establishing shot of a place.
+   * 'insert_card': a flat full-frame graphic with EXACT on-screen text
+   * (phone messages, menus, signs) — generated upfront so video scenes can
+   * reproduce the text pixel-faithfully instead of inventing it.
+   */
+  type?: 'location' | 'insert_card';
+  generation: GenerationInfo;
+  imagePath?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// Briefing & scenes
+// ---------------------------------------------------------------------------
+
+export type AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '3:4' | '21:9';
+export type Resolution = '480p' | '720p' | '1080p' | '4k';
+
+/** How a scene connects to the PREVIOUS scene in the final edit. */
+export type StitchMode =
+  /** First scene, or an intentional hard cut to a new setup */
+  | 'hard_cut'
+  /** Generated by extending the previous scene's video (same continuous shot) */
+  | 'extend_prev'
+  /** Uses the last frame of the previous scene as its first frame (seamless bridge) */
+  | 'frame_bridge';
+
+export interface SceneStage {
+  index: number;
+  /** seconds from scene start */
+  t0: number;
+  t1: number;
+  /** Beat name, e.g. "Case lands" */
+  beatName: string;
+  /** Physical action + framing, moment by moment. No intent clauses. */
+  action: string;
+  /** Optional spoken line */
+  dialogue?: {
+    subjectId: string;
+    /** The literal line, no braces/quotes — assembler adds {} */
+    line: string;
+    language?: string;
+  };
+  /** What is visibly true when this stage finishes (continuity anchor) */
+  endState?: string;
+  cut: 'CUT' | 'NO CUT';
+}
+
+export type SceneRefKind =
+  | 'subject_angle'   // a generated angle image of a subject (products)
+  | 'subject_video'   // a character's screen-test clip (@video ref — identity + voice)
+  | 'subject_upload'  // an original uploaded image
+  | 'environment'     // generated environment reference
+  | 'style'           // colour & light reference
+  | 'bridge_frame'    // last frame of previous scene (start-frame stitching)
+  | 'camera_previz'   // Blender previz — camera movement reference ONLY
+  | 'voice_audio';    // ElevenLabs voice sample (@audio ref)
+
+export interface SceneReference {
+  /** Tag as used in the prompt, assigned at assembly: "@image1", "@audio1" */
+  tag: string;
+  kind: SceneRefKind;
+  subjectId?: string;
+  angleId?: string;
+  envId?: string;
+  /** Resolved Storage path (filled at generation time for bridge frames) */
+  path?: string;
+  /** What to take from this reference */
+  use: string;
+  /** What to ignore ("Do not use the image background") */
+  ignore?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Camera previz (Blender)
+//
+// Complex camera moves are guesswork when written as prose — "pushes through
+// the window, then turns right onto the reveal" can come back as anything, and
+// every guess costs a paid generation. Instead the director plans the move as
+// GEOMETRY: blocky placeholder set + a keyframed camera. Deterministic code
+// (shared/previz.ts) turns that plan into a Blender Python script, Blender
+// renders it locally for free, and the rendered frames are read back into an
+// exact timed camera map that goes into the scene prompt.
+//
+// The previz feeds the generation as TEXT (and optionally one image), never as
+// a reference video by default: on ModelArk each attached reference_video adds
+// ≈ +1× base tokens while reference images are token-free.
+// ---------------------------------------------------------------------------
+
+/** One camera position in the move. Blender convention: metres, Z up. */
+export interface CameraKeyframe {
+  /** seconds from scene start */
+  t: number;
+  /** camera position [x, y, z] in metres */
+  pos: [number, number, number];
+  /** the point the camera is aimed at, [x, y, z] in metres */
+  lookAt: [number, number, number];
+  /** focal length in mm on a 36mm sensor (18 = wide, 85 = tight) */
+  focalMm: number;
+  /**
+   * 'linear' (default) holds a constant speed — the prompting guide's default
+   * camera behaviour. 'smooth' eases in/out; only for a deliberate settle.
+   */
+  easing?: 'linear' | 'smooth';
+  /** what happens at this moment: "clears the window glass" */
+  note?: string;
+}
+
+/** A blocky placeholder in the previz set. Never rendered in the final film. */
+export interface ProxyObject {
+  id: string;
+  kind: 'box' | 'cylinder' | 'plane' | 'figure';
+  /** what it stands in for: "the man, seated right" */
+  label: string;
+  /** centre position [x, y, z] in metres (z = centre height above the floor) */
+  pos: [number, number, number];
+  /** bounding size [x, y, z] in metres */
+  size: [number, number, number];
+  rotZdeg?: number;
+  /** when this block stands in for a real character */
+  subjectId?: string;
+}
+
+export interface CameraPlan {
+  /** MUST equal the scene duration — previz and generation share a clock */
+  durationSec: number;
+  fps: 24;
+  /** the blocky stand-in set: floor, walls, furniture, figures */
+  set: ProxyObject[];
+  /** the move, in order; the first keyframe is t=0 and is the opening frame */
+  camera: CameraKeyframe[];
+  /** the director's plain-words description of the move */
+  intent: string;
+}
+
+/** One window of the move, read back from the rendered previz frames. */
+export interface CameraMapEntry {
+  t0: number;
+  t1: number;
+  /** "pans right onto the man", "travels through the doorway" */
+  move: string;
+}
+
+/**
+ * How a scene's previz reaches the video model.
+ *  - map_only        the timed camera map as text. Free.
+ *  - map_plus_sheet  + the contact sheet as one reference image. Free
+ *                    (images are token-free) but risks style bleed.
+ *  - attach_video    + the previz clip as a reference_video. Costs ≈ +1× base
+ *                    tokens per generation; opt-in only.
+ */
+export type PrevizFeed = 'map_only' | 'map_plus_sheet' | 'attach_video';
+
+export interface ScenePreviz {
+  status: 'none' | 'planned' | 'script_ready' | 'rendered' | 'mapped';
+  plan?: CameraPlan;
+  /** generated Blender script (Storage path) */
+  scriptPath?: string;
+  /** the rendered previz clip, uploaded back after running Blender */
+  videoPath?: string;
+  /** 1 fps contact sheet built from the previz */
+  contactSheetPath?: string;
+  /** the timed camera map read back from the rendered frames */
+  cameraMap?: CameraMapEntry[];
+  /** the single riskiest moment of the generation + a one-line fallback fix */
+  riskiestMoment?: string;
+  fallbackFix?: string;
+  /** stage beats that fall outside the window the camera is pointed at them */
+  timingWarnings?: string[];
+  feed: PrevizFeed;
+  updatedAt?: number;
+}
+
+/**
+ * One field-level change a re-roll note asks for.
+ *
+ * Notes patch named fields rather than rewriting the prompt, because the
+ * identity and wardrobe blocks are reused VERBATIM across every scene — a
+ * rewrite is how a character starts drifting between shots.
+ */
+export interface ScenePatch {
+  /** Dotted path into the scene doc: "visualStyle", "stages[2].action", "audio" */
+  field: string;
+  from: string;
+  to: string;
+  why: string;
+}
+
+/** One generated version of a scene, and why it exists. */
+export interface SceneTake {
+  videoPath: string;
+  createdAt: number;
+  /** The note that prompted this take, when it was a deliberate re-roll */
+  note?: string;
+  /** One line per field the note changed, for the take gallery */
+  patchSummary?: string[];
+  /** The verdict score this take earned, if it was verified */
+  verdictScore?: number;
+}
+
+export interface SceneDoc {
+  id: string;
+  index: number;
+  title: string;
+  /** What this scene accomplishes in the story */
+  beatSummary: string;
+  durationSec: number;
+
+  /** stages = director cuts every shot; continuous = one take, single paragraph */
+  mode: 'stages' | 'continuous';
+
+  /** [GOAL] — what kind of video + beginning-to-end in one sentence */
+  goal: string;
+  /** [CONTINUITY] — per-character look/wardrobe + single location & lighting */
+  continuity: string;
+  stages: SceneStage[];
+  /** Mode B: the single flowing paragraph incl. dialogue */
+  continuousAction?: string;
+  /** [VISUAL STYLE] — sharpness/format, colour in positive names, light, mood */
+  visualStyle: string;
+  /** [CAMERA AND PERFORMANCE] — cutting rhythm, banned moves, how performances read */
+  cameraAndPerformance: string;
+  /** [AUDIO] — (music…) <effect at moment> ambience, subtitles on/off */
+  audio: string;
+  /** [EXCLUSIONS] — logos, extra people, on-screen text… */
+  exclusions: string;
+  /** [MAINTAIN CONSISTENCY] footer */
+  keepConsistent: string;
+
+  references: SceneReference[];
+
+  /** Director's read on whether this move needs previz, and why */
+  cameraComplexity?: 'simple' | 'complex';
+  previzRecommended?: boolean;
+  previzReason?: string;
+  /** The Blender previz for this scene's camera move */
+  previz?: ScenePreviz;
+
+  stitching: {
+    mode: StitchMode;
+    /** Director's note on why/how this boundary works */
+    notes?: string;
+    /** Filled when a bridge frame has been extracted from the previous scene */
+    bridgeFramePath?: string;
+  };
+
+  /** If the user edits the raw prompt directly, it wins over assembly */
+  promptOverride?: string;
+  /** Last assembled/used prompt (for display) */
+  assembledPrompt?: string;
+
+  generation: GenerationInfo & {
+    params?: {
+      model: string;
+      durationSec: number;
+      aspectRatio: AspectRatio;
+      resolution: Resolution;
+      seed?: number;
+    };
+  };
+  /** Storage path of the generated clip */
+  videoPath?: string;
+  /** Previous takes kept for comparison, oldest first */
+  versions?: SceneTake[];
+
+  /**
+   * The latest verification of this scene's take. Reading a take costs cents
+   * against a re-roll's dollars, so it runs before anyone reaches for the
+   * regenerate button — and each finding says which lever fixes it.
+   */
+  verdict?: SceneVerdict;
+
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// Project
+// ---------------------------------------------------------------------------
+
+export interface ProjectInput {
+  /** Free-form concept: what the video is about */
+  concept: string;
+  /** WHO is in it (beyond uploaded subjects) */
+  who?: string;
+  /** WHAT happens */
+  what?: string;
+  /** WHERE it takes place */
+  where?: string;
+  /** WHEN (time of day / era / season) */
+  when?: string;
+  /** Anything else: tone, jokes, must-haves */
+  extraNotes?: string;
+
+  durationSec: number;
+  aspectRatio: AspectRatio;
+  resolution: Resolution;
+
+  /** preferred video engine for this project; 'auto' (default) = best available */
+  videoEngine?: 'auto' | 'ark25' | 'fal25' | 'seedance25' | 'seedance1';
+
+  /**
+   * Blender camera previz: block out complex camera moves in 3D before
+   * spending a generation. 'auto' (default) lets the director decide per
+   * scene; 'always' plans one for every scene; 'off' disables it.
+   */
+  previz?: 'off' | 'auto' | 'always';
+
+  /** e.g. "cinematic", "ugc_handheld", "camcorder_2000s", "documentary", "commercial" */
+  stylePreset?: string;
+  styleNotes?: string;
+
+  dialogueEnabled: boolean;
+  /** Script wishes / actual lines if the user has them */
+  dialogueNotes?: string;
+
+  audio: {
+    music: boolean;
+    sfx: boolean;
+    ambience: boolean;
+    /** v2: ElevenLabs voice per character, attached as @audio refs */
+    characterVoices: boolean;
+    subtitles: boolean;
+  };
+}
+
+export interface BriefingMeta {
+  title: string;
+  logline: string;
+  durationSec: number;
+  aspectRatio: AspectRatio;
+  resolution: Resolution;
+  /** Higgsfield model used for scenes */
+  videoModel: string;
+}
+
+export interface StyleBible {
+  /** Sharpness & format: "large-format IMAX clarity" / "handheld phone video" */
+  look: string;
+  /** POSITIVE colour names only — never "desaturated"/"monochromatic" */
+  colourPalette: string;
+  /** How the light behaves (incl. flicker if practicals) */
+  lighting: string;
+  grainAndTexture: string;
+  mood: string;
+  /** The one technical line reused in every scene prompt */
+  technicalLine: string;
+}
+
+export interface AudioPlan {
+  music?: string;
+  soundEffects: string[];
+  ambience?: string;
+  subtitles: boolean;
+  dialogueLanguage?: string;
+  voicesEnabled: boolean;
+}
+
+export interface StitchBoundary {
+  fromSceneIndex: number;
+  toSceneIndex: number;
+  mode: StitchMode;
+  /** e.g. "match cut on the door closing", "extend keeps the take unbroken" */
+  rationale: string;
+}
+
+export interface Briefing {
+  meta: BriefingMeta;
+  styleBible: StyleBible;
+  audioPlan: AudioPlan;
+  /** Director's plan for how scenes join into one film */
+  stitchingPlan: {
+    boundaries: StitchBoundary[];
+    assemblyNotes: string;
+  };
+  /** Things the director invented that the user should confirm/adjust */
+  directorsNotes: string[];
+}
+
+export type ProjectStatus =
+  | 'draft'
+  | 'analyzing'          // subject sheets being written
+  | 'briefing_generating'
+  | 'briefing_ready'     // user reviews & edits
+  | 'briefing_accepted'  // locked; production enabled
+  | 'producing'
+  | 'done'
+  | 'error';
+
+/**
+ * A project-level audio track laid over the assembled film — the voiceover and
+ * the continuous background bed. Scene generations each invent their own
+ * narrator and score, so the film's real audio lives here: generated speech is
+ * separated out of every take (Demucs two-stem) and these tracks replace it.
+ */
+export interface AudioTrackDoc {
+  id: string;
+  kind: 'voiceover' | 'music' | 'ambience';
+  /** Display name, e.g. "Narrator — Lily (ElevenLabs)" */
+  name: string;
+  /** Storage path of the full-length track, already placed on the film timeline */
+  audioPath: string;
+  /** Seconds from film start (0 for full-length pre-placed tracks) */
+  offsetSec: number;
+  gainDb: number;
+  /** Music ducks under the voiceover track during spoken lines */
+  duckUnderVoice?: boolean;
+  /** True on the track set the published final mix uses */
+  active?: boolean;
+  /** Where it came from: 'elevenlabs' | 'demucs_no_vocals' | 'upload' */
+  source?: string;
+  updatedAt: number;
+}
+
+export interface ProjectDoc {
+  id: string;
+  title: string;
+  status: ProjectStatus;
+  input: ProjectInput;
+  briefing?: Briefing;
+  /** Live progress line for the UI while pipelines run */
+  progress?: { step: string; message: string; pct?: number };
+  error?: string;
+  finalVideoPath?: string;
+  /** Project-level audio tracks (voiceover, background bed) used by the final mix */
+  audioTracks?: AudioTrackDoc[];
+  finalAssembly?: { status: GenStatus; error?: string; completedAt?: number };
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// Callable function payloads
+// ---------------------------------------------------------------------------
+
+export interface AnalyzeSubjectsRequest { projectId: string; }
+export interface PlanBriefingRequest { projectId: string; }
+export interface GenerateAnglesRequest { projectId: string; subjectId: string; }
+export interface GenerateScreenTestRequest { projectId: string; subjectId: string; }
+export interface GenerateAngleImageRequest { projectId: string; subjectId: string; angleId: string; }
+export interface GenerateEnvironmentRequest { projectId: string; envId: string; }
+export interface GenerateSceneRequest { projectId: string; sceneId: string; }
+export interface ExtendSceneRequest { projectId: string; sceneId: string; extraSeconds: number; prompt?: string; }
+export interface BuildPrevizScriptRequest { projectId: string; sceneId: string; }
+export interface IngestPrevizRequest { projectId: string; sceneId: string; }
+export interface AssembleFinalRequest { projectId: string; }
+export interface VerifySceneRequest { projectId: string; sceneId: string; takePath?: string; }
+/** Costs nothing: works out what a note would change, so the diff and the price can be shown first. */
+export interface PlanRegenerationRequest { projectId: string; sceneId: string; note: string; }
+export interface RegenerateSceneRequest {
+  projectId: string;
+  sceneId: string;
+  /** 'as_is' re-rolls the identical prompt; 'note' applies an approved patch first. */
+  mode: 'as_is' | 'note';
+  note?: string;
+  patch?: ScenePatch[];
+}
+export interface GenerateVoiceSampleRequest { projectId: string; subjectId: string; }
+
+export interface PipelineStepResult {
+  ok: boolean;
+  message?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Angle-set definitions (single source of truth used by director & UI)
+// ---------------------------------------------------------------------------
+
+export interface AngleTemplate {
+  id: string;
+  label: string;
+  framing: 'full_body' | 'close_up' | 'product_view';
+  isMaster?: boolean;
+  /** Precise angle wording that Seedance/image models respond to */
+  angleWording: string;
+}
+
+export const CHARACTER_ANGLES_FULL: AngleTemplate[] = [
+  { id: 'fb_front', label: 'Full body — front (master)', framing: 'full_body', isMaster: true, angleWording: 'standing straight and facing the camera in a relaxed pose with their arms hanging at their sides' },
+  { id: 'fb_34_left', label: 'Full body — three-quarter left', framing: 'full_body', angleWording: 'rotated 45 degrees to their left so both the front and one side of the body are visible, head turned to face the lens' },
+  { id: 'fb_side_left', label: 'Full body — side profile left', framing: 'full_body', angleWording: 'turned 90 degrees so their left side faces the camera in a direct profile, looking straight ahead and not at the lens' },
+  { id: 'fb_rear34_left', label: 'Full body — rear three-quarter left', framing: 'full_body', angleWording: 'rotated 135 degrees so they are mostly facing away, one shoulder and the edge of the jaw visible, not looking at the lens' },
+  { id: 'fb_back', label: 'Full body — back', framing: 'full_body', angleWording: 'seen from directly behind, their face is not visible at all' },
+  { id: 'fb_rear34_right', label: 'Full body — rear three-quarter right', framing: 'full_body', angleWording: 'rotated 225 degrees so they are mostly facing away to the right, one shoulder and the edge of the jaw visible, not looking at the lens' },
+  { id: 'fb_side_right', label: 'Full body — side profile right', framing: 'full_body', angleWording: 'turned 270 degrees so their right side faces the camera in a direct profile, looking straight ahead and not at the lens' },
+  { id: 'fb_34_right', label: 'Full body — three-quarter right', framing: 'full_body', angleWording: 'rotated 315 degrees so both the front and their right side are visible, head turned to face the lens' },
+  { id: 'cu_front', label: 'Face — front', framing: 'close_up', angleWording: 'a head and shoulders portrait facing the camera directly, the entire head fully inside the frame, camera at eye level' },
+  { id: 'cu_34', label: 'Face — three-quarter', framing: 'close_up', angleWording: 'a head and shoulders portrait rotated 45 degrees, both eyes visible, the entire head fully inside the frame, camera at eye level' },
+  { id: 'cu_side', label: 'Face — side profile', framing: 'close_up', angleWording: 'a head and shoulders portrait in direct profile, looking straight ahead and not at the lens, the entire head fully inside the frame' },
+  { id: 'cu_back', label: 'Head — back', framing: 'close_up', angleWording: 'the back of the head facing the camera at eye level, showing the crown, the taper down the neck and around the ears' },
+];
+
+/** Fast set (default): 4 full-body + 4 close-ups — covers most scenes */
+export const CHARACTER_ANGLES_FAST: AngleTemplate[] = CHARACTER_ANGLES_FULL.filter((a) =>
+  ['fb_front', 'fb_34_left', 'fb_side_left', 'fb_back', 'cu_front', 'cu_34', 'cu_side', 'cu_back'].includes(a.id),
+);
+
+/** Minimal set: 4 full-body only — for quick tests */
+export const CHARACTER_ANGLES_MINIMAL: AngleTemplate[] = CHARACTER_ANGLES_FULL.filter((a) =>
+  ['fb_front', 'fb_34_left', 'fb_side_left', 'fb_back'].includes(a.id),
+);
+
+export const PRODUCT_ANGLE_SETS: Record<ProductType, AngleTemplate[]> = {
+  footwear: [
+    { id: 'p_side', label: 'Side profile (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a direct side profile with no perspective distortion' },
+    { id: 'p_34_front', label: 'Three-quarter front', framing: 'product_view', angleWording: 'shown in a three-quarter front view' },
+    { id: 'p_top', label: 'Top down', framing: 'product_view', angleWording: 'shown directly from above, top down' },
+    { id: 'p_underside', label: 'Underside / sole', framing: 'product_view', angleWording: 'shown directly from below, the entire underside visible' },
+    { id: 'p_front', label: 'Front', framing: 'product_view', angleWording: 'shown in a direct front view' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+  ],
+  garment: [
+    { id: 'p_front', label: 'Flat front (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a flat direct front view with no perspective distortion' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+    { id: 'p_side', label: 'Side', framing: 'product_view', angleWording: 'shown in a direct side profile' },
+    { id: 'p_detail', label: 'Detail — closures/hardware', framing: 'product_view', angleWording: 'a close-up detail shot of the closures and hardware' },
+  ],
+  handheld_prop: [
+    { id: 'p_front', label: 'Front (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a direct front view with no perspective distortion' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+    { id: 'p_side', label: 'Side', framing: 'product_view', angleWording: 'shown in a direct side profile' },
+    { id: 'p_top', label: 'Top down', framing: 'product_view', angleWording: 'shown in a true top-down view — the camera points straight down from directly overhead while the object stands upright, so only the top surface and upper edges are visible, strongly foreshortened; not a three-quarter view' },
+  ],
+  furniture_or_large_object: [
+    { id: 'p_front', label: 'Front (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a direct front view with no perspective distortion' },
+    { id: 'p_34', label: 'Three-quarter', framing: 'product_view', angleWording: 'shown in a three-quarter view' },
+    { id: 'p_side', label: 'Side', framing: 'product_view', angleWording: 'shown in a direct side profile' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+    { id: 'p_top', label: 'Top down', framing: 'product_view', angleWording: 'shown directly from above, top down' },
+  ],
+  vehicle: [
+    { id: 'p_side', label: 'Side (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a direct side profile with no perspective distortion' },
+    { id: 'p_front', label: 'Front', framing: 'product_view', angleWording: 'shown in a direct front view' },
+    { id: 'p_34_front', label: 'Three-quarter front', framing: 'product_view', angleWording: 'shown in a three-quarter front view at 45 degrees' },
+    { id: 'p_34_rear', label: 'Three-quarter rear', framing: 'product_view', angleWording: 'shown in a three-quarter rear view at 135 degrees' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+    { id: 'p_top', label: 'Top down', framing: 'product_view', angleWording: 'shown directly from above, top down' },
+  ],
+  other: [
+    { id: 'p_front', label: 'Front (master)', framing: 'product_view', isMaster: true, angleWording: 'shown in a direct front view with no perspective distortion' },
+    { id: 'p_34', label: 'Three-quarter', framing: 'product_view', angleWording: 'shown in a three-quarter view' },
+    { id: 'p_side', label: 'Side', framing: 'product_view', angleWording: 'shown in a direct side profile' },
+    { id: 'p_back', label: 'Back', framing: 'product_view', angleWording: 'shown in a direct rear view' },
+  ],
+};
+
+export function anglesForSubject(kind: SubjectKind, angleSet: AngleSetId, productType?: ProductType): AngleTemplate[] {
+  if (kind === 'product') {
+    return PRODUCT_ANGLE_SETS[productType ?? 'other'];
+  }
+  switch (angleSet) {
+    case 'minimal': return CHARACTER_ANGLES_MINIMAL;
+    case 'full': return CHARACTER_ANGLES_FULL;
+    default: return CHARACTER_ANGLES_FAST;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Storage path helpers (mirrored by storage.rules)
+// ---------------------------------------------------------------------------
+
+export const storagePaths = {
+  upload: (uid: string, projectId: string, subjectId: string, fileName: string) =>
+    `users/${uid}/projects/${projectId}/uploads/${subjectId}/${fileName}`,
+  angle: (uid: string, projectId: string, subjectId: string, angleId: string) =>
+    `users/${uid}/projects/${projectId}/angles/${subjectId}/${angleId}.png`,
+  environment: (uid: string, projectId: string, envId: string) =>
+    `users/${uid}/projects/${projectId}/environments/${envId}.png`,
+  sceneVideo: (uid: string, projectId: string, sceneId: string, version: number) =>
+    `users/${uid}/projects/${projectId}/scenes/${sceneId}/v${version}.mp4`,
+  screenTest: (uid: string, projectId: string, subjectId: string, version: number) =>
+    `users/${uid}/projects/${projectId}/screen_tests/${subjectId}/v${version}.mp4`,
+  bridgeFrame: (uid: string, projectId: string, sceneId: string) =>
+    `users/${uid}/projects/${projectId}/scenes/${sceneId}/bridge_in.png`,
+  previzScript: (uid: string, projectId: string, sceneId: string) =>
+    `users/${uid}/projects/${projectId}/previz/${sceneId}/camera.py`,
+  previzVideo: (uid: string, projectId: string, sceneId: string, version: number) =>
+    `users/${uid}/projects/${projectId}/previz/${sceneId}/v${version}.mp4`,
+  previzSheet: (uid: string, projectId: string, sceneId: string) =>
+    `users/${uid}/projects/${projectId}/previz/${sceneId}/contact_sheet.png`,
+  verifySheet: (uid: string, projectId: string, sceneId: string, version: number) =>
+    `users/${uid}/projects/${projectId}/scenes/${sceneId}/verify/v${version}_sheet.png`,
+  voiceSample: (uid: string, projectId: string, subjectId: string) =>
+    `users/${uid}/projects/${projectId}/audio/${subjectId}_voice_sample.mp3`,
+  audioTrack: (uid: string, projectId: string, trackId: string) =>
+    `users/${uid}/projects/${projectId}/audio/tracks/${trackId}.wav`,
+  finalVideo: (uid: string, projectId: string, version: number) =>
+    `users/${uid}/projects/${projectId}/final/final_v${version}.mp4`,
+};
+
+// Firestore collection helpers
+export const collections = {
+  projects: (uid: string) => `users/${uid}/projects`,
+  project: (uid: string, projectId: string) => `users/${uid}/projects/${projectId}`,
+  subjects: (uid: string, projectId: string) => `users/${uid}/projects/${projectId}/subjects`,
+  environments: (uid: string, projectId: string) => `users/${uid}/projects/${projectId}/environments`,
+  scenes: (uid: string, projectId: string) => `users/${uid}/projects/${projectId}/scenes`,
+};

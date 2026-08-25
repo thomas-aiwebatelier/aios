@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ServiceIcon from "@/components/ServiceIcon";
-import { services } from "@/app/diensten/content";
+import { visibleServices } from "@/app/diensten/content";
 
 export const metadata: Metadata = {
   title: "Diensten — AI Web Atelier",
@@ -12,6 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default function DienstenOverviewPage() {
+  // Public cards only — this page stays static. An admin reaches the hidden
+  // services through the Consulting tab that NavSession adds to the header.
+  const shown = visibleServices(false);
+
   return (
     <>
       <Nav />
@@ -30,7 +34,7 @@ export default function DienstenOverviewPage() {
         <section className="diensten-grid-wrap" aria-label="Onze diensten">
           <div className="container">
             <ul className="diensten-grid">
-              {services.map((service) => (
+              {shown.map((service) => (
                 <li key={service.slug} className="diensten-card">
                   <a
                     href={`/diensten/${service.slug}`}

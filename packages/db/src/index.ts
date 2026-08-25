@@ -37,6 +37,9 @@ export {
   profiles,
   operateProjects,
   adAssets,
+  // Front door + client portal deliverables
+  leadIntents,
+  videoDeliverables,
   // Enum value arrays
   leadStatusValues,
   blogPostStatusValues,
@@ -58,7 +61,17 @@ export {
   operateProjectStatusValues,
   adAssetStatusValues,
   adAssetStateValues,
+  leadIntentServiceValues,
+  leadIntentStatusValues,
+  videoDeliverableStatusValues,
   // Types
+  type LeadIntent,
+  type NewLeadIntent,
+  type LeadIntentService,
+  type LeadIntentStatus,
+  type VideoDeliverable,
+  type NewVideoDeliverable,
+  type VideoDeliverableStatus,
   type AdAsset,
   type NewAdAsset,
   type AdAssetStatus,
