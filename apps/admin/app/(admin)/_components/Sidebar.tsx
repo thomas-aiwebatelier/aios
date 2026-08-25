@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/discovery", label: "Discovery Queue" },
   { href: "/approval", label: "Approval Queue" },
   { href: "/build", label: "Build" },
+  { href: "/video", label: "Video" },
   { href: "/market", label: "Market" },
   { href: "/operate", label: "Operate" },
   { href: "/sites", label: "Sites", placeholder: true },
@@ -20,9 +21,15 @@ const NAV_LINKS = [
 
 interface SidebarProps {
   userEmail?: string | null;
+  /**
+   * Unhandled front-door requests. The public site promises a reply within 24
+   * hours on four pages, and sending mail is admin-only — so this badge is the
+   * notification. Without it you only find out by remembering to look.
+   */
+  newLeadCount?: number;
 }
 
-export function Sidebar({ userEmail }: SidebarProps) {
+export function Sidebar({ userEmail, newLeadCount = 0 }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -52,7 +59,15 @@ export function Sidebar({ userEmail }: SidebarProps) {
                 isPlaceholder ? "opacity-60" : "",
               ].join(" ")}
             >
-              {link.label}
+              <span className="flex-1">{link.label}</span>
+              {link.href === "/leads" && newLeadCount > 0 && (
+                <span
+                  className="ml-2 rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white"
+                  aria-label={`${newLeadCount} nieuwe aanvragen`}
+                >
+                  {newLeadCount}
+                </span>
+              )}
             </Link>
           );
         })}
