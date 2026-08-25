@@ -1,51 +1,68 @@
 import { notFound, redirect } from "next/navigation";
-import { getUser, createServiceSupabase } from "@atelier/auth";
+import { createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { startFromUrl } from "@/lib/brand-actions";
-import OperateIntakeForm from "@/components/OperateIntakeForm";
 import PollRefresh from "@/components/PollRefresh";
+import { statusLabel, isTerminal } from "@/lib/portal-status";
 
-const PRODUCTS: Record<string, { title: string; cta: string }> = {
-  build: { title: "Build — je AI-website", cta: "Bouw mijn site" },
-  market: { title: "Market — je merkkit & advertenties", cta: "Maak mijn merkkit" },
-  operate: { title: "Operate — je AI-besturingssysteem", cta: "Start de intake" },
+/**
+ * A client module page. READ-ONLY, by design.
+ *
+ * The portal used to be self-serve: this page rendered a "start" button wired
+ * to startFromUrl, and Operate rendered an intake form. Both are gone. We
+ * generate; clients look. The four server actions behind those buttons are now
+ * admin-only, and the write grants are revoked at the database — see
+ * packages/db/sql/rls-and-auth.sql.
+ *
+ * Clients ask for work through the capture forms on the public service pages,
+ * which land in `lead_intents`.
+ */
+
+const PRODUCTS: Record<string, { title: string; blurb: string }> = {
+  build: {
+    title: "Website — je AI-site",
+    blurb: "Je website op maat, gebouwd met AI.",
+  },
+  video: {
+    title: "Content — je AI-commercial",
+    blurb: "Je commercial van 15 seconden.",
+  },
+  market: {
+    title: "Marketing — je merkkit & advertenties",
+    blurb: "Je campagnes per kanaal, gestuurd op cijfers.",
+  },
+  operate: {
+    title: "Consulting — je AI-besturingssysteem",
+    blurb: "De AI-laag onder je dagelijkse werk.",
+  },
 };
 
-// Friendly Dutch status for the lead-driven Build pipeline.
-function buildStatusLabel(status: string | null): string {
-  switch (status) {
-    case "discovered":
-    case "researching":
-      return "Ik analyseer je site en je merk…";
-    case "awaiting_approval":
-      return "Je aanvraag is geanalyseerd. Ik bekijk ze en zet de bouw in gang.";
-    case "approved":
-    case "generating":
-    case "generated":
-      return "Je site wordt gebouwd…";
-    case "deployed":
-      return "Klaar! Je site staat online.";
-    case "generation_failed":
-      return "Er liep iets mis bij het bouwen. Ik kijk ernaar.";
-    default:
-      return "Aanvraag ontvangen.";
-  }
+/** Shown when a module has nothing yet — points at the request path, not a button. */
+function NotStarted({ service }: { service: string }) {
+  return (
+    <div className="portal-empty">
+      <p className="portal-home__lead">Hier staat nog niets.</p>
+      <p className="portal-home__muted">
+        Vraag dit aan via{" "}
+        <a href={`/diensten/${service}`}>de {service}-pagina</a> — ik ga ermee
+        aan de slag en je ziet de voortgang hier verschijnen.
+      </p>
+    </div>
+  );
 }
 
 export default async function ProductModule({
   params,
-  searchParams,
 }: {
   params: Promise<{ product: string }>;
-  searchParams: Promise<{ url?: string }>;
 }) {
   const { product } = await params;
-  const { url } = await searchParams;
   const meta = PRODUCTS[product];
   if (!meta) notFound();
 
   const supabase = await createSupabaseServerClient();
-  const user = await getUser(supabase);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/app/${product}`);
 
   const { data: brand } = await supabase
@@ -54,30 +71,14 @@ export default async function ProductModule({
     .eq("owner_user_id", user.id)
     .maybeSingle();
 
-  // Start trigger from the front door (?url=) — confirm + kick off.
-  if (url) {
-    return (
-      <main className="container portal-home">
-        <h1 className="portal-home__title">{meta.title}</h1>
-        <form action={startFromUrl} className="start-form">
-          <input type="hidden" name="product" value={product} />
-          <input type="hidden" name="url" value={url} />
-          <p className="portal-home__lead">
-            Klaar om te starten voor <strong>{url}</strong>?
-          </p>
-          <button type="submit" className="btn btn--primary">
-            {meta.cta}
-          </button>
-        </form>
-      </main>
-    );
-  }
-
-  // Build: lead-driven pipeline status (read via service client — leads has no
-  // customer RLS, so we never query it from the user role).
+  // ── Build: lead-driven pipeline status ─────────────────────────────────────
+  // `leads` and `generated_sites` have no customer RLS — they are operational
+  // tables — so they are read through the service client and never exposed
+  // directly to the user role.
   if (product === "build") {
     let leadStatus: string | null = null;
     let liveUrl: string | null = null;
+
     if (brand?.lead_id) {
       const svc = createServiceSupabase();
       const { data: lead } = await svc
@@ -86,6 +87,7 @@ export default async function ProductModule({
         .eq("id", brand.lead_id)
         .maybeSingle();
       leadStatus = (lead?.status as string | undefined) ?? null;
+
       if (leadStatus === "deployed") {
         const { data: site } = await svc
           .from("generated_sites")
@@ -97,22 +99,24 @@ export default async function ProductModule({
         liveUrl = (site?.cloudflare_preview_url as string | undefined) ?? null;
       }
     }
+
     return (
       <main className="container portal-home">
         <h1 className="portal-home__title">{meta.title}</h1>
         {!brand?.lead_id ? (
-          <p className="portal-home__lead">
-            Nog niets gestart. Voeg je website toe op de Build-pagina.
-          </p>
+          <NotStarted service="build" />
         ) : (
           <>
-            <p className="portal-home__lead">{buildStatusLabel(leadStatus)}</p>
-            {leadStatus &&
-              leadStatus !== "deployed" &&
-              leadStatus !== "generation_failed" && <PollRefresh intervalMs={8000} />}
+            <p className="portal-home__lead">{statusLabel("build", leadStatus)}</p>
+            {!isTerminal("build", leadStatus) && <PollRefresh intervalMs={8000} />}
             {liveUrl && (
               <p className="portal-home__lead">
-                <a className="btn btn--primary" href={liveUrl} target="_blank" rel="noreferrer">
+                <a
+                  className="btn btn--primary"
+                  href={liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Bekijk je site →
                 </a>
               </p>
@@ -123,7 +127,56 @@ export default async function ProductModule({
     );
   }
 
-  // Operate: intake-only (no async job in v1).
+  // ── Video: deliverables written by the studio bridge ───────────────────────
+  if (product === "video") {
+    const { data: videos } = await supabase
+      .from("video_deliverables")
+      .select("id, title, status, video_url, poster_url, duration_seconds")
+      .eq("owner_user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    const list = videos ?? [];
+    return (
+      <main className="container portal-home">
+        <h1 className="portal-home__title">{meta.title}</h1>
+        {list.length === 0 ? (
+          <NotStarted service="video" />
+        ) : (
+          <ul className="portal-list">
+            {list.map((v) => (
+              <li key={v.id} className="portal-card">
+                <h2 className="portal-card__title">{v.title ?? "Je commercial"}</h2>
+                <p className="portal-card__status">{statusLabel("video", v.status)}</p>
+                {v.video_url ? (
+                  <>
+                    <video
+                      className="portal-card__video"
+                      controls
+                      preload="metadata"
+                      poster={v.poster_url ?? undefined}
+                      src={v.video_url}
+                    />
+                    <a
+                      className="btn btn--ghost"
+                      href={v.video_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Download je video →
+                    </a>
+                  </>
+                ) : (
+                  <PollRefresh intervalMs={15000} />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    );
+  }
+
+  // ── Operate: project status (intake now happens through lead_intents) ──────
   if (product === "operate") {
     let project: { id: string; status: string } | null = null;
     if (brand) {
@@ -137,46 +190,39 @@ export default async function ProductModule({
     return (
       <main className="container portal-home">
         <h1 className="portal-home__title">{meta.title}</h1>
-        {!brand ? (
-          <p className="portal-home__lead">
-            Voeg eerst je website toe op de Operate-pagina om te beginnen.
-          </p>
-        ) : project ? (
-          <p className="portal-home__lead">
-            Intake ontvangen — status: <strong>{project.status}</strong>. Ik neem
-            dit op en kom bij je terug met een voorstel.
-          </p>
+        {project ? (
+          <p className="portal-home__lead">{statusLabel("operate", project.status)}</p>
         ) : (
-          <>
-            <p className="portal-home__lead">
-              Vertel me kort hoe je zaak draait, dan stel ik je AI-systeem samen.
-            </p>
-            <OperateIntakeForm />
-          </>
+          <NotStarted service="educate" />
         )}
       </main>
     );
   }
 
-  // Market: brand-kit status.
+  // ── Market: brand kit + creative ───────────────────────────────────────────
   return (
     <main className="container portal-home">
       <h1 className="portal-home__title">{meta.title}</h1>
       {brand ? (
-        <p className="portal-home__lead">
-          Status: <strong>{brand.status}</strong>
-          {brand.source_url ? ` — ${brand.source_url}` : ""}
+        <>
+          <p className="portal-home__lead">{statusLabel("market", brand.status)}</p>
+          {brand.source_url ? (
+            <p className="portal-home__muted">{brand.source_url}</p>
+          ) : null}
           {brand.status === "ready" && (
-            <>
-              {" "}
-              · <a href="/app/market/brand">bekijk je merkkit →</a>
-            </>
+            <p className="portal-home__lead">
+              <a className="btn btn--primary" href="/app/market/brand">
+                Bekijk je merkkit →
+              </a>{" "}
+              <a className="btn btn--ghost" href="/app/market/creative">
+                Bekijk je advertenties →
+              </a>
+            </p>
           )}
-        </p>
+          {!isTerminal("market", brand.status) && <PollRefresh intervalMs={8000} />}
+        </>
       ) : (
-        <p className="portal-home__lead">
-          Nog niets gestart. Voeg je website toe op de Market-pagina.
-        </p>
+        <NotStarted service="market" />
       )}
     </main>
   );

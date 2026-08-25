@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import CreativeChat from "@/components/CreativeChat";
 import PollRefresh from "@/components/PollRefresh";
+import { statusLabel } from "@/lib/portal-status";
 
 type AssetRow = {
   id: string;
@@ -41,21 +41,25 @@ export default async function MarketCreative() {
     <main className="container portal-home">
       <h1 className="portal-home__title">Creative</h1>
       {!brand ? (
-        <p className="portal-home__lead">
-          Voeg eerst je website toe op de Market-pagina om je merkkit te maken.
-        </p>
+        <div className="portal-empty">
+          <p className="portal-home__lead">Hier staat nog niets.</p>
+          <p className="portal-home__muted">
+            Vraag een gratis audit aan via <a href="/diensten/market">de Market-pagina</a>.
+          </p>
+        </div>
       ) : (
         <>
-          <section className="creative">
-            <h2 className="creative__title">Nieuwe advertentie</h2>
-            <CreativeChat />
-          </section>
+          {/*
+            The "Nieuwe advertentie" composer used to sit here. It called
+            createCreative, which spends real money per generation — that action
+            is admin-only now and the portal is read-only. Clients ask; we make.
+          */}
           {pending && <PollRefresh />}
           <section className="asset-lib">
             <h2 className="creative__title">Je advertenties</h2>
             {assets.length === 0 ? (
-              <p className="portal-home__lead">
-                Nog geen advertenties. Beschrijf hierboven een campagne.
+              <p className="portal-home__muted">
+                Nog geen advertenties. Ik zet ze hier klaar zodra ze er zijn.
               </p>
             ) : (
               <ul className="asset-grid">
@@ -73,7 +77,7 @@ export default async function MarketCreative() {
                       {a.headline && <strong>{a.headline}</strong>}
                       {a.primary_text && <p>{a.primary_text}</p>}
                       <span className="asset-card__meta">
-                        {a.placement} · {a.status}
+                        {a.placement} · {statusLabel("market", a.status)}
                       </span>
                     </div>
                   </li>

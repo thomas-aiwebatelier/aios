@@ -56,9 +56,9 @@ export default function TermsPage() {
                   een live preview-URL. Dit is uw MVP-moment.
                 </li>
                 <li>
-                  <strong>Iteratie:</strong> u stuurt uw feedback in één keer;
-                  wij verwerken alle aanpassingen in één iteratieronde. Daarna
-                  is de website af.
+                  <strong>Herziening (optioneel):</strong> wenst u aanpassingen,
+                  dan stuurt u uw feedback in één keer en verwerken wij alles in
+                  één herzieningsronde van €100. Daarna is de website af.
                 </li>
                 <li>
                   <strong>Lancering:</strong> na uw goedkeuring koppelen wij het
@@ -72,17 +72,28 @@ export default function TermsPage() {
               </p>
 
               <h2>3. Tarief</h2>
-              <p>Het tarief is opgebouwd uit twee delen — eerlijk en zonder verrassingen:</p>
+              <p>
+                Alle bedragen in deze voorwaarden zijn <strong>exclusief btw</strong>.
+                Het tarief is opgebouwd uit drie delen — eerlijk en zonder
+                verrassingen:
+              </p>
               <ul>
                 <li>
-                  <strong>€499 eenmalig — voor de bouw.</strong> Inclusief de
-                  eerste versie én één iteratieronde na uw MVP-review. Na die
-                  iteratie is de website af, krijgt u de volledige broncode en
-                  gaat het eigendom over naar u (zie §6).
+                  <strong>€249 eenmalig — voor het ontwerp.</strong> Dit dekt de
+                  eerste versie van de website. Na oplevering krijgt u de
+                  volledige broncode en gaat het eigendom over naar u (zie §6).
+                </li>
+                <li>
+                  <strong>€100 per herzieningsronde — optioneel.</strong> Wenst u
+                  na uw review aanpassingen, dan voeren wij die uit in één
+                  herzieningsronde tegen €100. Ontwerp plus één herzieningsronde
+                  komt zo op €349. Elke bijkomende ronde wordt apart aangerekend
+                  aan hetzelfde tarief.
                 </li>
                 <li>
                   <strong>
-                    €9,99 per maand — optioneel — voor hosting en onderhoud.
+                    €9,99 per maand of €99,99 per jaar — optioneel — voor hosting
+                    en onderhoud.
                   </strong>{" "}
                   Wij hosten uw site op Cloudflare&apos;s wereldwijde CDN,
                   beheren het SSL-certificaat, voeren beveiligings- en
@@ -94,9 +105,10 @@ export default function TermsPage() {
                 </li>
               </ul>
               <p>
-                Er zijn geen verborgen kosten. Meerwerk buiten de iteratieronde
-                of het maandabonnement wordt vooraf apart geoffreerd en
-                uitgevoerd alleen na uw expliciete schriftelijke akkoord.
+                Er zijn geen verborgen kosten. Meerwerk buiten een betaalde
+                herzieningsronde of het maandabonnement wordt vooraf apart
+                geoffreerd en uitgevoerd alleen na uw expliciete schriftelijke
+                akkoord.
               </p>
               <p>
                 Betaling van het eenmalige bedrag vindt plaats per factuur met
@@ -108,7 +120,7 @@ export default function TermsPage() {
                 lanceringsdatum.
               </p>
 
-              <h2>4. Wat is inbegrepen in de eenmalige bouw</h2>
+              <h2>4. Wat is inbegrepen in het eenmalige ontwerp</h2>
               <ul>
                 <li>
                   <strong>Domeinverbinding:</strong> koppeling van uw bestaand
@@ -126,15 +138,16 @@ export default function TermsPage() {
                   elders hosten of aanpassen.
                 </li>
                 <li>
-                  <strong>Eén iteratieronde</strong> na uw MVP-review. Alle
-                  aanpassingen aan inhoud, stijl of structuur die u in die
-                  ronde aanlevert, worden zonder meerprijs uitgevoerd.
+                  <strong>Herzieningsronde — apart aan te rekenen.</strong> Een
+                  herzieningsronde na uw MVP-review kost €100. Alle aanpassingen
+                  aan inhoud, stijl of structuur die u binnen die ronde
+                  aanlevert, worden voor dat bedrag uitgevoerd.
                 </li>
               </ul>
 
               <h2>
-                4b. Wat is inbegrepen in het maandabonnement (€9,99/maand,
-                optioneel)
+                4b. Wat is inbegrepen in het maandabonnement (€9,99/maand of
+                €99,99/jaar, optioneel)
               </h2>
               <ul>
                 <li>
@@ -222,13 +235,15 @@ export default function TermsPage() {
                   <strong>Na akkoord, binnen 7 werkdagen:</strong> bij
                   annulering binnen 7 werkdagen na uw schriftelijk akkoord
                   bedragen de kosten{" "}
-                  <strong>50% van het factuurbedrag</strong> (€249,50), ter
-                  dekking van reeds geleverd werk.
+                  <strong>50% van het factuurbedrag</strong> van de betreffende
+                  opdracht, ter dekking van reeds geleverd werk. Bij een
+                  webontwerp van €249 is dat €124,50.
                 </li>
                 <li>
                   <strong>Na akkoord, na 7 werkdagen:</strong> bij annulering
                   na 7 werkdagen is het volledige bedrag (
-                  <strong>100%</strong>, €499) verschuldigd.
+                  <strong>100%</strong>) van de betreffende opdracht
+                  verschuldigd.
                 </li>
               </ul>
 
@@ -239,9 +254,8 @@ export default function TermsPage() {
                 <strong>
                   tweemaal het factuurbedrag van de betreffende opdracht
                 </strong>{" "}
-                (maximaal €998). AI Web Atelier is niet aansprakelijk voor
-                indirecte schade, gevolgschade, gederfde winst of verlies van
-                gegevens.
+                . AI Web Atelier is niet aansprakelijk voor indirecte schade,
+                gevolgschade, gederfde winst of verlies van gegevens.
               </p>
               <p>
                 AI Web Atelier is niet aansprakelijk voor inhoud die u

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser, createServiceSupabase } from "@atelier/auth";
+import { requireAdmin, createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function newId(): string {
@@ -10,8 +10,11 @@ function newId(): string {
 
 /**
  * Enqueue an ad-creative generation. Inserts a draft ad_assets row (status
- * queued) + a `creative` pipeline job. Auth via the RLS user client; writes via
- * the service-role client (shared queue), ownership from the verified user.
+ * queued) + a `creative` pipeline job. Writes via the service-role client.
+ *
+ * ADMIN ONLY. This spends real money per call, and the portal is read-only:
+ * we generate, customers look. Server actions are HTTP endpoints, so removing
+ * the button is not a control — this check is.
  */
 export async function createCreative(formData: FormData) {
   const prompt = String(formData.get("prompt") ?? "").trim();
@@ -20,7 +23,7 @@ export async function createCreative(formData: FormData) {
   if (!prompt) return;
 
   const userClient = await createSupabaseServerClient();
-  const user = await requireUser(userClient);
+  const user = await requireAdmin(userClient);
 
   const svc = createServiceSupabase();
   const { data: brand } = await svc

@@ -2,9 +2,15 @@ export type FaqItem = { q: string; a: string };
 export type ProcessStep = { label: string; title: string; body: string };
 
 export type ServiceContent = {
-  slug: "build" | "market" | "operate" | "educate";
-  icon: "websites" | "consultancy" | "marketing" | "os";
+  slug: "build" | "market" | "operate" | "educate" | "video";
+  icon: "websites" | "consultancy" | "marketing" | "os" | "video";
   navTitle: string;
+  /**
+   * Built and deployed, but invisible to the public: no nav tab, no card on
+   * /diensten, and a genuine 404 on the detail page for anyone who is not an
+   * admin (enforced in middleware.ts — this flag only drives the UI).
+   */
+  hidden?: boolean;
   title: string;
   eyebrow: string;
   heroLead: string;
@@ -31,29 +37,29 @@ export const services: ServiceContent[] = [
   {
     slug: "build",
     icon: "websites",
-    navTitle: "Build",
+    navTitle: "Website",
     title: "Een website op maat, gebouwd met AI",
-    eyebrow: "Build",
+    eyebrow: "Website",
     heroLead:
-      "Ik bouw je site met AI: op maat, geen sjabloon, online in 5 werkdagen. Eén vaste prijs van €499 en je weet vooraf precies wat je krijgt.",
+      "Ik bouw je site met AI: op maat, geen sjabloon, online in 5 werkdagen. €249 voor het ontwerp, een herzieningsronde kost €100. Je weet vooraf precies wat je krijgt.",
     heroCtaLabel: "Vraag je site aan",
     heroCtaHref: "/#contact",
     intro:
-      "Een website op maat, met AI gebouwd, online in 5 werkdagen voor €499.",
+      "Een website op maat, met AI gebouwd, online in 5 werkdagen vanaf €249.",
     problemTitle: "Waarom je nog geen deftige site hebt",
     problemBody:
       "Je bent zelfstandig of runt een kleine zaak en je site is al jaren een losse eindje. Een bureau vraagt €3.000 en drie maanden, een sjabloonbouwer levert iets dat eruitziet als duizend andere. Ondertussen sturen klanten je naar je Instagram omdat ze online niets degelijks vinden. Je weet dat het beter kan, maar de drempel blijft te hoog.",
     solutionTitle: "Hoe ik het oplos",
     solutionBody:
-      "Ik gebruik AI om je site écht op maat te bouwen, niet om een template in te vullen. Jij levert je verhaal en je foto’s aan, ik genereer en verfijn elke pagina tot ze klopt voor jouw zaak. Vijf werkdagen, vijf stappen, elke dag één. Na de eerste oplevering krijg je één iteratieronde om alles bij te sturen. De code is van jou en je betaalt één vaste prijs.",
+      "Ik gebruik AI om je site écht op maat te bouwen, niet om een template in te vullen. Jij levert je verhaal en je foto’s aan, ik genereer en verfijn elke pagina tot ze klopt voor jouw zaak. Vijf werkdagen, vijf stappen, elke dag één. Wil je na de oplevering nog bijsturen, dan kost een herzieningsronde €100. De code is van jou en je weet vooraf wat je betaalt.",
     includesTitle: "Wat je krijgt",
     includes: [
       "Een website op maat, geen sjabloon, in jouw huisstijl",
-      "Vaste prijs van €499 eenmalig voor de bouw",
+      "€249 excl. btw voor het ontwerp, vaste prijs",
       "Online in 5 werkdagen, één stap per dag",
-      "Eén iteratieronde na de eerste oplevering",
+      "Herzieningsronde na de oplevering: €100 per ronde",
       "De volledige code is van jou, geen lock-in",
-      "Optioneel onderhoud en hosting voor €9,99/maand of €99/jaar",
+      "Optioneel onderhoud en hosting voor €9,99/maand of €99,99/jaar",
     ],
     process: [
       {
@@ -79,13 +85,13 @@ export const services: ServiceContent[] = [
       {
         label: "Stap 5",
         title: "Online",
-        body: "Je site gaat live en je krijgt één iteratieronde om de laatste dingen bij te sturen.",
+        body: "Je site gaat live. Wil je daarna nog bijsturen, dan boek je een herzieningsronde van €100.",
       },
     ],
     faq: [
       {
         q: "Wat kost het precies?",
-        a: "€499 eenmalig voor de bouw op maat. Onderhoud en hosting zijn optioneel: €9,99 per maand of €99 per jaar. Wil je zelf hosten, dan betaal je enkel die €499.",
+        a: "€249 excl. btw voor het ontwerp op maat. Wil je na de oplevering bijsturen, dan kost een herzieningsronde €100: samen €349 excl. btw. Onderhoud en hosting zijn optioneel: €9,99 per maand of €99,99 per jaar. Wil je zelf hosten, dan betaal je enkel het ontwerp.",
       },
       {
         q: "Is 5 werkdagen niet te snel?",
@@ -102,25 +108,25 @@ export const services: ServiceContent[] = [
     ],
     ctaTitle: "Klaar voor een site die wél klopt?",
     ctaBody:
-      "Eén vaste prijs, online in 5 werkdagen. Vertel me kort wat je nodig hebt en ik ga aan de slag.",
+      "Vaste prijzen, online in 5 werkdagen. Vertel me kort wat je nodig hebt en ik ga aan de slag.",
     ctaLabel: "Vraag je site aan",
     ctaHref: "/#contact",
-    seoTitle: "AI-website op maat in 5 dagen — AI Web Atelier",
+    seoTitle: "AI-website op maat in 5 dagen vanaf €249 — AI Web Atelier",
     seoDescription:
-      "Een website op maat, met AI gebouwd, online in 5 werkdagen voor €499 eenmalig. Geen sjabloon, jij bezit de code. Vraag vandaag nog je site aan.",
+      "Een website op maat, met AI gebouwd, online in 5 werkdagen. €249 excl. btw voor het ontwerp, herzieningsronde €100. Jij bezit de code. Vraag je site aan.",
   },
   {
     slug: "market",
     icon: "marketing",
-    navTitle: "Market",
+    navTitle: "Marketing",
     title: "AI-marketing die ook echt converteert",
-    eyebrow: "Market",
+    eyebrow: "Marketing",
     heroLead:
-      "Advertenties, content en landingspagina’s, met AI gemaakt en op cijfers gestuurd. Meer dan mooie posts: campagnes die klanten opleveren.",
+      "Advertenties, content en landingspagina’s, met AI gemaakt en op cijfers gestuurd. €499 opzet per kanaal, daarna €199 per maand per kanaal. Meer dan mooie posts: campagnes die klanten opleveren.",
     heroCtaLabel: "Vraag een voorbeeld",
     heroCtaHref: "/#contact",
     intro:
-      "AI-gestuurde advertenties, content en landingspagina’s die klanten opleveren.",
+      "AI-gestuurde campagnes per kanaal: €499 opzet, daarna €199 per maand.",
     problemTitle: "Mooie posts, weinig klanten",
     problemBody:
       "Je post braaf op Instagram en Facebook, maar het levert vooral likes op en geen klanten. Adverteren probeerde je een keer, maar je zag niet wat je geld deed. Content schrijven kost je elke week tijd die je niet hebt. Je weet dat marketing moet renderen, alleen niet hoe je dat als eenmanszaak voor elkaar krijgt.",
@@ -129,11 +135,14 @@ export const services: ServiceContent[] = [
       "Ik kom uit performance marketing en stuur alles op cijfers, niet op gevoel. Met AI maak ik snel meerdere versies van je advertenties, content en landingspagina’s, en ik laat de markt bepalen wat werkt. Wat aanslaat schaal ik op, de rest gaat eruit. Zo krijg je marketing die je klanten oplevert in plaats van likes.",
     includesTitle: "Wat je krijgt",
     includes: [
+      "€499 excl. btw opzet per kanaal: één campagne, volledig ingericht",
+      "€199 excl. btw per maand per kanaal: die campagne opgevolgd en bijgestuurd",
       "AI-gegenereerde advertenties in meerdere versies",
       "Content die past bij je merk en je publiek",
       "Landingspagina’s die bezoekers tot actie aanzetten",
       "Campagnes op Meta en Google, gestuurd op resultaat",
       "Heldere rapportage: wat werkt, wat het kost en wat het oplevert",
+      "Advertentiebudget betaal je rechtstreeks aan Meta of Google",
     ],
     process: [
       {
@@ -159,6 +168,10 @@ export const services: ServiceContent[] = [
     ],
     faq: [
       {
+        q: "Wat kost het precies?",
+        a: "€499 excl. btw om één kanaal op te zetten: bijvoorbeeld één campagne op Meta, of één op Google Ads. Daarna €199 excl. btw per maand per kanaal om ze op te volgen en bij te sturen. Wil je twee kanalen, dan verdubbelt dat. Je advertentiebudget staat daar los van en betaal je rechtstreeks aan Meta of Google.",
+      },
+      {
         q: "Op welke kanalen werk je?",
         a: "Vooral Meta (Facebook en Instagram) en Google, want daar zit het gros van de Belgische kmo-doelgroep. Welk kanaal het wordt, hangt af van je doel.",
       },
@@ -176,14 +189,18 @@ export const services: ServiceContent[] = [
       "Vertel me wat je verkoopt en wie je wil bereiken. Ik laat je zien hoe AI-marketing er bij jou uitziet.",
     ctaLabel: "Vraag een voorbeeld",
     ctaHref: "/#contact",
-    seoTitle: "AI-marketing die converteert — AI Web Atelier",
+    seoTitle: "AI-marketing per kanaal vanaf €499 — AI Web Atelier",
     seoDescription:
-      "AI-gestuurde advertenties, content en landingspagina’s, op cijfers gestuurd. Marketing die klanten oplevert in plaats van likes. Vraag een voorbeeld aan.",
+      "AI-gestuurde advertenties en landingspagina’s, op cijfers gestuurd. €499 excl. btw opzet per kanaal, daarna €199 per maand. Vraag een voorbeeld aan.",
   },
   {
     slug: "operate",
     icon: "os",
     navTitle: "Operate",
+    // Hidden with Consulting: both are the advisory track, and the nav carries
+    // three public tabs (Website · Content · Marketing) plus Consulting for
+    // admins only.
+    hidden: true,
     title: "Een AI-besturingssysteem voor je zaak",
     eyebrow: "Operate",
     heroLead:
@@ -254,9 +271,10 @@ export const services: ServiceContent[] = [
   {
     slug: "educate",
     icon: "consultancy",
-    navTitle: "Educate",
+    navTitle: "Consulting",
+    hidden: true,
     title: "Concreet advies over waar AI je zaak echt helpt",
-    eyebrow: "Educate",
+    eyebrow: "Consulting",
     heroLead:
       "Geen hype, geen vaag toekomstpraat. Ik kijk naar jouw zaak en zeg je waar AI nu al tijd of geld oplevert en wat je beter laat liggen.",
     heroCtaLabel: "Stel je vraag",
@@ -322,6 +340,97 @@ export const services: ServiceContent[] = [
     seoDescription:
       "Concreet AI-advies voor Belgische zelfstandigen en kmo’s. Ik zeg je waar AI nu al tijd en geld oplevert en wat je beter laat liggen. Stel je vraag.",
   },
+  {
+    slug: "video",
+    icon: "video",
+    navTitle: "Content",
+    title: "AI-commercials die er professioneel uitzien",
+    eyebrow: "Content",
+    heroLead:
+      "Ik maak een commercial van 15 seconden met AI. €99 per video, excl. btw. Jij stuurt je foto’s en je verhaal, ik lever de video.",
+    heroCtaLabel: "Vraag je video aan",
+    heroCtaHref: "/#contact",
+    intro:
+      "Een professionele AI-commercial van 15 seconden voor €99 per video.",
+    problemTitle: "Waarom je nog geen video hebt",
+    problemBody:
+      "Je weet dat video werkt. Op Instagram, op Facebook, op je eigen homepage. Maar een videograaf vraagt €2.000 en een draaidag, je moet acteurs regelen en zelf voor de camera staan, en drie weken later krijg je één clip terug. Dus blijft het bij foto’s van je gsm. Ondertussen scrollt je klant voorbij aan de concurrent die wél een filmpje heeft.",
+    solutionTitle: "Hoe ik het maak",
+    solutionBody:
+      "Je stuurt me foto’s van je product of van jezelf en vertelt wat je wil verkopen. Daaruit leg ik eerst vast hoe je product er van elke hoek uitziet, zodat het in elke scène hetzelfde blijft. Daarna schrijf ik het scenario en de beeldrichting, en die keur jij goed vóór ik iets genereer. Pas dan maak ik de scènes en monteer ik ze aan elkaar, met stem en geluid erbij. Geen draaidag, geen acteurs, geen studio.",
+    includesTitle: "Wat je krijgt",
+    includes: [
+      "Een commercial van 15 seconden, in jouw huisstijl",
+      "€99 excl. btw per video, je weet vooraf wat je betaalt",
+      "Je product of jezelf herkenbaar in beeld, van elke hoek",
+      "Stem en geluid mee gegenereerd",
+      "Klaar in 5 werkdagen",
+      "Eén iteratieronde: één scène opnieuw",
+      "Geleverd in 1080p, klaar voor Meta, Instagram en YouTube",
+      "De video is van jou, je mag ze commercieel gebruiken",
+    ],
+    process: [
+      {
+        label: "Stap 1",
+        title: "Brief",
+        body: "Je vertelt me wat je wil tonen en aan wie. Eén paragraaf volstaat.",
+      },
+      {
+        label: "Stap 2",
+        title: "Materiaal",
+        body: "Je stuurt foto’s van je product of van jezelf. Hoe scherper, hoe beter.",
+      },
+      {
+        label: "Stap 3",
+        title: "Scenario",
+        body: "Ik schrijf het scenario en de beeldrichting. Jij keurt goed voor er iets gegenereerd wordt.",
+      },
+      {
+        label: "Stap 4",
+        title: "Productie",
+        body: "Ik genereer de scènes, controleer elke take en monteer alles aan elkaar.",
+      },
+      {
+        label: "Stap 5",
+        title: "Oplevering",
+        body: "Je krijgt je video, plus één ronde om één scène bij te sturen.",
+      },
+    ],
+    faq: [
+      {
+        q: "Wat kost het precies?",
+        a: "€99 excl. btw voor één commercial van 15 seconden, inclusief één iteratieronde. Wil je meerdere versies of een langere video, dan spreken we een prijs af.",
+      },
+      {
+        q: "Hoe lang duurt het?",
+        a: "5 werkdagen nadat ik je foto’s en je brief heb.",
+      },
+      {
+        q: "Blijft mijn product er hetzelfde uitzien?",
+        a: "Ja. Ik leg je product eerst vast van elke hoek, en die referenties gebruik ik in elke scène. Dat is precies waarom het niet gaat zweven zoals bij een losse AI-prompt.",
+      },
+      {
+        q: "Moet ik zelf voor de camera?",
+        a: "Nee. Foto’s volstaan. Wil je zelf in beeld, dan kan dat ook, met foto’s van jou.",
+      },
+      {
+        q: "Van wie is de video?",
+        a: "Van jou. Je mag ze commercieel gebruiken, op eender welk kanaal.",
+      },
+      {
+        q: "Wat als ik ze niet goed vind?",
+        a: "Je krijgt één iteratieronde: ik maak één scène opnieuw met jouw opmerkingen erin.",
+      },
+    ],
+    ctaTitle: "Klaar voor je eerste commercial?",
+    ctaBody:
+      "Stuur me kort wat je wil tonen en aan wie. Binnen 5 werkdagen staat je video klaar.",
+    ctaLabel: "Vraag je video aan",
+    ctaHref: "/#contact",
+    seoTitle: "AI-commercial van 15 seconden voor €99 — AI Web Atelier",
+    seoDescription:
+      "Een professionele AI-commercial van 15 seconden voor €99 excl. btw. Ik maak je video met AI, klaar in 5 werkdagen. Vraag vandaag je video aan.",
+  },
 ];
 
 export function getService(slug: string): ServiceContent | undefined {
@@ -329,3 +438,28 @@ export function getService(slug: string): ServiceContent | undefined {
 }
 
 export const serviceSlugs = services.map((s) => s.slug);
+
+/**
+ * What a visitor may see. Admins get everything; everyone else gets the three
+ * public tabs. Both the nav and the /diensten grid read this, so a service can
+ * never appear in one and not the other.
+ */
+const NAV_ORDER: ServiceContent["slug"][] = [
+  "build", // Website
+  "video", // Content
+  "market", // Marketing
+  "educate", // Consulting — hidden
+  "operate", // hidden
+];
+
+export function visibleServices(isAdmin: boolean): ServiceContent[] {
+  const shown = isAdmin ? services : services.filter((s) => !s.hidden);
+  // The array above is in the order the pages were written; the nav has its own
+  // order (Website · Content · Marketing) and it is the one people see.
+  return [...shown].sort(
+    (a, b) => NAV_ORDER.indexOf(a.slug) - NAV_ORDER.indexOf(b.slug),
+  );
+}
+
+/** Slugs that must 404 for non-admins. Keep middleware.ts in step with this. */
+export const hiddenServiceSlugs = services.filter((s) => s.hidden).map((s) => s.slug);

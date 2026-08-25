@@ -166,7 +166,7 @@ export default function PrivacyPage() {
                   volledige eigendom van de website — inclusief alle
                   gegenereerde code, het ontwerp en alle aanpassingen —{" "}
                   <strong>automatisch overgedragen</strong> als onderdeel van
-                  de €499-deal. AI Web Atelier behoudt na overdracht geen
+                  de overeenkomst. AI Web Atelier behoudt na overdracht geen
                   enkele aanspraak op uw merk, uw teksten of uw afbeeldingen.
                 </li>
                 <li>

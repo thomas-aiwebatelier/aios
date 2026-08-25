@@ -13,7 +13,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "AI Web Atelier — Vakwerk websites, gebouwd met AI",
   description:
-    "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
+    "Custom AI-gegenereerde websites voor Belgische ondernemers. €249 excl. btw voor het ontwerp, een herzieningsronde kost €100. Online binnen 5 werkdagen.",
   alternates: { canonical: "/" },
 };
 
