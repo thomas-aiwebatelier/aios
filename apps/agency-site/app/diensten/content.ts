@@ -130,7 +130,7 @@ export const services: ServiceContent[] = [
     includesTitle: "Wat je krijgt",
     includes: [
       "€499 excl. btw opzet per kanaal: één campagne, volledig ingericht",
-      "€199 excl. btw per maand per kanaal voor opvolging en bijsturing",
+      "€199 excl. btw per maand per kanaal: die campagne opgevolgd en bijgestuurd",
       "AI-gegenereerde advertenties in meerdere versies",
       "Content die past bij je merk en je publiek",
       "Landingspagina’s die bezoekers tot actie aanzetten",
@@ -336,11 +336,11 @@ export const services: ServiceContent[] = [
     title: "AI-commercials die er professioneel uitzien",
     eyebrow: "Video",
     heroLead:
-      "Ik maak een commercial van 30 seconden met AI. €99 per video, excl. btw. Jij stuurt je foto’s en je verhaal, ik lever de video.",
+      "Ik maak een commercial van 15 seconden met AI. €99 per video, excl. btw. Jij stuurt je foto’s en je verhaal, ik lever de video.",
     heroCtaLabel: "Vraag je video aan",
     heroCtaHref: "/#contact",
     intro:
-      "Een professionele AI-commercial van 30 seconden voor €99 per video.",
+      "Een professionele AI-commercial van 15 seconden voor €99 per video.",
     problemTitle: "Waarom je nog geen video hebt",
     problemBody:
       "Je weet dat video werkt. Op Instagram, op Facebook, op je eigen homepage. Maar een videograaf vraagt €2.000 en een draaidag, je moet acteurs regelen en zelf voor de camera staan, en drie weken later krijg je één clip terug. Dus blijft het bij foto’s van je gsm. Ondertussen scrollt je klant voorbij aan de concurrent die wél een filmpje heeft.",
@@ -349,7 +349,7 @@ export const services: ServiceContent[] = [
       "Je stuurt me foto’s van je product of van jezelf en vertelt wat je wil verkopen. Daaruit leg ik eerst vast hoe je product er van elke hoek uitziet, zodat het in elke scène hetzelfde blijft. Daarna schrijf ik het scenario en de beeldrichting, en die keur jij goed vóór ik iets genereer. Pas dan maak ik de scènes en monteer ik ze aan elkaar, met stem en geluid erbij. Geen draaidag, geen acteurs, geen studio.",
     includesTitle: "Wat je krijgt",
     includes: [
-      "Een commercial van 30 seconden, in jouw huisstijl",
+      "Een commercial van 15 seconden, in jouw huisstijl",
       "€99 excl. btw per video, je weet vooraf wat je betaalt",
       "Je product of jezelf herkenbaar in beeld, van elke hoek",
       "Stem en geluid mee gegenereerd",
@@ -388,7 +388,7 @@ export const services: ServiceContent[] = [
     faq: [
       {
         q: "Wat kost het precies?",
-        a: "€99 excl. btw voor één commercial van 30 seconden, inclusief één iteratieronde. Wil je meerdere versies of een langere video, dan spreken we een prijs af.",
+        a: "€99 excl. btw voor één commercial van 15 seconden, inclusief één iteratieronde. Wil je meerdere versies of een langere video, dan spreken we een prijs af.",
       },
       {
         q: "Hoe lang duurt het?",
@@ -416,9 +416,9 @@ export const services: ServiceContent[] = [
       "Stuur me kort wat je wil tonen en aan wie. Binnen 5 werkdagen staat je video klaar.",
     ctaLabel: "Vraag je video aan",
     ctaHref: "/#contact",
-    seoTitle: "AI-commercial van 30 seconden voor €99 — AI Web Atelier",
+    seoTitle: "AI-commercial van 15 seconden voor €99 — AI Web Atelier",
     seoDescription:
-      "Een professionele AI-commercial van 30 seconden voor €99 excl. btw. Ik maak je video met AI, klaar in 5 werkdagen. Vraag vandaag je video aan.",
+      "Een professionele AI-commercial van 15 seconden voor €99 excl. btw. Ik maak je video met AI, klaar in 5 werkdagen. Vraag vandaag je video aan.",
   },
 ];
 

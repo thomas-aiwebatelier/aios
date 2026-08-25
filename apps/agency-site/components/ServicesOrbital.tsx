@@ -69,7 +69,7 @@ const services: Service[] = [
     id: "video",
     slug: "video",
     title: "Video",
-    desc: "Een AI-commercial van 30 seconden voor je zaak of je product. €99 per video, klaar in 5 werkdagen.",
+    desc: "Een AI-commercial van 15 seconden voor je zaak of je product. €99 per video, klaar in 5 werkdagen.",
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-forest)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="2.5" y="6" width="13" height="12" rx="2" />
