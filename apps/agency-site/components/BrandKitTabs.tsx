@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import BrandFileEditor from "@/components/BrandFileEditor";
 
 export type KitTab = { id: string; title: string; content: string; html: string };
 
-/** Tabbed Brand Guidelines: one tab per file (visual / voice / business). */
+/**
+ * Tabbed Brand Guidelines: one tab per file (visual / voice / business).
+ *
+ * Read-only. This used to render BrandFileEditor, which saved through
+ * updateBrandFile — now admin-only, with UPDATE revoked from the client role
+ * at the database. Leaving an editor here would just hand clients a save
+ * button that always errors.
+ */
 export default function BrandKitTabs({ files }: { files: KitTab[] }) {
   const [active, setActive] = useState(0);
   if (files.length === 0) return null;
@@ -27,13 +33,18 @@ export default function BrandKitTabs({ files }: { files: KitTab[] }) {
           </button>
         ))}
       </div>
-      <BrandFileEditor
+      <article
         key={current.id}
-        id={current.id}
-        title={current.title}
-        content={current.content}
-        html={current.html}
-      />
+        className="brandfile"
+        role="tabpanel"
+        aria-label={current.title}
+      >
+        <div
+          className="brandfile__body prose"
+          // Rendered server-side from the stored markdown, same as before.
+          dangerouslySetInnerHTML={{ __html: current.html }}
+        />
+      </article>
     </div>
   );
 }

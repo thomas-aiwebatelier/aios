@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Order mirrors the public /diensten navigation so the two never disagree.
 const TABS = [
   { href: "/app/build", label: "Build" },
+  { href: "/app/video", label: "Video" },
   { href: "/app/market", label: "Market" },
   { href: "/app/operate", label: "Operate" },
 ];

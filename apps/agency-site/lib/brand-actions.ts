@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireUser, createServiceSupabase } from "@atelier/auth";
+import { requireAdmin, createServiceSupabase } from "@atelier/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { assertSafePublicUrl, UnsafeUrlError } from "@/lib/url-guard";
 
@@ -64,7 +64,9 @@ export async function startFromUrl(formData: FormData) {
   }
 
   const userClient = await createSupabaseServerClient();
-  const user = await requireUser(userClient);
+  // ADMIN ONLY: this enqueues scraping and generation work that costs money.
+  // Customers ask through the lead-capture forms; we start the pipeline.
+  const user = await requireAdmin(userClient);
   const svc = createServiceSupabase();
 
   // One brand per account.

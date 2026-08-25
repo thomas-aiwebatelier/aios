@@ -576,3 +576,85 @@ export const adAssets = pgTable("ad_assets", {
 
 export type AdAsset = typeof adAssets.$inferSelect;
 export type NewAdAsset = typeof adAssets.$inferInsert;
+
+// ── lead_intents — the front door ─────────────────────────────────────────────
+//
+// Written BEFORE we ask who someone is. The service pages capture one thing (a
+// URL, a video idea, an audit request, questionnaire answers) and persist it
+// immediately; name + email land in a second step and the Supabase user id is
+// backfilled if they finish signing up.
+//
+// The point is that an abandoned signup still leaves a row worth following up.
+// Passing the answer through a redirect querystring — which is what the build
+// page used to do — loses the lead the moment someone hesitates at the login
+// screen, and that is the most valuable signal on the site.
+//
+// This is the ONLY table a non-admin may INSERT into, and even then it is
+// insert-only: no select, no update. See sql/rls-and-auth.sql.
+
+export const leadIntentServiceValues = ["build", "video", "market", "educate"] as const;
+export type LeadIntentService = (typeof leadIntentServiceValues)[number];
+
+export const leadIntentStatusValues = [
+  "new", "claimed", "contacted", "converted", "abandoned",
+] as const;
+export type LeadIntentStatus = (typeof leadIntentStatusValues)[number];
+
+export const leadIntents = pgTable("lead_intents", {
+  id:      text("id").primaryKey(),
+  service: text("service").$type<LeadIntentService>().notNull(),
+  /** Whatever step 1 asked for: { url } | { idea } | { answers: {...} }. */
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+  // Step 2 — identity. Null until they get that far, which is the whole point.
+  firstName: text("first_name"),
+  lastName:  text("last_name"),
+  email:     text("email"),
+  /** Backfilled on signup; links the intent to the account it became. */
+  userId:    text("user_id"),
+  status:    text("status").$type<LeadIntentStatus>().notNull().default("new"),
+  /** Which page it came from, for attribution. */
+  sourcePath: text("source_path"),
+  createdAt:  timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:  timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  statusIdx:  index("lead_intents_status_idx").on(t.status),
+  serviceIdx: index("lead_intents_service_idx").on(t.service),
+  userIdx:    index("lead_intents_user_idx").on(t.userId),
+  emailIdx:   index("lead_intents_email_idx").on(t.email),
+}));
+
+export type LeadIntent = typeof leadIntents.$inferSelect;
+export type NewLeadIntent = typeof leadIntents.$inferInsert;
+
+// ── video_deliverables — what the portal shows for the Video module ───────────
+//
+// The video studio (services/video-studio) writes to FIRESTORE. The portal
+// reads POSTGRES. This table is the one-way bridge between them: when a video
+// is finished, an admin action copies the MP4 into Supabase Storage and writes
+// a row here. The portal never reaches into Firestore on a customer request.
+
+export const videoDeliverableStatusValues = [
+  "requested", "briefing", "producing", "review", "delivered",
+] as const;
+export type VideoDeliverableStatus = (typeof videoDeliverableStatusValues)[number];
+
+export const videoDeliverables = pgTable("video_deliverables", {
+  id:          text("id").primaryKey(),
+  ownerUserId: text("owner_user_id").notNull(), // = auth.users.id, as on brands
+  title:       text("title"),
+  status:      text("status").$type<VideoDeliverableStatus>().notNull().default("requested"),
+  /** Delivered length in seconds — the offer is 15s. */
+  durationSeconds: integer("duration_seconds"),
+  videoUrl:    text("video_url"),
+  posterUrl:   text("poster_url"),
+  notes:       text("notes"),
+  /** The Firestore projectId this came from, so the two sides can be reconciled. */
+  studioProjectId: text("studio_project_id"),
+  createdAt:   timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull().$onUpdateFn(() => new Date()),
+}, (t) => ({
+  ownerIdx: index("video_deliverables_owner_idx").on(t.ownerUserId),
+}));
+
+export type VideoDeliverable = typeof videoDeliverables.$inferSelect;
+export type NewVideoDeliverable = typeof videoDeliverables.$inferInsert;

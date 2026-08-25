@@ -1,9 +1,42 @@
 import type { ServiceContent } from "@/app/diensten/content";
 import ServiceIcon from "@/components/ServiceIcon";
 import Faq from "@/components/Faq";
-import UrlCaptureForm from "@/components/UrlCaptureForm";
+import LeadCaptureForm from "@/components/LeadCaptureForm";
+import type { LeadService } from "@/lib/lead-intent-actions";
 
-const SELF_SERVE = new Set(["build", "market", "operate"]);
+/**
+ * Front-door capture, per service. Each page asks ONE qualifying thing at the
+ * top; identity comes in step 2. Anything not listed here keeps the plain CTA
+ * link (operate is consultative — it goes through the hidden setup route).
+ */
+const CAPTURE: Partial<Record<
+  ServiceContent["slug"],
+  Omit<React.ComponentProps<typeof LeadCaptureForm>, "service"> & { service: LeadService }
+>> = {
+  build: {
+    service: "build",
+    variant: "url",
+    label: "Wat is je huidige website? Geen site? Plak je Facebook- of Instagram-pagina.",
+    placeholder: "mijnzaak.be of facebook.com/mijnzaak",
+    ctaLabel: "Vraag je ontwerp aan",
+    signupAfter: true,
+  },
+  video: {
+    service: "video",
+    variant: "textarea",
+    label: "Wat moet je video tonen?",
+    placeholder: "Bijvoorbeeld: mijn nieuwe koffiebar in Gent, gezellig en warm, met focus op de latte art.",
+    ctaLabel: "Vraag je video aan",
+    signupAfter: true,
+  },
+  market: {
+    service: "market",
+    variant: "cta",
+    label: "",
+    ctaLabel: "Vraag een gratis audit",
+    signupAfter: true,
+  },
+};
 
 export default function ServicePage({ service }: { service: ServiceContent }) {
   return (
@@ -17,11 +50,8 @@ export default function ServicePage({ service }: { service: ServiceContent }) {
           <span className="section-eyebrow">{service.eyebrow}</span>
           <h1 className="svc-hero__title">{service.title}</h1>
           <p className="svc-hero__lead">{service.heroLead}</p>
-          {SELF_SERVE.has(service.slug) ? (
-            <UrlCaptureForm
-              product={service.slug as "build" | "market" | "operate"}
-              cta={service.heroCtaLabel}
-            />
+          {CAPTURE[service.slug] ? (
+            <LeadCaptureForm {...CAPTURE[service.slug]!} />
           ) : (
             <a href={service.heroCtaHref} className="btn btn--primary svc-hero__cta">
               {service.heroCtaLabel}

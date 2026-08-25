@@ -12,6 +12,9 @@ import { updateSession } from "@/lib/supabase/middleware";
  */
 const PROD_HOSTS = new Set(["aiwebatelier.com", "www.aiwebatelier.com"]);
 
+/** Built, deployed, and invisible to everyone but an admin. See below. */
+const HIDDEN_ROUTES = ["/diensten/educate/setup"];
+
 export async function middleware(request: NextRequest) {
   const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
   const isProd = PROD_HOSTS.has(host);
@@ -25,8 +28,25 @@ export async function middleware(request: NextRequest) {
     });
   }
 
+  // Routes that exist in the codebase but must not exist for the public.
+  // Admins get the real page; everyone else gets a genuine 404.
+  //
+  // A 404 and not a /login redirect: redirecting confirms the route is there
+  // and worth coming back to with a session. A 404 tells a scanner nothing.
+  // And not a NEXT_PUBLIC_ env flag either — those ship to the browser and
+  // leave the route reachable anyway.
+  const isHidden = HIDDEN_ROUTES.some((p) => path === p || path.startsWith(p + "/"));
+
   // Refresh the Supabase session (rebuilds the response with fresh cookies).
-  const { response, user } = await updateSession(request);
+  // Role resolution costs a query, so ask for it only on the hidden routes.
+  const { response, user, role } = await updateSession(request, isHidden);
+
+  if (isHidden && role !== "admin") {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { "X-Robots-Tag": "noindex, nofollow, noarchive" },
+    });
+  }
 
   // Gate the authenticated portal.
   if (path.startsWith("/app") && !user) {
