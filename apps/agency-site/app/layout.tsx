@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
+    "Custom AI-gegenereerde websites voor Belgische ondernemers. €249 excl. btw voor het ontwerp, een herzieningsronde kost €100. Online binnen 5 werkdagen.",
   icons: { icon: "/favicon.svg" },
   openGraph: {
     type: "website",
@@ -20,14 +20,14 @@ export const metadata: Metadata = {
     url: siteUrl,
     title: "AI Web Atelier — Vakwerk websites, gebouwd met AI",
     description:
-      "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
+      "Custom AI-gegenereerde websites voor Belgische ondernemers. €249 excl. btw voor het ontwerp, een herzieningsronde kost €100. Online binnen 5 werkdagen.",
     images: [{ url: "/og-image.jpg" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AI Web Atelier — Vakwerk websites, gebouwd met AI",
     description:
-      "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
+      "Custom AI-gegenereerde websites voor Belgische ondernemers. €249 excl. btw voor het ontwerp, een herzieningsronde kost €100. Online binnen 5 werkdagen.",
     images: ["/og-image.jpg"],
   },
 };
@@ -39,7 +39,7 @@ const orgSchema = {
   url: siteUrl,
   logo: `${siteUrl}/logo.svg`,
   description:
-    "Custom AI-gegenereerde websites voor Belgische ondernemers. €499 eenmalig, inclusief één herzieningsronde. Online binnen 7 dagen.",
+    "Custom AI-gegenereerde websites voor Belgische ondernemers. €249 excl. btw voor het ontwerp, een herzieningsronde kost €100. Online binnen 5 werkdagen.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Antwerpen",

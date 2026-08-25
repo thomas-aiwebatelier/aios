@@ -32,7 +32,7 @@ export default function About() {
             Ik zag te veel zelfstandigen vastzitten met een verouderde site of
             helemaal geen, gewoon omdat een fatsoenlijke oplossing onbetaalbaar
             leek. Met de juiste AI-tools bouw ik vandaag een website die vroeger
-            €3.000 kostte. Bij mij betaal je €499.
+            €3.000 kostte. Bij mij betaal je €249.
           </p>
           <p className="about__body">
             En dat zonder in te boeten op kwaliteit: eigen teksten, een eigen

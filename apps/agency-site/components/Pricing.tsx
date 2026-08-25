@@ -1,9 +1,9 @@
 const buildIncludes = [
   "Volledig op maat, geen sjabloon",
   "Online in 5 werkdagen: 5 stappen, elke dag één",
-  "Eén iteratieronde na je review, daarna is de site af",
   "Code en inhoud volledig van jou",
   "Snel, mobielvriendelijk en met je SEO-basis correct",
+  "Wil je bijsturen? Een herzieningsronde kost €100",
 ];
 
 const maintenanceIncludes = [
@@ -29,9 +29,9 @@ export default function Pricing() {
             </span>
           </h2>
           <p className="section-subtitle">
-            Je betaalt eenmalig voor de bouw. Wil je onderhoud, dan komt daar
-            een vast bedrag per maand bij. Geen verrassingen, geen
-            contractduur, opzegbaar per maand.
+            Je betaalt eenmalig voor het ontwerp. Wil je bijsturen, dan reken ik
+            één vast bedrag per herzieningsronde. Onderhoud is optioneel en
+            opzegbaar per maand. Alle prijzen zijn exclusief btw.
           </p>
         </div>
 
@@ -40,15 +40,16 @@ export default function Pricing() {
             className="pricing__card pricing__card--build"
             aria-label="Eenmalige bouw"
           >
-            <div className="pricing__badge">Stap 1 · de bouw</div>
+            <div className="pricing__badge">Stap 1 · het ontwerp</div>
             <div className="pricing__amount">
               <span className="pricing__currency">€</span>
-              <span className="pricing__price">499</span>
-              <span className="pricing__period">eenmalig</span>
+              <span className="pricing__price">249</span>
+              <span className="pricing__period">eenmalig · excl. btw</span>
             </div>
             <p className="pricing__tagline">
               Ik bouw een eerste versie op basis van research en je merk. Jij
-              geeft feedback. Ik doe één iteratie. <strong>Klaar.</strong>
+              geeft feedback. Wil je die verwerkt zien, dan kost een
+              herzieningsronde <strong>€100</strong>.
             </p>
             <ul
               className="pricing__list"
@@ -81,7 +82,9 @@ export default function Pricing() {
             <div className="pricing__amount">
               <span className="pricing__currency">€</span>
               <span className="pricing__price">9,99</span>
-              <span className="pricing__period">/maand · of €99/jaar</span>
+              <span className="pricing__period">
+                /maand · of €99,99/jaar · excl. btw
+              </span>
             </div>
             <p className="pricing__tagline">
               Ik hou je site snel, veilig en bereikbaar, zodat jij je op je
@@ -113,14 +116,15 @@ export default function Pricing() {
         <div className="pricing__total">
           <div className="pricing__total-line">
             <span className="pricing__total-label">
-              Eerste jaar, alles inbegrepen:
+              Ontwerp plus één herzieningsronde:
             </span>
             <span className="pricing__total-value">
-              €499 + €99 = <strong>€598</strong>
+              €249 + €100 = <strong>€349</strong> excl. btw
             </span>
           </div>
           <p className="pricing__total-note">
-            Of zonder onderhoud: gewoon €499 eenmalig en je host het zelf.
+            Of enkel het ontwerp: €249 excl. btw, en je host het zelf. Onderhoud
+            en hosting komen daar los bij.
           </p>
         </div>
 
@@ -145,7 +149,7 @@ export default function Pricing() {
             </div>
             <div className="pricing__compare-item pricing__compare-item--ours">
               <span className="pricing__compare-label">AI Web Atelier</span>
-              <span className="pricing__compare-price">€499 + €9,99/mnd</span>
+              <span className="pricing__compare-price">€349 + €9,99/mnd</span>
             </div>
           </div>
         </div>

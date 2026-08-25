@@ -14,7 +14,7 @@ const cards = [
   {
     number: "03",
     title: "Live en bijgestuurd",
-    body: "Ik zet je site online op je eigen domein. Daarna krijg je één iteratieronde: aanpassingen aan teksten, kleuren of structuur, alles in één keer. Ik stuur bij tot het klopt. Klaar voor je klanten.",
+    body: "Ik zet je site online op je eigen domein. Wil je daarna nog bijsturen, dan boek je een herzieningsronde van €100: aanpassingen aan teksten, kleuren of structuur, alles in één keer. Klaar voor je klanten.",
     icon: "🚀",
   },
 ];

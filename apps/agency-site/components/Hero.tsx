@@ -34,9 +34,10 @@ export default function Hero() {
           </h1>
           <p className="hero__tagline">
             Een website op maat voor jouw zaak, gebouwd met AI.{" "}
-            <strong>€499 voor de bouw</strong>, inclusief één iteratieronde na
-            je eerste review. Wil je er niet meer naar omkijken? Dan host en
-            onderhoud ik hem voor <strong>€9,99/maand</strong>.
+            <strong>€249 voor het ontwerp</strong>, een herzieningsronde na je
+            review kost €100. Wil je er niet meer naar omkijken? Dan host en
+            onderhoud ik hem voor <strong>€9,99/maand</strong>. Alle prijzen
+            excl. btw.
           </p>
           <div className="hero__ctas">
             <a href="#contact" className="btn btn--primary">
